@@ -1,0 +1,49 @@
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  lint-and-schema:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+      - name: Install Python + deps
+        run: |
+          uv python install 3.11
+          uv sync --all-extras
+      - name: Ruff
+        run: uv run ruff check .
+      - name: Schema + module-load tests
+        run: uv run pytest -q
+
+  smoke-run:
+    runs-on: ubuntu-latest
+    needs: lint-and-schema
+    if: ${{ secrets.ANTHROPIC_API_KEY != '' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        eval:
+          - voting_access
+          - election_integrity
+          - policy_impact_personalization
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+      - run: uv python install 3.11 && uv sync --all-extras
+      - name: Smoke-run ${{ matrix.eval }} (1 sample, Haiku)
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          uv run inspect eval evals/${{ matrix.eval }}/eval.py \
+            --model anthropic/claude-haiku-4-5 \
+            --limit 1 \
+            --log-dir logs/
