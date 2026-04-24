@@ -21,9 +21,24 @@ uv run python analysis/rollup.py logs/ > rollup.parquet
 src/p3/          shared infrastructure (schema, personas, scorers, providers)
 evals/           one folder per eval; mentees copy _template/ to start
 analysis/        rollup.py unifies .eval logs into a single long-form dataframe
+site/            Next.js App Router dashboard — reads rollup.json, deploys to Vercel
 tests/           CI: schema validation + smoke-run every eval under Haiku
 logs/            .eval outputs (gitignored)
 ```
+
+## Showcase site
+
+`site/` is a Next.js App Router dashboard that reads `site/public/data/rollup.json` at build time. To run locally:
+
+```bash
+cd site
+pnpm install
+pnpm dev
+```
+
+The `refresh-results` GitHub Action runs the eval suite on a weekly schedule (and on `workflow_dispatch`), regenerates `rollup.json`, and commits the update. Vercel picks up the commit and redeploys automatically. Requires the `ANTHROPIC_API_KEY` repo secret.
+
+Deploying to Vercel: `vercel login && vercel` from the `site/` directory, or import the repo through the Vercel dashboard with **Root Directory** set to `site`.
 
 ## Contributing a new eval
 

@@ -75,7 +75,9 @@ def _as_float(v: Any) -> float | None:
 def main() -> int:
     p = argparse.ArgumentParser()
     p.add_argument("log_dir", type=Path)
-    p.add_argument("--format", choices=["parquet", "csv"], default="parquet")
+    p.add_argument("--format", choices=["parquet", "csv", "json"], default="parquet")
+    p.add_argument("-o", "--output", type=Path, default=None,
+                   help="Output file path; stdout if omitted.")
     args = p.parse_args()
 
     df = rollup(args.log_dir)
@@ -84,9 +86,31 @@ def main() -> int:
         return 1
 
     if args.format == "csv":
-        df.to_csv(sys.stdout, index=False)
+        if args.output:
+            df.to_csv(args.output, index=False)
+        else:
+            df.to_csv(sys.stdout, index=False)
+    elif args.format == "json":
+        payload = {
+            "generated_at": pd.Timestamp.now(tz="UTC").isoformat(),
+            "n_rows": len(df),
+            "evals": sorted(df["eval"].dropna().unique().tolist()),
+            "providers": sorted(df["provider"].dropna().unique().tolist()),
+            "scorers": sorted(df["scorer"].dropna().unique().tolist()),
+            "rows": df.to_dict(orient="records"),
+        }
+        import json as _json
+        text = _json.dumps(payload, default=str, indent=2)
+        if args.output:
+            args.output.write_text(text)
+        else:
+            sys.stdout.write(text)
     else:
-        df.to_parquet(sys.stdout.buffer, index=False)
+        if args.output:
+            df.to_parquet(args.output, index=False)
+        else:
+            df.to_parquet(sys.stdout.buffer, index=False)
+
     print(f"{len(df)} rows from {df['eval'].nunique()} evals, "
           f"{df['provider'].nunique()} providers, {df['scorer'].nunique()} scorers.",
           file=sys.stderr)

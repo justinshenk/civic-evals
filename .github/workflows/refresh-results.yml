@@ -1,0 +1,69 @@
+name: refresh-results
+
+# Runs the eval suite, regenerates site/public/data/rollup.json, and
+# commits the update. Vercel picks up the commit and redeploys the site.
+#
+# Triggered either manually (Actions tab → Run workflow) or weekly at
+# Sunday 08:00 UTC. Requires the repo secret ANTHROPIC_API_KEY.
+
+on:
+  workflow_dispatch:
+    inputs:
+      model:
+        description: "Subject model (inspect-ai model spec)"
+        default: "anthropic/claude-haiku-4-5"
+        required: false
+      limit:
+        description: "Per-eval sample cap (keeps CI budget bounded)"
+        default: "5"
+        required: false
+  schedule:
+    - cron: "0 8 * * 0"
+
+permissions:
+  contents: write
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    if: ${{ secrets.ANTHROPIC_API_KEY != '' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+      - run: uv python install 3.11 && uv sync --all-extras
+      - name: Run each eval
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          mkdir -p logs
+          MODEL="${{ inputs.model || 'anthropic/claude-haiku-4-5' }}"
+          LIMIT="${{ inputs.limit || '5' }}"
+          for eval_dir in evals/*/; do
+            name="$(basename "$eval_dir")"
+            if [ "$name" = "_template" ]; then continue; fi
+            echo "::group::$name"
+            uv run inspect eval "$eval_dir/eval.py" \
+              --model "$MODEL" \
+              --limit "$LIMIT" \
+              --log-dir logs/
+            echo "::endgroup::"
+          done
+      - name: Regenerate rollup.json
+        run: |
+          mkdir -p site/public/data
+          uv run python analysis/rollup.py logs/ \
+            --format json \
+            -o site/public/data/rollup.json
+      - name: Commit if changed
+        run: |
+          if git diff --quiet -- site/public/data/rollup.json; then
+            echo "No changes to rollup.json"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add site/public/data/rollup.json
+          git commit -m "refresh: update rollup.json from eval run"
+          git push
