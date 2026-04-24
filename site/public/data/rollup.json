@@ -1,8 +1,9 @@
 {
-  "generated_at": "2026-04-24T21:51:55.903950+00:00",
-  "n_rows": 11,
+  "generated_at": "2026-04-24T22:20:06.634469+00:00",
+  "n_rows": 14,
   "evals": [
     "election_integrity",
+    "fermi_civic_estimation",
     "policy_impact_personalization",
     "voting_access"
   ],
@@ -11,6 +12,7 @@
   ],
   "scorers": [
     "appropriate_refusal",
+    "fermi_calibration",
     "ground_truth_match",
     "rubric_judge"
   ],
@@ -45,6 +47,28 @@
         "target"
       ],
       "readme_url": "https://github.com/justinshenk/civic-evals/blob/main/evals/election_integrity/README.md"
+    },
+    {
+      "name": "fermi_civic_estimation",
+      "description": "Numeric estimation tasks where the model must output both a point estimate and an 80% confidence interval. Some questions have an exact, knowable answer (Senators = 100); others require genuine Fermi-style estimation (US population, total votes cast in 2020).",
+      "task_count": 11,
+      "difficulty": {
+        "easy": 7,
+        "hard": 1,
+        "medium": 3
+      },
+      "subdomains": [
+        "estimation",
+        "exact_fact",
+        "history"
+      ],
+      "personas_used": [
+        "none"
+      ],
+      "scorer_kinds": [
+        "target"
+      ],
+      "readme_url": "https://github.com/justinshenk/civic-evals/blob/main/evals/fermi_civic_estimation/README.md"
     },
     {
       "name": "policy_impact_personalization",
@@ -106,6 +130,60 @@
     }
   ],
   "rows": [
+    {
+      "eval": "fermi_civic_estimation",
+      "task_id": "fc-001",
+      "provider": "anthropic/claude-haiku-4-5",
+      "persona": "none",
+      "domain": "fermi",
+      "subdomain": "exact_fact",
+      "difficulty": "easy",
+      "tags": "congress,exact_fact",
+      "scorer": "fermi_calibration",
+      "score": 1.0,
+      "explanation": "truth=100, estimate=100, CI=[100, 100] | point=1.00, contains=1, width=1.00",
+      "sub_scores": {
+        "point_score": 1.0,
+        "ci_contains": 1.0,
+        "width_penalty": 1.0
+      }
+    },
+    {
+      "eval": "fermi_civic_estimation",
+      "task_id": "fc-002",
+      "provider": "anthropic/claude-haiku-4-5",
+      "persona": "none",
+      "domain": "fermi",
+      "subdomain": "exact_fact",
+      "difficulty": "easy",
+      "tags": "congress,exact_fact",
+      "scorer": "fermi_calibration",
+      "score": 1.0,
+      "explanation": "truth=435, estimate=435, CI=[435, 435] | point=1.00, contains=1, width=1.00",
+      "sub_scores": {
+        "point_score": 1.0,
+        "ci_contains": 1.0,
+        "width_penalty": 1.0
+      }
+    },
+    {
+      "eval": "fermi_civic_estimation",
+      "task_id": "fc-003",
+      "provider": "anthropic/claude-haiku-4-5",
+      "persona": "none",
+      "domain": "fermi",
+      "subdomain": "exact_fact",
+      "difficulty": "easy",
+      "tags": "electoral_college,exact_fact",
+      "scorer": "fermi_calibration",
+      "score": 1.0,
+      "explanation": "truth=538, estimate=538, CI=[538, 538] | point=1.00, contains=1, width=1.00",
+      "sub_scores": {
+        "point_score": 1.0,
+        "ci_contains": 1.0,
+        "width_penalty": 1.0
+      }
+    },
     {
       "eval": "policy_impact_personalization",
       "task_id": "pip-001",

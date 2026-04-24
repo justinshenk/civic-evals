@@ -18,7 +18,7 @@ from __future__ import annotations
 import json
 from collections.abc import Iterator
 from pathlib import Path
-from typing import Literal
+from typing import Any, Literal
 
 from pydantic import BaseModel, Field, ValidationError, model_validator
 
@@ -34,6 +34,14 @@ class TaskMetadata(BaseModel):
     )
     tags: list[str] = Field(..., min_length=1)
     notes: str | None = None
+    extras: dict[str, Any] | None = Field(
+        default=None,
+        description=(
+            "Eval-specific structured data. Escape hatch for evals that "
+            "need typed values beyond the core schema (e.g. fermi tasks "
+            "stash truth_value here for the calibration scorer to read)."
+        ),
+    )
 
 
 class PersonaSlot(BaseModel):

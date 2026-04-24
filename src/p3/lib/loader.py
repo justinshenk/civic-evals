@@ -46,6 +46,8 @@ def task_to_sample(task: Task, attach_persona: bool = True) -> Sample:
     }
     if task.metadata.notes:
         metadata["notes"] = task.metadata.notes
+    if task.metadata.extras:
+        metadata["extras"] = task.metadata.extras
 
     return Sample(
         id=task.id,

@@ -11,11 +11,11 @@ on:
     inputs:
       model:
         description: "Subject model (inspect-ai model spec)"
-        default: "anthropic/claude-haiku-4-5"
+        default: "anthropic/claude-sonnet-4-6"
         required: false
       limit:
-        description: "Per-eval sample cap (keeps CI budget bounded)"
-        default: "5"
+        description: "Per-eval sample cap; leave blank to run the full suite"
+        default: ""
         required: false
   schedule:
     - cron: "0 8 * * 0"
@@ -38,15 +38,17 @@ jobs:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: |
           mkdir -p logs
-          MODEL="${{ inputs.model || 'anthropic/claude-haiku-4-5' }}"
-          LIMIT="${{ inputs.limit || '5' }}"
+          MODEL="${{ inputs.model || 'anthropic/claude-sonnet-4-6' }}"
+          LIMIT="${{ inputs.limit }}"
+          LIMIT_FLAG=""
+          if [ -n "$LIMIT" ]; then LIMIT_FLAG="--limit $LIMIT"; fi
           for eval_dir in evals/*/; do
             name="$(basename "$eval_dir")"
             if [ "$name" = "_template" ]; then continue; fi
             echo "::group::$name"
             uv run inspect eval "$eval_dir/eval.py" \
               --model "$MODEL" \
-              --limit "$LIMIT" \
+              $LIMIT_FLAG \
               --log-dir logs/
             echo "::endgroup::"
           done
