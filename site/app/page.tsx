@@ -1,6 +1,7 @@
 import { ScoreMatrix } from "./components/ScoreMatrix";
 import { PersonaChart } from "./components/PersonaChart";
 import { SubScorePanel } from "./components/SubScorePanel";
+import { EvalCards } from "./components/EvalCards";
 import { loadRollup } from "@/lib/rollup";
 
 export default function Home() {
@@ -57,6 +58,14 @@ export default function Home() {
             </a>
           </div>
         </header>
+
+        <section className="space-y-4">
+          <SectionHeader
+            title="Evals in this suite"
+            hint="Each eval is a folder under evals/. Mentees copy _template/ to start a new one — see CONTRIBUTING.md."
+          />
+          <EvalCards rollup={rollup} />
+        </section>
 
         {empty ? (
           <EmptyState />

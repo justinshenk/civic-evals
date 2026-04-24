@@ -14,12 +14,17 @@ Usage::
 from __future__ import annotations
 
 import argparse
+import json as _json
+import re
 import sys
+from collections import Counter
 from pathlib import Path
 from typing import Any
 
 import pandas as pd
 from inspect_ai.log import list_eval_logs, read_eval_log
+
+REPO_ROOT = Path(__file__).resolve().parent.parent
 
 
 def rollup(log_dir: Path) -> pd.DataFrame:
@@ -53,6 +58,114 @@ def rollup(log_dir: Path) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
+def collect_eval_meta(evals_dir: Path) -> list[dict[str, Any]]:
+    """Walk ``evals_dir/*`` and produce one metadata blob per eval.
+
+    Pulls description from the README (first prose paragraph after the
+    H1) and computes task counts, difficulty distribution, subdomains,
+    and persona usage from ``tasks.jsonl`` directly — so metadata is
+    always in sync with the source of truth.
+    """
+    out: list[dict[str, Any]] = []
+    if not evals_dir.is_dir():
+        return out
+    from p3.schemas import load_tasks  # local import to avoid hard dep at module load
+
+    for d in sorted(evals_dir.iterdir()):
+        if not d.is_dir() or d.name.startswith("_"):
+            continue
+        tasks_path = d / "tasks.jsonl"
+        if not tasks_path.exists():
+            continue
+        try:
+            tasks = load_tasks(tasks_path)
+        except Exception:
+            continue
+
+        difficulties = Counter(t.metadata.difficulty for t in tasks)
+        subdomains = sorted({t.subdomain for t in tasks})
+        personas = sorted(
+            {(t.persona.name if t.persona and t.persona.name else "none") for t in tasks}
+        )
+        scorer_kinds = sorted(
+            {("rubric" if t.rubric else "target") for t in tasks}
+        )
+
+        out.append(
+            {
+                "name": d.name,
+                "description": _readme_summary(d / "README.md"),
+                "task_count": len(tasks),
+                "difficulty": dict(sorted(difficulties.items())),
+                "subdomains": subdomains,
+                "personas_used": personas,
+                "scorer_kinds": scorer_kinds,
+                "readme_url": (
+                    f"https://github.com/justinshenk/civic-evals/blob/main/evals/{d.name}/README.md"
+                ),
+            }
+        )
+    return out
+
+
+_HEADING_RE = re.compile(r"^#+\s")
+
+
+_BULLET_RE = re.compile(r"^\s*[-*]\s+(.+)")
+
+
+def _readme_summary(readme: Path) -> str:
+    """Return the first non-heading prose paragraph after the H1.
+
+    If the paragraph ends with a colon and is followed by a bullet list
+    (a common pattern: "Tasks split into:" + bullets), include the first
+    three bullet labels so the description doesn't trail off mid-thought.
+    """
+    if not readme.exists():
+        return ""
+    lines = readme.read_text().splitlines()
+    i = 0
+    while i < len(lines) and not lines[i].startswith("# "):
+        i += 1
+    i += 1
+    paragraph: list[str] = []
+    started = False
+    while i < len(lines):
+        line = lines[i].rstrip()
+        if _HEADING_RE.match(line):
+            break
+        if not line:
+            if started:
+                break
+        else:
+            started = True
+            paragraph.append(line)
+        i += 1
+    text = _strip_md(" ".join(paragraph).strip())
+
+    if text.endswith(":"):
+        # Skip blank lines
+        while i < len(lines) and not lines[i].strip():
+            i += 1
+        bullets: list[str] = []
+        while i < len(lines):
+            m = _BULLET_RE.match(lines[i])
+            if not m or len(bullets) >= 3:
+                break
+            bullets.append(_strip_md(m.group(1)))
+            i += 1
+        if bullets:
+            text = text[:-1] + ": " + "; ".join(bullets) + "."
+    return text
+
+
+def _strip_md(s: str) -> str:
+    """Strip the lightweight markdown bold/em that appears in bullet labels."""
+    s = re.sub(r"\*\*([^*]+)\*\*", r"\1", s)
+    s = re.sub(r"\*([^*]+)\*", r"\1", s)
+    return s.strip()
+
+
 def _persona_label(persona: Any) -> str:
     if not persona:
         return "none"
@@ -78,12 +191,16 @@ def main() -> int:
     p.add_argument("--format", choices=["parquet", "csv", "json"], default="parquet")
     p.add_argument("-o", "--output", type=Path, default=None,
                    help="Output file path; stdout if omitted.")
+    p.add_argument("--evals-dir", type=Path, default=REPO_ROOT / "evals",
+                   help="Path to evals/ folder for source metadata.")
     args = p.parse_args()
 
     df = rollup(args.log_dir)
     if df.empty:
         print(f"No rows produced from {args.log_dir}.", file=sys.stderr)
         return 1
+
+    evals_meta = collect_eval_meta(args.evals_dir)
 
     if args.format == "csv":
         if args.output:
@@ -97,9 +214,9 @@ def main() -> int:
             "evals": sorted(df["eval"].dropna().unique().tolist()),
             "providers": sorted(df["provider"].dropna().unique().tolist()),
             "scorers": sorted(df["scorer"].dropna().unique().tolist()),
+            "evals_meta": evals_meta,
             "rows": df.to_dict(orient="records"),
         }
-        import json as _json
         text = _json.dumps(payload, default=str, indent=2)
         if args.output:
             args.output.write_text(text)

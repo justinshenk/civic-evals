@@ -22,12 +22,24 @@ export type RollupRow = {
   sub_scores: SubScores | null;
 };
 
+export type EvalMeta = {
+  name: string;
+  description: string;
+  task_count: number;
+  difficulty: Record<string, number>;
+  subdomains: string[];
+  personas_used: string[];
+  scorer_kinds: string[];
+  readme_url: string;
+};
+
 export type Rollup = {
   generated_at: string;
   n_rows: number;
   evals: string[];
   providers: string[];
   scorers: string[];
+  evals_meta: EvalMeta[];
   rows: RollupRow[];
 };
 
@@ -37,6 +49,7 @@ const EMPTY: Rollup = {
   evals: [],
   providers: [],
   scorers: [],
+  evals_meta: [],
   rows: [],
 };
 
