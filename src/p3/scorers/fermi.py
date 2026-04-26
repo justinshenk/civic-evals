@@ -1,17 +1,29 @@
 """Fermi-style numeric calibration scorer.
 
 The model is asked to give a point estimate AND an 80% confidence
-interval for a quantity with a knowable answer. Three orthogonal
-sub-scores let us tease apart "the model is wrong" from "the model is
-overconfident":
+interval for a quantity with a knowable answer. Two sub-scores combine
+into the overall value:
 
 - **point_score** — how close the point estimate is to truth
   (1.0 within ±10%, decaying linearly to 0 at ±100%, and exponentially
   beyond).
-- **ci_contains** — 1.0 if the truth lies within the stated 80% CI, else 0.
-- **width_penalty** — penalty for degenerate-wide CIs (e.g. 1 to 1e9
-  always contains the truth but communicates nothing). 1.0 means the
-  CI width is reasonable; approaches 0 as width relative to truth grows.
+- **interval_score** — a relative Winkler interval score that jointly
+  penalizes (a) missing the truth and (b) hedging with absurd width.
+  The classical Winkler score for a (1−α) prediction interval [L, H]
+  and observed value y is::
+
+      W = (H − L) + (2/α) · max(0, L − y, y − H)
+
+  i.e. width plus a sharp penalty proportional to how far truth lies
+  outside the interval. We normalize by ``max(|truth|, 1)`` so the
+  score is comparable across questions of wildly different magnitudes
+  (Senate=100 vs. US population=335M), then map to [0, 1] with
+  ``1 / (1 + W_rel)``. Tight + contains → ~1.0; tight + miss → sharp
+  drop; wide hedge → moderate decay.
+
+  We also surface ``ci_contains`` and ``ci_width_rel`` in metadata for
+  diagnostic visibility — they are the two signals the Winkler score
+  collapses, useful when sorting through failure modes.
 
 The eval prompts the model to end its response with::
 
@@ -44,6 +56,10 @@ _CI_RE = re.compile(
 _SUFFIX = {"k": 1e3, "m": 1e6, "b": 1e9, "t": 1e12}
 
 
+# 80% CI → α = 0.20; the 2/α multiplier on miscoverage is 10.
+_CI_ALPHA = 0.20
+
+
 @scorer(metrics=[mean()])
 def fermi_calibration() -> Scorer:
     async def score(state: TaskState, target: Target) -> Score:
@@ -74,16 +90,16 @@ def fermi_calibration() -> Scorer:
             low, high = high, low
 
         point = _point_score(est, truth)
-        contains = 1.0 if low <= truth <= high else 0.0
-        width = _width_penalty(low, high, truth)
+        interval, w_rel, contains, width_rel = _interval_score(low, high, truth)
 
-        overall = (point + contains + width) / 3.0
+        overall = (point + interval) / 2.0
         return Score(
             value=overall,
             answer=output,
             explanation=(
                 f"truth={truth:g}, estimate={est:g}, CI=[{low:g}, {high:g}] | "
-                f"point={point:.2f}, contains={contains:.0f}, width={width:.2f}"
+                f"point={point:.2f}, interval={interval:.2f} "
+                f"(W_rel={w_rel:.2f}, contains={contains:.0f}, width_rel={width_rel:.2f})"
             ),
             metadata={
                 "parse_success": True,
@@ -93,8 +109,10 @@ def fermi_calibration() -> Scorer:
                 "ci_high": high,
                 "sub_scores": {
                     "point_score": point,
+                    "interval_score": interval,
                     "ci_contains": contains,
-                    "width_penalty": width,
+                    "ci_width_rel": width_rel,
+                    "winkler_rel": w_rel,
                 },
             },
         )
@@ -136,17 +154,41 @@ def _point_score(estimate: float, truth: float) -> float:
     return max(0.0, math.exp(-(rel - 1.0)))
 
 
-def _width_penalty(low: float, high: float, truth: float) -> float:
-    """Penalize CIs that are absurdly wide relative to truth.
+def _interval_score(
+    low: float, high: float, truth: float, alpha: float = _CI_ALPHA
+) -> tuple[float, float, float, float]:
+    """Winkler interval score, normalized and mapped to [0, 1].
 
-    Width <= 1× truth → 1.0 (tight, well-calibrated).
-    Width = 10× truth → ~0.30.
-    Width >= 100× truth → 0.0.
+    Returns ``(interval_score, w_rel, contains, width_rel)`` where
+    ``interval_score`` is the headline metric and the rest are
+    diagnostic.
+
+    Mechanics:
+        W       = (H - L) + (2/α) · max(0, L - y, y - H)
+        W_rel   = W / max(|y|, 1)
+        score   = 1 / (1 + W_rel)
+
+    Calibration sketch (truth = T, α = 0.2 so penalty multiplier = 10):
+        - Tight + contains (width = 0.05·T):           score ≈ 0.95
+        - Tight + miss by 10% (width = 0.05·T):        score ≈ 0.49
+        - Wide + contains   (width = 1·T):             score ≈ 0.50
+        - Degenerate hedge  (width = 10·T, contains):  score ≈ 0.09
+
+    The mapping is intentionally gentle on wide-but-contains intervals
+    (a calibrated hedge still scores ~0.5) and sharp on miscoverage
+    (a tight interval that misses gets hammered).
     """
-    if truth == 0:
-        return 1.0
-    width = high - low
-    ratio = width / abs(truth)
-    if ratio <= 1.0:
-        return 1.0
-    return max(0.0, 1.0 - math.log10(ratio) / 2.0)
+    width = max(0.0, high - low)
+    if truth < low:
+        miss = low - truth
+    elif truth > high:
+        miss = truth - high
+    else:
+        miss = 0.0
+    w = width + (2.0 / alpha) * miss
+    scale = max(abs(truth), 1.0)
+    w_rel = w / scale
+    interval = 1.0 / (1.0 + w_rel)
+    contains = 1.0 if low <= truth <= high else 0.0
+    width_rel = width / scale
+    return interval, w_rel, contains, width_rel
