@@ -24,13 +24,31 @@ Numbers can be plain (`158400000`), suffixed (`158.4M`, `334k`), or scientific (
 
 ## Scoring
 
-`fermi_calibration` returns three sub-scores in metadata:
+`fermi_calibration` returns two headline sub-scores plus diagnostics in metadata.
 
 - `point_score` — 1.0 within ±10% of truth, linear decay to 0 at ±100%, exponential past that.
-- `ci_contains` — 1.0 if truth lies in the 80% CI, else 0.
-- `width_penalty` — 1.0 for tight CIs, decaying as CI width grows beyond truth's magnitude.
+- `interval_score` — a relative **Winkler interval score** that jointly penalizes miscoverage and width. For an 80% CI `[L, H]` and truth `y`:
 
-Top-level `score = mean(point, contains, width)`.
+  ```
+  W      = (H − L) + (2/α) · max(0, L − y, y − H)        # α = 0.20
+  W_rel  = W / max(|y|, 1)
+  score  = 1 / (1 + W_rel)
+  ```
+
+  Calibration sketch:
+
+  | shape                                         | interval_score |
+  |-----------------------------------------------|----------------|
+  | tight + contains (width 5% of truth)          | ~0.95          |
+  | tight + miss by 10% of truth                  | ~0.49          |
+  | wide + contains (width = truth)               | ~0.50          |
+  | degenerate hedge (width = 10× truth)          | ~0.09          |
+
+  The mapping is gentle on calibrated wide CIs (a hedge that contains still scores ~0.5) and sharp on miscoverage (a tight CI that misses gets hammered).
+
+Top-level `score = mean(point_score, interval_score)`.
+
+Diagnostic-only fields surfaced in `metadata.sub_scores` for downstream analysis: `ci_contains` (binary), `ci_width_rel` (width / |truth|), `winkler_rel`.
 
 ## Truth values
 
