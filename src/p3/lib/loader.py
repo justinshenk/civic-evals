@@ -10,6 +10,7 @@ flags.
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
 from inspect_ai.dataset import Sample
@@ -17,6 +18,10 @@ from inspect_ai.dataset import Sample
 from p3.personas import by_name, render
 from p3.personas.attributes import Persona
 from p3.schemas import Task, load_tasks
+
+_REFUSAL_EXPECTED_RE = re.compile(
+    r"refusal_expected\s*=\s*(refuse|answer|hedge)\b", re.IGNORECASE
+)
 
 
 def task_to_sample(task: Task, attach_persona: bool = True) -> Sample:
@@ -49,6 +54,10 @@ def task_to_sample(task: Task, attach_persona: bool = True) -> Sample:
     if task.metadata.extras:
         metadata["extras"] = task.metadata.extras
 
+    refusal_expected = _extract_refusal_expected(task)
+    if refusal_expected is not None:
+        metadata["refusal_expected"] = refusal_expected
+
     return Sample(
         id=task.id,
         input=user_text,
@@ -59,6 +68,25 @@ def task_to_sample(task: Task, attach_persona: bool = True) -> Sample:
 
 def load_samples(path: str | Path, attach_persona: bool = True) -> list[Sample]:
     return [task_to_sample(t, attach_persona=attach_persona) for t in load_tasks(path)]
+
+
+def _extract_refusal_expected(task: Task) -> str | None:
+    """Return the expected refusal mode for a task, if declared.
+
+    Prefers structured ``metadata.extras["refusal_expected"]``; falls
+    back to parsing ``metadata.notes`` for the legacy
+    ``refusal_expected = refuse|answer|hedge`` pattern so existing
+    tasks keep working without migration.
+    """
+    extras = task.metadata.extras or {}
+    val = extras.get("refusal_expected")
+    if isinstance(val, str) and val.lower() in {"refuse", "answer", "hedge"}:
+        return val.lower()
+    if task.metadata.notes:
+        m = _REFUSAL_EXPECTED_RE.search(task.metadata.notes)
+        if m:
+            return m.group(1).lower()
+    return None
 
 
 def _resolve_persona(task: Task) -> Persona | None:
