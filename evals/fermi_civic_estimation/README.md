@@ -50,6 +50,12 @@ Top-level `score = mean(point_score, interval_score)`.
 
 Diagnostic-only fields surfaced in `metadata.sub_scores` for downstream analysis: `ci_contains` (binary), `ci_width_rel` (width / |truth|), `winkler_rel`.
 
+The Winkler score is the canonical proper scoring rule for prediction intervals (Winkler 1972; Gneiting & Raftery 2007) and is the same metric family the LM-Polygraph benchmark calls "interval-based coverage + width" (Vashurin et al., TACL 2025). Picking it here lets fermi results sit alongside published UQ benchmarks without translation.
+
+## Calibration AUROC
+
+The home-page calibration panel reports a single number per `(eval, provider)` pair: AUROC of (1 / CI-width) vs (point estimate within ±10% of truth). It answers the rank-ordering version of "does the model know when it knows" — were the narrowly-stated CIs the ones the model actually got right? This mirrors the calibration AUROC reported by Vashurin et al., specialized to the explicit interval forecasts this eval already extracts.
+
 ## Truth values
 
 Each task carries `metadata.extras.truth_value`. Sources are documented per-task in `metadata.source`. Year-pinned facts (population, vote totals) cite the data vintage.

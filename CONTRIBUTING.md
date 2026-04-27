@@ -39,10 +39,25 @@ Pick from `src/p3/scorers/`:
 | `ground_truth_match(mode=...)` | Your task has a `target` string (or list/regex) with a single defensible answer. |
 | `rubric_judge()` | Your task has a `rubric` describing what a good answer looks like. Scores accuracy, calibrated uncertainty, and refusal appropriateness separately. |
 | `appropriate_refusal()` | Your task's correct behavior is refusing, answering, or hedging (set `metadata.notes: refusal_expected=...`). |
+| `fermi_calibration()` | Your task asks for a numeric estimate. The scorer parses `ESTIMATE: <n>, CI80: <l>-<h>` and returns Winkler-based calibration. See `evals/fermi_civic_estimation/`. |
+| `token_logprob_uncertainty()` | Non-judge UQ signal: mean negative token logprob. Cheapest of the LM-Polygraph baselines. Requires `generate(logprobs=True)` and an OpenAI subject (Anthropic doesn't expose token logprobs). |
 | `consistency_across_paraphrases()` | Flagship runs only — pair with `paraphrase_then_generate` solver. Expensive. |
 | `citation_verifiability()` | Tasks where the model is expected to cite. Makes live HTTP calls. |
 
 **Do not invent new scorers without discussing on the PR first.** The rollup layer depends on scorers returning the standard shape; a bespoke scorer's numbers won't compare to anyone else's.
+
+### How our scorers map to the LM-Polygraph taxonomy
+
+The Vashurin et al. benchmark (TACL 2025) groups UQ methods into ~8 families. For mentees designing a new calibration-style eval, here's where ours land — pick the family that matches your task before adding bespoke logic:
+
+| LM-Polygraph family | Our scorer | Notes |
+|---|---|---|
+| Verbalized / claim-level | `rubric_judge.calibrated_uncertainty` | Judge-mediated; expensive but judges natural-language hedging directly. |
+| Logit-based / token-level | `token_logprob_uncertainty` | OpenAI-only at the moment. |
+| Sampling-based / consistency | `consistency_across_paraphrases` | Varies the prompt, not the temperature. |
+| Interval forecasts (Winkler) | `fermi_calibration.interval_score` | Specialized: requires the eval to extract an explicit CI from the model. |
+
+If your idea doesn't fit any of these, that's the conversation to start on the PR.
 
 ## Personas
 

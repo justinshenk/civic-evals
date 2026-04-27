@@ -68,6 +68,16 @@ export type EvalMeta = {
   tasks: TaskSummary[];
 };
 
+export type CalibrationStat = {
+  eval: string;
+  provider: string;
+  metric: "calibration_auroc";
+  value: number | null;
+  n: number;
+  n_correct: number;
+  explanation: string;
+};
+
 export type Rollup = {
   generated_at: string;
   n_rows: number;
@@ -75,6 +85,7 @@ export type Rollup = {
   providers: string[];
   scorers: string[];
   evals_meta: EvalMeta[];
+  calibration_stats: CalibrationStat[];
   rows: RollupRow[];
 };
 
@@ -85,6 +96,7 @@ const EMPTY: Rollup = {
   providers: [],
   scorers: [],
   evals_meta: [],
+  calibration_stats: [],
   rows: [],
 };
 

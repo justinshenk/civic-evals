@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-27T09:43:14.697017+00:00",
+  "generated_at": "2026-04-27T10:02:21.844722+00:00",
   "n_rows": 14,
   "evals": [
     "election_integrity",
@@ -1326,6 +1326,17 @@
           "source": "Sentencing Project, 'Felony Disenfranchisement' state-by-state data"
         }
       ]
+    }
+  ],
+  "calibration_stats": [
+    {
+      "eval": "fermi_civic_estimation",
+      "provider": "anthropic/claude-haiku-4-5",
+      "metric": "calibration_auroc",
+      "value": null,
+      "n": 3,
+      "n_correct": 3,
+      "explanation": "AUROC of (1/CI-width) vs (point estimate within \u00b110% of truth). Higher = narrower CIs on questions the model gets right."
     }
   ],
   "rows": [

@@ -54,3 +54,14 @@ This scaffolding is the foundation for experiments on:
 - **Citation verifiability** — when the model cites, does the source exist and support the claim.
 
 The three reference evals (`voting_access`, `election_integrity`, `policy_impact_personalization`) demonstrate how to wire each of these into the shared infrastructure.
+
+## Methodology notes
+
+The scoring layer is intentionally aligned with the LM-Polygraph benchmark (Vashurin et al., [TACL 2025](https://aclanthology.org/2025.tacl-1.11/)) so results sit alongside published UQ work without translation:
+
+- `fermi_calibration.interval_score` is a relative Winkler interval score — the canonical proper scoring rule for prediction intervals (Winkler 1972; Gneiting & Raftery 2007), which LM-Polygraph aggregates as "interval-based coverage + width."
+- `rubric_judge.calibrated_uncertainty` is a verbalized / claim-level UQ signal: one confidence assessment per generated claim, judged by a different-provider LLM.
+- `token_logprob_uncertainty` is the cheapest LM-Polygraph baseline — mean negative token logprob. Currently OpenAI-only since Anthropic doesn't expose token logprobs in its API.
+- `analysis/rollup.py` reports a per-(eval, provider) **calibration AUROC**, mirroring the LM-Polygraph headline metric specialized to interval forecasts.
+
+`CONTRIBUTING.md` has a more detailed mapping for mentees designing new calibration-style evals.

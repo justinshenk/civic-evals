@@ -246,6 +246,116 @@ def _persona_label(persona: Any) -> str:
     return str(persona)
 
 
+def calibration_stats(df: pd.DataFrame) -> list[dict[str, Any]]:
+    """Per (eval, provider) calibration AUROC for fermi-style scorers.
+
+    Frames calibration as: does the model give narrower CIs on tasks it
+    gets right? AUROC over (confidence = -ci_width_rel, correct =
+    point_score >= 0.9). 0.5 = chance, 1.0 = perfect rank ordering, < 0.5
+    = anti-calibrated (narrower on the things it gets wrong).
+
+    The metric closely follows the calibration AUROC reported by Vashurin
+    et al. (TACL 2025, "Benchmarking UQ Methods for LLMs with
+    LM-Polygraph") — there over an LLM's stated or derived per-claim
+    confidence; here over the explicit CI width the eval already asks
+    for. Only computed when the row's scorer surfaced both ``ci_width_rel``
+    in sub_scores and ``point_score`` (the fermi scorer's contract).
+    """
+    out: list[dict[str, Any]] = []
+    fermi_rows = df[df["scorer"] == "fermi_calibration"]
+    if fermi_rows.empty:
+        return out
+
+    for (eval_name, provider), group in fermi_rows.groupby(["eval", "provider"]):
+        scores: list[float] = []
+        labels: list[int] = []
+        n_correct = 0
+        for _, row in group.iterrows():
+            width_rel, point = _calibration_inputs(row)
+            if width_rel is None or point is None:
+                continue
+            # Confidence = narrowness; AUROC is rank-based so any
+            # monotone-decreasing transform of width_rel works.
+            scores.append(-width_rel)
+            correct = 1 if point >= 0.9 else 0
+            labels.append(correct)
+            n_correct += correct
+
+        au = _auroc(scores, labels)
+        out.append(
+            {
+                "eval": eval_name,
+                "provider": provider,
+                "metric": "calibration_auroc",
+                "value": au,
+                "n": len(scores),
+                "n_correct": n_correct,
+                "explanation": (
+                    "AUROC of (1/CI-width) vs (point estimate within ±10% of truth). "
+                    "Higher = narrower CIs on questions the model gets right."
+                ),
+            }
+        )
+    return out
+
+
+def _calibration_inputs(row: Any) -> tuple[float | None, float | None]:
+    """Extract (ci_width_rel, point_score) from a fermi row.
+
+    Robust to scorer-version drift: prefers sub_scores fields
+    (``ci_width_rel``, ``point_score``) when present, falls back to
+    deriving them from ``score_metadata`` (truth/estimate/ci_low/ci_high)
+    so historical logs scored under earlier formulas still contribute.
+    """
+    sub = row.get("sub_scores") or {}
+    sm = row.get("score_metadata") or {}
+
+    width_rel: float | None = None
+    if isinstance(sub.get("ci_width_rel"), (int, float)):
+        width_rel = float(sub["ci_width_rel"])
+    else:
+        truth = sm.get("truth")
+        lo, hi = sm.get("ci_low"), sm.get("ci_high")
+        if all(isinstance(x, (int, float)) for x in (truth, lo, hi)):
+            denom = max(abs(float(truth)), 1.0)
+            width_rel = max(0.0, float(hi) - float(lo)) / denom
+
+    point: float | None = None
+    if isinstance(sub.get("point_score"), (int, float)):
+        point = float(sub["point_score"])
+    else:
+        truth = sm.get("truth")
+        est = sm.get("estimate")
+        if all(isinstance(x, (int, float)) for x in (truth, est)):
+            t = float(truth)
+            if t == 0:
+                point = 1.0 if float(est) == 0 else 0.0
+            else:
+                rel = abs(float(est) - t) / abs(t)
+                point = 1.0 if rel <= 0.10 else max(0.0, 1.0 - (rel - 0.10) / 0.90)
+
+    return width_rel, point
+
+
+def _auroc(scores: list[float], labels: list[int]) -> float | None:
+    """Mann-Whitney U / pair-counting AUROC. O(n^2), fine for our scale.
+
+    Returns None if either class is empty (AUROC undefined).
+    """
+    pos = [s for s, y in zip(scores, labels, strict=True) if y == 1]
+    neg = [s for s, y in zip(scores, labels, strict=True) if y == 0]
+    if not pos or not neg:
+        return None
+    wins = 0.0
+    for p in pos:
+        for n in neg:
+            if p > n:
+                wins += 1.0
+            elif p == n:
+                wins += 0.5
+    return wins / (len(pos) * len(neg))
+
+
 def _as_float(v: Any) -> float | None:
     if isinstance(v, (int, float)):
         return float(v)
@@ -273,6 +383,7 @@ def main() -> int:
         return 1
 
     evals_meta = collect_eval_meta(args.evals_dir)
+    calib_stats = calibration_stats(df)
 
     if args.format == "csv":
         if args.output:
@@ -287,6 +398,7 @@ def main() -> int:
             "providers": sorted(df["provider"].dropna().unique().tolist()),
             "scorers": sorted(df["scorer"].dropna().unique().tolist()),
             "evals_meta": evals_meta,
+            "calibration_stats": calib_stats,
             "rows": df.to_dict(orient="records"),
         }
         text = _json.dumps(payload, default=str, indent=2)
