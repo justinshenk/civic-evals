@@ -78,6 +78,17 @@ export type CalibrationStat = {
   explanation: string;
 };
 
+export type ExternalBaseline = {
+  name: string;
+  short_name: string;
+  title: string;
+  description: string;
+  arxiv: string | null;
+  source: string;
+  providers: string[];
+  n_rows: number;
+};
+
 export type Rollup = {
   generated_at: string;
   n_rows: number;
@@ -86,6 +97,7 @@ export type Rollup = {
   scorers: string[];
   evals_meta: EvalMeta[];
   calibration_stats: CalibrationStat[];
+  external_baselines: ExternalBaseline[];
   rows: RollupRow[];
 };
 
@@ -97,6 +109,7 @@ const EMPTY: Rollup = {
   scorers: [],
   evals_meta: [],
   calibration_stats: [],
+  external_baselines: [],
   rows: [],
 };
 

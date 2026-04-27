@@ -74,6 +74,24 @@ jobs:
                 || echo "::warning::$MODEL · $name failed; continuing"
               echo "::endgroup::"
             done
+
+            # External baselines from inspect_evals — comparison axis
+            # only, capped at 50 samples regardless of LIMIT to keep
+            # cost bounded. The site renders these as context, not as
+            # a leaderboard reproduction.
+            BASELINE_LIMIT=50
+            if [ -n "$LIMIT" ] && [ "$LIMIT" -lt "$BASELINE_LIMIT" ]; then
+              BASELINE_LIMIT="$LIMIT"
+            fi
+            for BASELINE in inspect_evals/truthfulqa inspect_evals/simpleqa; do
+              echo "::group::$MODEL · $BASELINE (limit $BASELINE_LIMIT)"
+              uv run inspect eval "$BASELINE" \
+                --model "$MODEL" \
+                --limit "$BASELINE_LIMIT" \
+                --log-dir logs/ \
+                || echo "::warning::$MODEL · $BASELINE failed; continuing"
+              echo "::endgroup::"
+            done
           done
       - name: Regenerate rollup.json
         if: env.HAS_ANTHROPIC_KEY == 'true'

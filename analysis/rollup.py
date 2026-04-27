@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import argparse
 import json as _json
+import math
 import re
 import sys
 from collections import Counter
@@ -246,6 +247,72 @@ def _persona_label(persona: Any) -> str:
     return str(persona)
 
 
+# Catalog of baselines we pull from inspect_evals as comparison points.
+# Keep concise — this is a label, not a full re-derivation. The actual
+# data is whatever rows show up under these eval names in the rollup.
+_BASELINE_CATALOG: dict[str, dict[str, str]] = {
+    "truthfulqa": {
+        "title": "TruthfulQA",
+        "description": (
+            "Measures whether a model produces falsehoods on questions some "
+            "humans get wrong. Lin et al., 2022. Comparison axis for "
+            "election_integrity."
+        ),
+        "arxiv": "https://arxiv.org/abs/2109.07958",
+        "source": "UKGovernmentBEIS/inspect_evals",
+    },
+    "simpleqa": {
+        "title": "SimpleQA",
+        "description": (
+            "Single-fact recall benchmark from OpenAI; tests verifiable "
+            "factual answers. Comparison axis for voting_access exact-fact "
+            "subset."
+        ),
+        "arxiv": "https://openai.com/index/introducing-simpleqa-a-new-benchmark/",
+        "source": "UKGovernmentBEIS/inspect_evals",
+    },
+}
+
+
+def collect_external_baselines(df: pd.DataFrame) -> list[dict[str, Any]]:
+    """Summary entry for each external (inspect_evals) baseline observed.
+
+    The point of these isn't to replicate the published numbers — we run
+    them with --limit so they're rough comparison axes only. The site
+    treats them as context: "civic eval scored X; same model on
+    TruthfulQA scored Y, so the civic gap is real and not just a
+    capability ceiling."
+    """
+    out: list[dict[str, Any]] = []
+    seen: set[str] = set()
+    for eval_name in df["eval"].dropna().unique():
+        if not eval_name.startswith("inspect_evals/"):
+            continue
+        short = eval_name.split("/", 1)[1]
+        if short in seen:
+            continue
+        seen.add(short)
+        meta = _BASELINE_CATALOG.get(short, {
+            "title": short,
+            "description": "External baseline pulled from inspect_evals.",
+            "source": "UKGovernmentBEIS/inspect_evals",
+        })
+        rows = df[df["eval"] == eval_name]
+        out.append(
+            {
+                "name": eval_name,
+                "short_name": short,
+                "title": meta["title"],
+                "description": meta["description"],
+                "arxiv": meta.get("arxiv"),
+                "source": meta["source"],
+                "providers": sorted(rows["provider"].dropna().unique().tolist()),
+                "n_rows": int(len(rows)),
+            }
+        )
+    return out
+
+
 def calibration_stats(df: pd.DataFrame) -> list[dict[str, Any]]:
     """Per (eval, provider) calibration AUROC for fermi-style scorers.
 
@@ -356,6 +423,25 @@ def _auroc(scores: list[float], labels: list[int]) -> float | None:
     return wins / (len(pos) * len(neg))
 
 
+def _clean_nans(obj: Any) -> Any:
+    """Recursively replace NaN floats with None.
+
+    Required because pandas/numpy emit NaN for missing values in
+    to_dict(orient='records'), but the JSON spec doesn't define NaN.
+    Strict parsers (e.g. JSON.parse in browsers) reject the document
+    silently — masking the failure as 'no data' rather than an error.
+    """
+    if isinstance(obj, float):
+        if math.isnan(obj) or math.isinf(obj):
+            return None
+        return obj
+    if isinstance(obj, dict):
+        return {k: _clean_nans(v) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [_clean_nans(v) for v in obj]
+    return obj
+
+
 def _as_float(v: Any) -> float | None:
     if isinstance(v, (int, float)):
         return float(v)
@@ -384,6 +470,7 @@ def main() -> int:
 
     evals_meta = collect_eval_meta(args.evals_dir)
     calib_stats = calibration_stats(df)
+    external_baselines = collect_external_baselines(df)
 
     if args.format == "csv":
         if args.output:
@@ -391,6 +478,11 @@ def main() -> int:
         else:
             df.to_csv(sys.stdout, index=False)
     elif args.format == "json":
+        # pandas emits NaN for missing values; that's not valid JSON and
+        # JSON.parse() in the site silently falls back to EMPTY rollup.
+        # Convert to None at serialization time so the wire format
+        # round-trips through any strict parser.
+        records = [_clean_nans(rec) for rec in df.to_dict(orient="records")]
         payload = {
             "generated_at": pd.Timestamp.now(tz="UTC").isoformat(),
             "n_rows": len(df),
@@ -399,9 +491,10 @@ def main() -> int:
             "scorers": sorted(df["scorer"].dropna().unique().tolist()),
             "evals_meta": evals_meta,
             "calibration_stats": calib_stats,
-            "rows": df.to_dict(orient="records"),
+            "external_baselines": external_baselines,
+            "rows": records,
         }
-        text = _json.dumps(payload, default=str, indent=2)
+        text = _json.dumps(payload, default=str, indent=2, allow_nan=False)
         if args.output:
             args.output.write_text(text)
         else:

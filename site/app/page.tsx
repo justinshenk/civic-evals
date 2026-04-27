@@ -3,6 +3,7 @@ import { PersonaChart } from "./components/PersonaChart";
 import { SubScorePanel } from "./components/SubScorePanel";
 import { EvalCards } from "./components/EvalCards";
 import { CalibrationPanel } from "./components/CalibrationPanel";
+import { BaselinePanel } from "./components/BaselinePanel";
 import { loadRollup } from "@/lib/rollup";
 
 export default function Home() {
@@ -102,6 +103,14 @@ export default function Home() {
                 hint="For Fermi tasks, AUROC of (1/CI-width) vs (point estimate within ±10% of truth). Mirrors the calibration AUROC reported by LM-Polygraph (Vashurin et al., TACL 2025), specialized to interval forecasts. 0.5 = chance; >0.75 = the model knows when it knows."
               />
               <CalibrationPanel rollup={rollup} />
+            </section>
+
+            <section className="space-y-4">
+              <SectionHeader
+                title="External baselines"
+                hint="Pulled from UKGovernmentBEIS/inspect_evals and run with --limit, so these numbers are a comparison axis, not a leaderboard reproduction. Use them to calibrate how civic-eval gaps compare to model capability ceilings on established benchmarks."
+              />
+              <BaselinePanel rollup={rollup} />
             </section>
           </>
         )}
