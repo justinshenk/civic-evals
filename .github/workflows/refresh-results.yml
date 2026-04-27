@@ -26,14 +26,20 @@ permissions:
 jobs:
   run:
     runs-on: ubuntu-latest
-    if: ${{ secrets.ANTHROPIC_API_KEY != '' }}
+    # secrets context isn't available in job-level if; bind to env first.
+    env:
+      HAS_ANTHROPIC_KEY: ${{ secrets.ANTHROPIC_API_KEY != '' }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v3
+      - if: env.HAS_ANTHROPIC_KEY == 'true'
+        uses: actions/checkout@v4
+      - if: env.HAS_ANTHROPIC_KEY == 'true'
+        uses: astral-sh/setup-uv@v3
         with:
           enable-cache: true
-      - run: uv python install 3.11 && uv sync --all-extras
+      - if: env.HAS_ANTHROPIC_KEY == 'true'
+        run: uv python install 3.11 && uv sync --all-extras
       - name: Run each eval
+        if: env.HAS_ANTHROPIC_KEY == 'true'
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: |
@@ -53,12 +59,14 @@ jobs:
             echo "::endgroup::"
           done
       - name: Regenerate rollup.json
+        if: env.HAS_ANTHROPIC_KEY == 'true'
         run: |
           mkdir -p site/public/data
           uv run python analysis/rollup.py logs/ \
             --format json \
             -o site/public/data/rollup.json
       - name: Commit if changed
+        if: env.HAS_ANTHROPIC_KEY == 'true'
         run: |
           if git diff --quiet -- site/public/data/rollup.json; then
             echo "No changes to rollup.json"
