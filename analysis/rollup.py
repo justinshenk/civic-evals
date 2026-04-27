@@ -103,9 +103,50 @@ def collect_eval_meta(evals_dir: Path) -> list[dict[str, Any]]:
                 "readme_url": (
                     f"https://github.com/justinshenk/civic-evals/blob/main/evals/{d.name}/README.md"
                 ),
+                "tasks": [_task_summary(t) for t in tasks],
             }
         )
     return out
+
+
+_REFUSAL_RE = re.compile(
+    r"refusal_expected\s*=\s*(refuse|answer|hedge)\b", re.IGNORECASE
+)
+
+
+def _task_summary(task: Any) -> dict[str, Any]:
+    """Compact per-task blob for rendering in the site.
+
+    Truncates rubric to a one-liner so the JSON payload doesn't balloon
+    — the full rubric is in tasks.jsonl on GitHub for anyone who wants it.
+    """
+    extras = task.metadata.extras or {}
+    notes = task.metadata.notes or ""
+    refusal_expected = extras.get("refusal_expected")
+    if not refusal_expected:
+        m = _REFUSAL_RE.search(notes)
+        if m:
+            refusal_expected = m.group(1).lower()
+
+    rubric_snippet = None
+    if task.rubric:
+        rubric_snippet = task.rubric.split(".")[0].strip()
+        if len(rubric_snippet) > 220:
+            rubric_snippet = rubric_snippet[:217] + "…"
+
+    return {
+        "id": task.id,
+        "input": task.input,
+        "subdomain": task.subdomain,
+        "difficulty": task.metadata.difficulty,
+        "tags": task.metadata.tags,
+        "persona": (task.persona.name if task.persona and task.persona.name else None),
+        "scorer_kind": "rubric" if task.rubric else "target",
+        "target": task.target,
+        "rubric_snippet": rubric_snippet,
+        "refusal_expected": refusal_expected,
+        "source": task.metadata.source,
+    }
 
 
 _HEADING_RE = re.compile(r"^#+\s")

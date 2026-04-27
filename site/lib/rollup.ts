@@ -22,6 +22,20 @@ export type RollupRow = {
   sub_scores: SubScores | null;
 };
 
+export type TaskSummary = {
+  id: string;
+  input: string;
+  subdomain: string;
+  difficulty: "easy" | "medium" | "hard";
+  tags: string[];
+  persona: string | null;
+  scorer_kind: "rubric" | "target";
+  target: string | null;
+  rubric_snippet: string | null;
+  refusal_expected: "refuse" | "answer" | "hedge" | null;
+  source: string;
+};
+
 export type EvalMeta = {
   name: string;
   description: string;
@@ -31,6 +45,7 @@ export type EvalMeta = {
   personas_used: string[];
   scorer_kinds: string[];
   readme_url: string;
+  tasks: TaskSummary[];
 };
 
 export type Rollup = {

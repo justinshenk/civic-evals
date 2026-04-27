@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { fmt, groupBy, meanBy, type Rollup, type EvalMeta } from "@/lib/rollup";
 
 export function EvalCards({ rollup }: { rollup: Rollup }) {
@@ -25,9 +26,16 @@ function EvalCard({ meta, rows }: { meta: EvalMeta; rows: Rollup["rows"] }) {
   const totalDiff = Object.values(meta.difficulty).reduce((a, b) => a + b, 0) || 1;
 
   return (
-    <article className="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5 flex flex-col gap-3">
+    <article className="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5 flex flex-col gap-3 hover:border-zinc-400 dark:hover:border-zinc-600 transition-colors">
       <header className="flex items-baseline justify-between gap-3">
-        <h3 className="font-mono text-sm font-medium tracking-tight">{meta.name}</h3>
+        <h3 className="font-mono text-sm font-medium tracking-tight">
+          <Link
+            href={`/evals/${meta.name}`}
+            className="hover:underline decoration-zinc-400 underline-offset-4"
+          >
+            {meta.name}
+          </Link>
+        </h3>
         <span
           className="font-mono text-xs tabular-nums text-zinc-500 dark:text-zinc-400"
           title="mean of all scorers, all rows"
@@ -71,12 +79,12 @@ function EvalCard({ meta, rows }: { meta: EvalMeta; rows: Rollup["rows"] }) {
 
       <footer className="pt-2 mt-auto flex items-center justify-between text-xs">
         <ScorerBadges kinds={meta.scorer_kinds} />
-        <a
-          href={meta.readme_url}
+        <Link
+          href={`/evals/${meta.name}`}
           className="text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 underline decoration-zinc-300 dark:decoration-zinc-700 underline-offset-3"
         >
-          README →
-        </a>
+          tasks →
+        </Link>
       </footer>
     </article>
   );
