@@ -9,9 +9,9 @@ name: refresh-results
 on:
   workflow_dispatch:
     inputs:
-      model:
-        description: "Subject model (inspect-ai model spec)"
-        default: "anthropic/claude-sonnet-4-6"
+      models:
+        description: "Comma-separated subject models (inspect-ai specs). Defaults run anthropic + openai if both keys are set."
+        default: ""
         required: false
       limit:
         description: "Per-eval sample cap; leave blank to run the full suite"
@@ -29,6 +29,7 @@ jobs:
     # secrets context isn't available in job-level if; bind to env first.
     env:
       HAS_ANTHROPIC_KEY: ${{ secrets.ANTHROPIC_API_KEY != '' }}
+      HAS_OPENAI_KEY: ${{ secrets.OPENAI_API_KEY != '' }}
     steps:
       - if: env.HAS_ANTHROPIC_KEY == 'true'
         uses: actions/checkout@v4
@@ -38,25 +39,41 @@ jobs:
           enable-cache: true
       - if: env.HAS_ANTHROPIC_KEY == 'true'
         run: uv python install 3.11 && uv sync --all-extras
-      - name: Run each eval
+      - name: Run each eval against each available provider
         if: env.HAS_ANTHROPIC_KEY == 'true'
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
           mkdir -p logs
-          MODEL="${{ inputs.model || 'anthropic/claude-sonnet-4-6' }}"
           LIMIT="${{ inputs.limit }}"
           LIMIT_FLAG=""
           if [ -n "$LIMIT" ]; then LIMIT_FLAG="--limit $LIMIT"; fi
-          for eval_dir in evals/*/; do
-            name="$(basename "$eval_dir")"
-            if [ "$name" = "_template" ]; then continue; fi
-            echo "::group::$name"
-            uv run inspect eval "$eval_dir/eval.py" \
-              --model "$MODEL" \
-              $LIMIT_FLAG \
-              --log-dir logs/
-            echo "::endgroup::"
+
+          # Build the model list. Manual override beats auto-selection.
+          MODELS_INPUT="${{ inputs.models }}"
+          if [ -n "$MODELS_INPUT" ]; then
+            IFS=',' read -ra MODELS <<< "$MODELS_INPUT"
+          else
+            MODELS=("anthropic/claude-sonnet-4-6")
+            if [ "$HAS_OPENAI_KEY" = "true" ]; then
+              MODELS+=("openai/gpt-4o")
+            fi
+          fi
+
+          echo "Running models: ${MODELS[*]}"
+          for MODEL in "${MODELS[@]}"; do
+            for eval_dir in evals/*/; do
+              name="$(basename "$eval_dir")"
+              if [ "$name" = "_template" ]; then continue; fi
+              echo "::group::$MODEL · $name"
+              uv run inspect eval "$eval_dir/eval.py" \
+                --model "$MODEL" \
+                $LIMIT_FLAG \
+                --log-dir logs/ \
+                || echo "::warning::$MODEL · $name failed; continuing"
+              echo "::endgroup::"
+            done
           done
       - name: Regenerate rollup.json
         if: env.HAS_ANTHROPIC_KEY == 'true'
