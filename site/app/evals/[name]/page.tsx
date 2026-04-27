@@ -1,6 +1,14 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { fmt, groupBy, loadRollup, meanBy, type RollupRow, type TaskSummary } from "@/lib/rollup";
+import { FermiRangeBar } from "@/app/components/FermiRangeBar";
+import {
+  fmt,
+  groupBy,
+  loadRollup,
+  meanBy,
+  type RollupRow,
+  type TaskSummary,
+} from "@/lib/rollup";
 
 export function generateStaticParams() {
   return loadRollup().evals_meta.map((m) => ({ name: m.name }));
@@ -145,6 +153,11 @@ function TaskRow({
   scorers: string[];
 }) {
   const byScorer = groupBy(rows, (r) => r.scorer);
+  // Fermi tasks: find a row whose scorer surfaced truth/CI diagnostics so
+  // the range bar has data to draw. Any provider's row works for shape.
+  const fermiRow = rows.find(
+    (r) => r.score_metadata && typeof r.score_metadata.truth === "number",
+  );
 
   return (
     <>
@@ -190,7 +203,10 @@ function TaskRow({
               <span className="font-mono">{task.subdomain}</span> ·{" "}
               <span className="font-mono">{task.tags.join(", ") || "—"}</span>
             </summary>
-            <div className="pt-2 pb-1 space-y-1.5 text-zinc-600 dark:text-zinc-400 leading-relaxed">
+            <div className="pt-3 pb-1 space-y-3 text-zinc-600 dark:text-zinc-400 leading-relaxed">
+              {fermiRow && fermiRow.score_metadata && (
+                <FermiRangeBar diag={fermiRow.score_metadata} />
+              )}
               {task.scorer_kind === "rubric" ? (
                 <p>
                   <span className="text-zinc-400 dark:text-zinc-500 font-mono mr-2">rubric:</span>
@@ -206,6 +222,13 @@ function TaskRow({
                 <span className="text-zinc-400 dark:text-zinc-500 font-mono mr-2">source:</span>
                 {task.source}
               </p>
+              <PersonaAttrsLine attrs={rows[0]?.persona_attrs ?? null} />
+              {rows[0]?.completion && (
+                <CompletionBlock
+                  completion={rows[0].completion}
+                  provider={rows[0].provider}
+                />
+              )}
               {rows[0]?.explanation && (
                 <p>
                   <span className="text-zinc-400 dark:text-zinc-500 font-mono mr-2">last run:</span>
@@ -261,6 +284,60 @@ function ScoreCell({ score }: { score: number | null }) {
   else if (score >= 0.6) color = "text-amber-600 dark:text-amber-400";
   else color = "text-rose-600 dark:text-rose-400";
   return <span className={color}>{fmt(score)}</span>;
+}
+
+function PersonaAttrsLine({
+  attrs,
+}: {
+  attrs: RollupRow["persona_attrs"];
+}) {
+  if (!attrs) return null;
+  // Skip default-y attrs to keep the line short; only show non-baseline values.
+  const baseline: Record<string, string> = {
+    lang_fluency: "fluent",
+    education: "unspecified",
+    political_lean: "unspecified",
+    urgency: "medium",
+    digital_literacy: "medium",
+  };
+  const interesting = Object.entries(attrs).filter(
+    ([k, v]) => k !== "role" && baseline[k] !== v,
+  );
+  if (interesting.length === 0) return null;
+  return (
+    <p className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+      <span className="text-zinc-400 dark:text-zinc-500 font-mono mr-1">persona:</span>
+      <span className="font-mono text-zinc-700 dark:text-zinc-200">{attrs.role}</span>
+      {interesting.map(([k, v]) => (
+        <span
+          key={k}
+          className="inline-flex items-center rounded bg-zinc-100 dark:bg-zinc-800 px-1.5 py-0.5 text-[10px] font-mono text-zinc-600 dark:text-zinc-300"
+        >
+          {k.replace(/_/g, " ")}={v}
+        </span>
+      ))}
+    </p>
+  );
+}
+
+function CompletionBlock({
+  completion,
+  provider,
+}: {
+  completion: string;
+  provider: string;
+}) {
+  return (
+    <div className="rounded border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-3">
+      <div className="mb-1.5 flex items-center justify-between text-[10px] font-mono uppercase tracking-wide text-zinc-400 dark:text-zinc-500">
+        <span>model output</span>
+        <span>{provider}</span>
+      </div>
+      <p className="whitespace-pre-wrap font-mono text-[11px] leading-relaxed text-zinc-700 dark:text-zinc-300">
+        {completion}
+      </p>
+    </div>
+  );
 }
 
 function SectionHeader({ title, hint }: { title: string; hint: string }) {

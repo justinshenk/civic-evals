@@ -7,11 +7,29 @@ export type SubScores = {
   refusal_appropriateness?: number;
 };
 
+export type PersonaAttrs = {
+  role: string;
+  lang_fluency: string;
+  education: string;
+  political_lean: string;
+  urgency: string;
+  digital_literacy: string;
+};
+
+export type ScoreDiagnostics = {
+  truth?: number;
+  estimate?: number;
+  ci_low?: number;
+  ci_high?: number;
+  parse_success?: boolean;
+};
+
 export type RollupRow = {
   eval: string;
   task_id: string;
   provider: string;
   persona: string;
+  persona_attrs: PersonaAttrs | null;
   domain: string | null;
   subdomain: string | null;
   difficulty: string | null;
@@ -19,7 +37,9 @@ export type RollupRow = {
   scorer: string;
   score: number | null;
   explanation: string;
+  completion: string;
   sub_scores: SubScores | null;
+  score_metadata: ScoreDiagnostics | null;
 };
 
 export type TaskSummary = {

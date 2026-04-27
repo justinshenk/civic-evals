@@ -36,15 +36,19 @@ def rollup(log_dir: Path) -> pd.DataFrame:
         for sample in log.samples or []:
             meta = sample.metadata or {}
             persona = meta.get("persona")
-            persona_name = _persona_label(persona)
+            persona_role = _persona_label(persona)
+            persona_attrs = persona if isinstance(persona, dict) else None
+            completion = _truncate(_completion_text(sample), 600)
             scores = sample.scores or {}
             for scorer_name, score in scores.items():
+                score_meta = score.metadata or {}
                 rows.append(
                     {
                         "eval": eval_name,
                         "task_id": sample.id,
                         "provider": provider,
-                        "persona": persona_name,
+                        "persona": persona_role,
+                        "persona_attrs": persona_attrs,
                         "domain": meta.get("domain"),
                         "subdomain": meta.get("subdomain"),
                         "difficulty": meta.get("difficulty"),
@@ -52,10 +56,37 @@ def rollup(log_dir: Path) -> pd.DataFrame:
                         "scorer": scorer_name,
                         "score": _as_float(score.value),
                         "explanation": score.explanation or "",
-                        "sub_scores": (score.metadata or {}).get("sub_scores"),
+                        "completion": completion,
+                        "sub_scores": score_meta.get("sub_scores"),
+                        "score_metadata": _scorer_diagnostics(score_meta),
                     }
                 )
     return pd.DataFrame(rows)
+
+
+# Whitelist of scorer-metadata keys the site needs (e.g. fermi range bar).
+# Pass-through would bloat the rollup; named keys keep the contract explicit.
+_DIAG_KEYS = ("truth", "estimate", "ci_low", "ci_high", "parse_success")
+
+
+def _scorer_diagnostics(score_meta: dict[str, Any]) -> dict[str, Any] | None:
+    out = {k: score_meta[k] for k in _DIAG_KEYS if k in score_meta}
+    return out or None
+
+
+def _completion_text(sample: Any) -> str:
+    output = getattr(sample, "output", None)
+    if output is None:
+        return ""
+    text = getattr(output, "completion", None)
+    return text if isinstance(text, str) else ""
+
+
+def _truncate(text: str, limit: int) -> str:
+    text = text.strip()
+    if len(text) <= limit:
+        return text
+    return text[: limit - 1].rstrip() + "…"
 
 
 def collect_eval_meta(evals_dir: Path) -> list[dict[str, Any]]:
