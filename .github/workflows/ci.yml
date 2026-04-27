@@ -25,10 +25,13 @@ jobs:
   smoke-run:
     runs-on: ubuntu-latest
     needs: lint-and-schema
-    # The `secrets` context is not available in job-level `if`. Map to env
-    # at job level, then guard each step on env.HAS_ANTHROPIC_KEY.
+    # secrets context isn't available in job-level if. Bind to env, then
+    # gate each step. Note: fork PRs *legitimately* don't have the secret,
+    # so skipping is the right behavior here — but we surface an explicit
+    # warning so a deleted-secret-on-main scenario isn't invisibly green.
     env:
       HAS_ANTHROPIC_KEY: ${{ secrets.ANTHROPIC_API_KEY != '' }}
+      IS_FORK_PR: ${{ github.event.pull_request.head.repo.fork == true }}
     strategy:
       fail-fast: false
       matrix:
@@ -38,6 +41,16 @@ jobs:
           - policy_impact_personalization
           - fermi_civic_estimation
     steps:
+      - name: Provider key check
+        run: |
+          if [ "$HAS_ANTHROPIC_KEY" = "true" ]; then
+            echo "key present; smoke-run will execute"
+          elif [ "$IS_FORK_PR" = "true" ]; then
+            echo "::notice::Fork PR — smoke-run skipped by design (secrets unavailable to forks)"
+          else
+            echo "::error::ANTHROPIC_API_KEY missing on a non-fork run. Re-add the secret in repo settings."
+            exit 1
+          fi
       - if: env.HAS_ANTHROPIC_KEY == 'true'
         uses: actions/checkout@v4
       - if: env.HAS_ANTHROPIC_KEY == 'true'

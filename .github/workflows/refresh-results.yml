@@ -31,16 +31,22 @@ jobs:
       HAS_ANTHROPIC_KEY: ${{ secrets.ANTHROPIC_API_KEY != '' }}
       HAS_OPENAI_KEY: ${{ secrets.OPENAI_API_KEY != '' }}
     steps:
-      - if: env.HAS_ANTHROPIC_KEY == 'true'
-        uses: actions/checkout@v4
-      - if: env.HAS_ANTHROPIC_KEY == 'true'
-        uses: astral-sh/setup-uv@v3
+      # Fail loudly if no provider keys are set rather than letting every
+      # subsequent step skip silently with a green checkmark — a missing
+      # secret previously looked indistinguishable from a passing run.
+      - name: Require at least one provider key
+        run: |
+          if [ "$HAS_ANTHROPIC_KEY" != "true" ] && [ "$HAS_OPENAI_KEY" != "true" ]; then
+            echo "::error::No provider key configured. Set ANTHROPIC_API_KEY or OPENAI_API_KEY as a repo secret."
+            exit 1
+          fi
+          echo "anthropic=$HAS_ANTHROPIC_KEY openai=$HAS_OPENAI_KEY"
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v3
         with:
           enable-cache: true
-      - if: env.HAS_ANTHROPIC_KEY == 'true'
-        run: uv python install 3.11 && uv sync --all-extras
+      - run: uv python install 3.11 && uv sync --all-extras
       - name: Run each eval against each available provider
-        if: env.HAS_ANTHROPIC_KEY == 'true'
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
@@ -94,14 +100,12 @@ jobs:
             done
           done
       - name: Regenerate rollup.json
-        if: env.HAS_ANTHROPIC_KEY == 'true'
         run: |
           mkdir -p site/public/data
           uv run python analysis/rollup.py logs/ \
             --format json \
             -o site/public/data/rollup.json
       - name: Commit if changed
-        if: env.HAS_ANTHROPIC_KEY == 'true'
         run: |
           if git diff --quiet -- site/public/data/rollup.json; then
             echo "No changes to rollup.json"

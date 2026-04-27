@@ -423,6 +423,20 @@ def _auroc(scores: list[float], labels: list[int]) -> float | None:
     return wins / (len(pos) * len(neg))
 
 
+def _atomic_write_text(path: Path, text: str) -> None:
+    """Write to a sibling .tmp then rename(atomic on POSIX) over target.
+
+    A naive ``write_text`` truncates target on open, so a crash mid-write
+    (disk full, signal, OOM) leaves a partial file. The site's
+    ``JSON.parse`` would then silently fall back to EmptyState on the
+    next deploy. Same-directory tmp file ensures the rename stays
+    atomic across the same filesystem.
+    """
+    tmp = path.with_name(path.name + ".tmp")
+    tmp.write_text(text)
+    tmp.replace(path)
+
+
 def _clean_nans(obj: Any) -> Any:
     """Recursively replace NaN floats with None.
 
@@ -496,7 +510,7 @@ def main() -> int:
         }
         text = _json.dumps(payload, default=str, indent=2, allow_nan=False)
         if args.output:
-            args.output.write_text(text)
+            _atomic_write_text(args.output, text)
         else:
             sys.stdout.write(text)
     else:

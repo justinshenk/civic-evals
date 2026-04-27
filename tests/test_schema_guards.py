@@ -64,6 +64,30 @@ def test_persona_name_xor_attributes() -> None:
         )
 
 
+def test_persona_smell_covers_every_canonical_role() -> None:
+    """Adding a canonical persona must extend the smell guard automatically.
+
+    Regression test for the prior implementation, which hardcoded three
+    role-specific phrases — meaning new roles were silently uncovered.
+    """
+    from p3.personas.canonical import names
+
+    base = {
+        "id": "smell-{i}",
+        "domain": "x",
+        "subdomain": "y",
+        "target": "answer",
+        "metadata": {"difficulty": "easy", "source": "src", "tags": ["t"]},
+    }
+    for i, role in enumerate(names()):
+        phrasing = role.replace("_", " ")
+        for prefix in ("As a", "I am a", "I'm a", "As an", "I am an"):
+            payload = {**base, "id": f"smell-{i}-{prefix.replace(' ', '_')}",
+                       "input": f"{prefix} {phrasing}, what do I need to know?"}
+            with pytest.raises(ValidationError):
+                Task.model_validate(payload)
+
+
 def test_valid_task_accepts() -> None:
     Task.model_validate(
         {

@@ -41,8 +41,13 @@ Pick from `src/p3/scorers/`:
 | `appropriate_refusal()` | Your task's correct behavior is refusing, answering, or hedging (set `metadata.notes: refusal_expected=...`). |
 | `fermi_calibration()` | Your task asks for a numeric estimate. The scorer parses `ESTIMATE: <n>, CI80: <l>-<h>` and returns Winkler-based calibration. See `evals/fermi_civic_estimation/`. |
 | `token_logprob_uncertainty()` | Non-judge UQ signal: mean negative token logprob. Cheapest of the LM-Polygraph baselines. Requires `generate(logprobs=True)` and an OpenAI subject (Anthropic doesn't expose token logprobs). |
-| `consistency_across_paraphrases()` | Flagship runs only — pair with `paraphrase_then_generate` solver. Expensive. |
-| `citation_verifiability()` | Tasks where the model is expected to cite. Makes live HTTP calls. |
+
+**Experimental scorers** — listed in `p3.scorers.EXPERIMENTAL` but not yet exercised by any eval. Importable but not in `__all__`. A PR adding one of these to a new eval must also add tests for the path it activates:
+
+| Scorer | Status |
+|---|---|
+| `consistency_across_paraphrases()` | Implementation ready; needs the `paraphrase_then_generate` solver, no eval currently uses it. |
+| `citation_verifiability()` | Implementation ready; makes live HTTP calls so test setup needs network mocking. |
 
 **Do not invent new scorers without discussing on the PR first.** The rollup layer depends on scorers returning the standard shape; a bespoke scorer's numbers won't compare to anyone else's.
 

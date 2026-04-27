@@ -80,18 +80,26 @@ class Task(BaseModel):
 
     @model_validator(mode="after")
     def _persona_not_in_input(self) -> Task:
-        lowered = self.input.lower()
-        # A cheap guard: mentees sometimes smuggle persona into input
-        # with phrases like "As a first-time voter, ...". Real enforcement
-        # happens in CI review, but catch the obvious cases.
-        smells = ("as a first-time voter", "i am a journalist", "i'm an election worker")
-        for smell in smells:
-            if smell in lowered:
-                raise ValueError(
-                    f"Task {self.id!r}: persona appears to be embedded in input "
-                    f"({smell!r}). Move it to the persona slot so persona x task "
-                    "ablations remain possible."
-                )
+        # Mentees sometimes smuggle persona into input with phrases like
+        # "As a first-time voter, …" — that defeats the persona ablation.
+        # Smell list is derived from the canonical persona roles so newly
+        # added personas inherit the guard automatically. Hyphens in the
+        # input are normalized to spaces so "first-time voter" and
+        # "first time voter" both trip the same check. Local import to
+        # avoid a circular dep (personas → schemas → personas).
+        from p3.personas.canonical import names as _persona_names
+
+        normalized = self.input.lower().replace("-", " ")
+        for role in _persona_names():
+            phrasing = role.replace("_", " ")
+            for smell in (f"as a {phrasing}", f"i am a {phrasing}", f"i'm a {phrasing}",
+                          f"as an {phrasing}", f"i am an {phrasing}", f"i'm an {phrasing}"):
+                if smell in normalized:
+                    raise ValueError(
+                        f"Task {self.id!r}: persona appears to be embedded in input "
+                        f"({smell!r}). Move it to the persona slot so persona x task "
+                        "ablations remain possible."
+                    )
         return self
 
 
