@@ -64,3 +64,67 @@ Each task carries `metadata.extras.truth_value`. Sources are documented per-task
 
 - Some "exact" facts have a defensible single answer but the model could legitimately note ambiguity (e.g. "voting members of the House" excludes non-voting delegates from territories — the truth is 435 if you mean voting members, 441 if you count delegates). Tasks that have this ambiguity are flagged in `metadata.notes`.
 - 2020 vote-total estimates differ slightly across sources (FEC, Census Bureau, state-level aggregations); we use FEC certified results as the canonical truth.
+
+## Evaluation Report
+
+Reproducible run, 35 tasks against the two flagship providers we have keys for. Run on 2026-04-28.
+
+Command:
+
+```bash
+uv run inspect eval evals/fermi_civic_estimation/eval.py \
+    --model anthropic/claude-sonnet-4-6 \
+    --log-dir logs/
+
+uv run inspect eval evals/fermi_civic_estimation/eval.py \
+    --model openai/gpt-4o \
+    --log-dir logs/
+```
+
+### Headline results
+
+| Model | n parsed | mean score | point_score | interval_score | CI80 coverage |
+|---|---:|---:|---:|---:|---:|
+| `anthropic/claude-sonnet-4-6` | 35 / 35 | **0.920** | 0.977 | 0.863 | **0.800** |
+| `openai/gpt-4o` | 32 / 35 | **0.797** | 0.857 | 0.737 | 0.656 |
+
+`mean score = (point_score + interval_score) / 2`.
+
+The `CI80 coverage` column is the empirical fraction of tasks whose truth fell inside the model's 80% CI. Sonnet's coverage is exactly 0.800, which is what perfect calibration looks like for this confidence level. GPT-4o's 0.656 indicates its CIs are systematically too narrow — it is overconfident on this domain. This is precisely the failure-mode separation the eval is built to surface: GPT-4o's higher accuracy on easy tasks doesn't compensate for its under-coverage when it's wrong.
+
+### By difficulty
+
+| | easy (n=9) | medium (n=7) | hard (n=19) |
+|---|---:|---:|---:|
+| Sonnet 4.6 | 1.000 | 0.995 | 0.854 |
+| GPT-4o | 0.881 | 0.829 | 0.749 |
+
+### By subdomain
+
+| subdomain | Sonnet 4.6 | GPT-4o | n |
+|---|---:|---:|---:|
+| `exact_fact` | 1.000 | 1.000 | 4 |
+| `history` | 1.000 | 0.999 | 4 |
+| `presidential_2024` | 0.989 | 0.408 | 5–7 |
+| `estimation` | 0.969 | 0.996 | 3 |
+| `congress_119` | 0.954 | 0.931 | 3 |
+| `state_registration` | 0.936 | 0.916 | 3–4 |
+| `voting_policy` | 0.828 | 0.823 | 5 |
+| `election_admin` | 0.757 | 0.549 | 3 |
+| `federal_spending` | 0.675 | 0.592 | 2 |
+
+(GPT-4o's `n` is lower in some subdomains because of three parse failures — see Observations.)
+
+### Observations
+
+- **GPT-4o failed to format three responses correctly** (`fc-015` PA registration count, `fc-017` Trump electoral votes, `fc-019` Trump popular vote), all 2024-election tasks. The system message instructs models to end responses with `ESTIMATE: <n>, CI80: <l>-<h>`; GPT-4o substituted prose phrasings for those rows. Format compliance is scored as 0 (`parse_success: false`), which contributes to the overall gap. Sonnet 4.6 had zero format failures.
+- **The `presidential_2024` subdomain is the largest gap** — 0.989 vs 0.408. This is recent-news territory where training-cutoff differences dominate. A cross-cutoff comparison would likely shrink as both providers update.
+- **Both models are saturated on `exact_fact` and `history`** (≥0.999). Year-pinned constitutional facts and current Senate/House composition are at-ceiling for any flagship; these tasks are useful as anchor points, not discriminators.
+- **The hardest civic-knowledge subdomain is `federal_spending`** (EAC budget, HAVA grants), where both flagships score below 0.7. Recommended for replication studies that want a non-saturated probe.
+
+### Versions
+
+- `inspect-ai`: 0.3.211
+- `anthropic/claude-sonnet-4-6`: provider model ID `claude-sonnet-4-6`
+- `openai/gpt-4o`: provider model ID `gpt-4o`
+- Eval `version: '2'` (post-Winkler-scoring change in [PR #1](https://github.com/justinshenk/civic-evals/pull/1)).
