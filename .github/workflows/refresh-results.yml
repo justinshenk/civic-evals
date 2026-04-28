@@ -4,7 +4,9 @@ name: refresh-results
 # commits the update. Vercel picks up the commit and redeploys the site.
 #
 # Triggered either manually (Actions tab → Run workflow) or weekly at
-# Sunday 08:00 UTC. Requires the repo secret ANTHROPIC_API_KEY.
+# Sunday 08:00 UTC. Requires the repo secret ANTHROPIC_API_KEY (and
+# optionally OPENAI_API_KEY for cross-provider runs, SLACK_WEBHOOK_URL
+# for notifications — all secrets are gracefully no-op when unset).
 
 on:
   workflow_dispatch:
@@ -30,6 +32,7 @@ jobs:
     env:
       HAS_ANTHROPIC_KEY: ${{ secrets.ANTHROPIC_API_KEY != '' }}
       HAS_OPENAI_KEY: ${{ secrets.OPENAI_API_KEY != '' }}
+      HAS_SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL != '' }}
     steps:
       # Fail loudly if no provider keys are set rather than letting every
       # subsequent step skip silently with a green checkmark — a missing
@@ -99,6 +102,14 @@ jobs:
               echo "::endgroup::"
             done
           done
+      - name: Capture prior rollup for delta
+        run: |
+          # Snapshot the current committed rollup BEFORE we overwrite it,
+          # so the Slack summary can compute Δ vs. the last run.
+          mkdir -p /tmp/prior
+          if [ -f site/public/data/rollup.json ]; then
+            cp site/public/data/rollup.json /tmp/prior/rollup.json
+          fi
       - name: Regenerate rollup.json
         run: |
           mkdir -p site/public/data
@@ -106,9 +117,11 @@ jobs:
             --format json \
             -o site/public/data/rollup.json
       - name: Commit if changed
+        id: commit
         run: |
           if git diff --quiet -- site/public/data/rollup.json; then
             echo "No changes to rollup.json"
+            echo "committed=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
           git config user.name "github-actions[bot]"
@@ -116,3 +129,36 @@ jobs:
           git add site/public/data/rollup.json
           git commit -m "refresh: update rollup.json from eval run"
           git push
+          echo "committed=true" >> "$GITHUB_OUTPUT"
+          echo "sha=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
+      - name: Slack notify (success)
+        if: success() && env.HAS_SLACK_WEBHOOK == 'true'
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          SHA: ${{ steps.commit.outputs.sha }}
+        run: |
+          PRIOR_FLAG=""
+          if [ -f /tmp/prior/rollup.json ]; then
+            PRIOR_FLAG="--prior /tmp/prior/rollup.json"
+          fi
+          uv run python analysis/slack_summary.py site/public/data/rollup.json \
+            $PRIOR_FLAG \
+            --run-url "$RUN_URL" \
+            --commit-sha "${SHA:-no-commit}" \
+            > /tmp/slack-payload.json
+          curl -fsS -X POST -H 'Content-Type: application/json' \
+            --data @/tmp/slack-payload.json "$SLACK_WEBHOOK_URL"
+      - name: Slack notify (failure)
+        # always() so this still fires when a prior step failed; key check
+        # prevents firing on fork-PR runs that wouldn't have the secret anyway.
+        if: failure() && env.HAS_SLACK_WEBHOOK == 'true'
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          uv run python analysis/slack_summary.py --mode failure \
+            --run-url "$RUN_URL" > /tmp/slack-payload.json \
+            || python3 -c "import json; print(json.dumps({'text': 'civic-evals refresh failed'}))" > /tmp/slack-payload.json
+          curl -fsS -X POST -H 'Content-Type: application/json' \
+            --data @/tmp/slack-payload.json "$SLACK_WEBHOOK_URL" || true

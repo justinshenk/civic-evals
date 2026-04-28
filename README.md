@@ -36,7 +36,13 @@ pnpm install
 pnpm dev
 ```
 
-The `refresh-results` GitHub Action runs the eval suite on a weekly schedule (and on `workflow_dispatch`), regenerates `rollup.json`, and commits the update. Vercel picks up the commit and redeploys automatically. Requires the `ANTHROPIC_API_KEY` repo secret.
+The `refresh-results` GitHub Action runs the eval suite on a weekly schedule (and on `workflow_dispatch`), regenerates `rollup.json`, and commits the update. Vercel picks up the commit and redeploys automatically.
+
+Repo secrets (set under `Settings → Secrets and variables → Actions`):
+
+- `ANTHROPIC_API_KEY` — required.
+- `OPENAI_API_KEY` — optional. When present, every eval also runs against `openai/gpt-4o`, populating the cross-provider columns on the site.
+- `SLACK_WEBHOOK_URL` — optional. When present, the workflow posts a summary to the configured Slack channel after each successful run (per-eval × provider mean table, calibration AUROC, baseline scores, Δ vs. the previous rollup) and a short failure notification when the run dies. No-op when unset, so unconfigured forks don't try to post anywhere.
 
 Deploying to Vercel: `vercel login && vercel` from the `site/` directory, or import the repo through the Vercel dashboard with **Root Directory** set to `site`.
 

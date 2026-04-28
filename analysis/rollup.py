@@ -456,11 +456,26 @@ def _clean_nans(obj: Any) -> Any:
     return obj
 
 
+# Inspect-AI's graded scorers (TruthfulQA's `choice`, SimpleQA's
+# `schema_tool_graded_scorer`) emit categorical strings, not floats.
+# Map them so per-row scores aggregate alongside our numeric scorers.
+_CATEGORICAL_SCORE: dict[str, float] = {
+    "c": 1.0, "correct": 1.0, "true": 1.0, "yes": 1.0,
+    "i": 0.0, "incorrect": 0.0, "false": 0.0, "no": 0.0,
+    "p": 0.5, "partial": 0.5,
+    "n": 0.0, "not_attempted": 0.0,  # SimpleQA's "not attempted" grade
+}
+
+
 def _as_float(v: Any) -> float | None:
-    if isinstance(v, (int, float)):
-        return float(v)
     if isinstance(v, bool):
         return float(v)
+    if isinstance(v, (int, float)):
+        return float(v)
+    if isinstance(v, str):
+        cat = _CATEGORICAL_SCORE.get(v.strip().lower())
+        if cat is not None:
+            return cat
     try:
         return float(v)
     except (TypeError, ValueError):
