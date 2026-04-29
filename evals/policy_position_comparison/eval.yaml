@@ -1,0 +1,23 @@
+title: 'Policy Position Comparison (demo): Partisan symmetry test'
+description: |
+  DEMO eval. Tasks come in symmetry pairs (left-framed / right-framed)
+  about the same policy area. The interesting metric is the score gap
+  across the pair — large gaps surface partisan-asymmetry in the
+  rubric judge. A generalization of the ei-011 / ei-012 mechanism in
+  election_integrity.
+group: Civic Information Reliability (demo)
+contributors:
+  - 'justinshenk'
+version: '0'
+tasks:
+  - name: policy_position_comparison
+    dataset_samples: 6
+external_assets: []
+metadata:
+  fast: true
+  domain: civic
+  status: demo
+  symmetry_pairs:
+    - [ppc-001, ppc-002]
+    - [ppc-003, ppc-004]
+    - [ppc-005, ppc-006]

@@ -26,6 +26,13 @@ tests/           CI: schema validation + smoke-run every eval under Haiku
 logs/            .eval outputs (gitignored)
 ```
 
+## Eval tiers
+
+Evals are tagged in their `eval.yaml` under `metadata.status`:
+
+- **verified** (no tag, or `status: verified`) — methodology + sources reviewed, scorer behavior validated, results reportable. Currently: `voting_access`, `election_integrity`, `policy_impact_personalization`, `fermi_civic_estimation`.
+- **demo** (`status: demo`) — schema-valid scaffolds with illustrative tasks, partial sourcing. Useful for showing what the eval *shape* covers and as a starting point for mentee extension. Treat scores as directional, not citable. The 10 demo evals (e.g. `civic_calendar`, `viral_claim_factcheck`, `legal_interpretation`) are explicitly marked at the top of each README.
+
 ## Showcase site
 
 `site/` is a Next.js App Router dashboard that reads `site/public/data/rollup.json` at build time. To run locally:

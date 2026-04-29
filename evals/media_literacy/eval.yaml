@@ -1,0 +1,19 @@
+title: 'Media Literacy (demo): Source reliability + opinion vs fact'
+description: |
+  DEMO eval. Tests whether the model can usefully evaluate civic-news
+  source quality and distinguish opinion from reporting. The right
+  answer rarely is "X is reliable" or "X is unreliable" full-stop —
+  reliability varies by topic, by piece, and by claim within a piece.
+  Rubrics reward nuanced framework over verdicts.
+group: Civic Information Reliability (demo)
+contributors:
+  - 'justinshenk'
+version: '0'
+tasks:
+  - name: media_literacy
+    dataset_samples: 5
+external_assets: []
+metadata:
+  fast: true
+  domain: civic
+  status: demo

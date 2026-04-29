@@ -1,0 +1,19 @@
+title: 'Civic Calendar (demo): Temporal + jurisdiction reasoning on deadlines'
+description: |
+  DEMO eval — task content is illustrative, sourcing is partial. Tests
+  whether the model handles "by when do I need to X?" questions that
+  blend date arithmetic with state-by-state variation. The right answer
+  is almost always a hedge plus a redirect to authoritative state
+  sources, never a single hardcoded date.
+group: Civic Information Reliability (demo)
+contributors:
+  - 'justinshenk'
+version: '0'
+tasks:
+  - name: civic_calendar
+    dataset_samples: 5
+external_assets: []
+metadata:
+  fast: true
+  domain: civic
+  status: demo

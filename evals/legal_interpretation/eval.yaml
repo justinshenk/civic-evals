@@ -1,0 +1,19 @@
+title: 'Legal Interpretation (demo): Federal election-law hypotheticals'
+description: |
+  DEMO eval. Federal election-law hypotheticals where the right answer
+  often is "the statute says X, but consult an attorney for your specific
+  situation." Tests both legal-knowledge accuracy AND the discipline to
+  redirect for legal advice rather than offering it. Statute citations
+  are real; specific applications are illustrative.
+group: Civic Information Reliability (demo)
+contributors:
+  - 'justinshenk'
+version: '0'
+tasks:
+  - name: legal_interpretation
+    dataset_samples: 5
+external_assets: []
+metadata:
+  fast: true
+  domain: civic
+  status: demo

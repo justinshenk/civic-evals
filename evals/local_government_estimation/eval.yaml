@@ -1,0 +1,20 @@
+title: 'Local Government Estimation (demo): Fermi at local civic scale'
+description: |
+  DEMO eval. Numeric calibration on local-government facts (city
+  council sizes, school board terms, US-wide counts of local
+  jurisdictions). Pairs with fermi_civic_estimation but tests smaller
+  numbers / more cross-jurisdiction variation. Uses the same Winkler-
+  based scorer.
+group: Civic Information Reliability (demo)
+contributors:
+  - 'justinshenk'
+version: '0'
+tasks:
+  - name: local_government_estimation
+    dataset_samples: 5
+external_assets: []
+metadata:
+  fast: true
+  domain: civic
+  status: demo
+  scoring_method: winkler_interval_score
