@@ -1,4 +1,8 @@
-import { fmt, meanBy, type Rollup } from "@/lib/rollup";
+"use client";
+
+import { useState } from "react";
+import { fmt, meanBy, type Rollup } from "@/lib/rollup-utils";
+import { ProviderSelect } from "@/app/components/ProviderSelect";
 
 const DIMENSIONS = [
   { key: "accuracy", label: "Accuracy" },
@@ -7,20 +11,24 @@ const DIMENSIONS = [
 ] as const;
 
 export function SubScorePanel({ rollup }: { rollup: Rollup }) {
-  const rubricRows = rollup.rows.filter((r) => r.scorer === "rubric_judge" && r.sub_scores);
+  const [provider, setProvider] = useState<string>("All Providers");
 
-  if (rubricRows.length === 0) {
-    return (
-      <p className="text-sm text-zinc-500 dark:text-zinc-400">
-        No rubric_judge runs yet in the rollup.
-      </p>
-    );
-  }
+  const allRubricRows = rollup.rows.filter((r) => r.scorer === "rubric_judge" && r.sub_scores);
+  const providersWithData = new Set(allRubricRows.map((r) => r.provider));
+
+  const rubricRows = allRubricRows.filter(
+    (r) => provider === "All Providers" || r.provider === provider,
+  );
 
   const evals = [...new Set(rubricRows.map((r) => r.eval))].sort();
 
   return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+    <div className="space-y-3">
+      <ProviderSelect id="subscore-provider" provider={provider} providers={[...providersWithData].sort()} onChange={setProvider} />
+      {rubricRows.length === 0 ? (
+        <p className="text-sm text-zinc-500 dark:text-zinc-400">No rubric_judge runs for this provider.</p>
+      ) : (
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {DIMENSIONS.map((dim) => {
         const rows = rubricRows.map((r) => ({
           eval: r.eval,
@@ -57,6 +65,8 @@ export function SubScorePanel({ rollup }: { rollup: Rollup }) {
           </div>
         );
       })}
+      </div>
+      )}
     </div>
   );
 }

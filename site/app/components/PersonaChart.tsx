@@ -1,17 +1,26 @@
 "use client";
 
 import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { type Rollup } from "@/lib/rollup";
+import { useState } from "react";
+import { type Rollup } from "@/lib/rollup-utils";
+import { ProviderSelect } from "@/app/components/ProviderSelect";
 
 type Props = { rollup: Rollup };
 
 export function PersonaChart({ rollup }: Props) {
-  const rubricRows = rollup.rows.filter((r) => r.scorer === "rubric_judge");
+  const [provider, setProvider] = useState<string>("All Providers");
+
+  const allRubricRows = rollup.rows.filter((r) => r.scorer === "rubric_judge");
+  const providersWithData = [...new Set(allRubricRows.map((r) => r.provider))].sort();
+  const rubricRows = allRubricRows.filter(
+    (r) => provider === "All Providers" || r.provider === provider,
+  );
   if (rubricRows.length === 0) {
     return (
-      <p className="text-sm text-zinc-500 dark:text-zinc-400">
-        No rubric_judge rows yet.
-      </p>
+      <div className="space-y-3">
+        <ProviderSelect id="persona-chart-provider" provider={provider} providers={providersWithData} onChange={setProvider} />
+        <p className="text-sm text-zinc-500 dark:text-zinc-400">No rubric_judge rows for this provider.</p>
+      </div>
     );
   }
 
@@ -35,7 +44,9 @@ export function PersonaChart({ rollup }: Props) {
   const palette = ["#2563eb", "#16a34a", "#ea580c", "#9333ea", "#dc2626"];
 
   return (
-    <div className="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4">
+    <div className="space-y-3">
+      <ProviderSelect id="persona-chart-provider" provider={provider} providers={providersWithData} onChange={setProvider} />
+      <div className="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4">
       <div className="h-80">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={data} margin={{ top: 12, right: 16, bottom: 12, left: 0 }}>
@@ -52,6 +63,7 @@ export function PersonaChart({ rollup }: Props) {
             ))}
           </BarChart>
         </ResponsiveContainer>
+      </div>
       </div>
     </div>
   );
