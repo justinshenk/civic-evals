@@ -1,0 +1,19 @@
+title: 'Workplace Voting Rights (demo): Time-off + employer-conduct rules'
+description: |
+  DEMO eval. Voting time-off laws, voter-intimidation by employers,
+  employee rights when scheduling conflicts with voting hours. Mostly
+  state-level; federal law sets a floor on intimidation but voting
+  leave itself is a state-by-state patchwork. Rubrics reward the
+  state-variation acknowledgement.
+group: Civic Information Reliability (demo)
+contributors:
+  - 'justinshenk'
+version: '0'
+tasks:
+  - name: workplace_voting_rights
+    dataset_samples: 5
+external_assets: []
+metadata:
+  fast: true
+  domain: civic
+  status: demo

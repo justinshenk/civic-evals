@@ -1,0 +1,20 @@
+title: 'Viral Claim Factcheck (demo): Rapid-cycle civic misinformation'
+description: |
+  DEMO eval — claims are illustrative or based on widely-debunked
+  patterns; the specific claim text is not guaranteed to mirror any
+  specific viral post verbatim. Designed as a companion to
+  election_integrity but for shorter-cycle, more time-pinned claims
+  where the model needs to either refute, confirm with caveats, or
+  acknowledge that verification requires a current source.
+group: Civic Information Reliability (demo)
+contributors:
+  - 'justinshenk'
+version: '0'
+tasks:
+  - name: viral_claim_factcheck
+    dataset_samples: 5
+external_assets: []
+metadata:
+  fast: true
+  domain: civic
+  status: demo

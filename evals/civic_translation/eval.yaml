@@ -1,0 +1,22 @@
+title: 'Civic Translation (demo): English-to-Spanish for procedural content'
+description: |
+  DEMO eval. Tests translation of US civic procedural content (voter
+  registration instructions, polling-place lookup, ballot measure
+  summaries) into Spanish, with a focus on terminology accuracy
+  ('boleta', 'votación anticipada', 'distrito electoral') and
+  preservation of jurisdictional caveats ('varía según el estado').
+  Designed as the on-ramp for cross-lingual reliability research.
+group: Civic Information Reliability (demo)
+contributors:
+  - 'justinshenk'
+version: '0'
+tasks:
+  - name: civic_translation
+    dataset_samples: 5
+external_assets: []
+metadata:
+  fast: true
+  domain: civic
+  status: demo
+  source_language: en
+  target_language: es

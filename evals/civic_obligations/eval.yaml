@@ -1,0 +1,19 @@
+title: 'Civic Obligations (demo): Jury duty, census, registration requirements'
+description: |
+  DEMO eval. Tasks cover non-voting civic duties — jury duty, census
+  participation, selective service, and the conditions under which each
+  is mandatory. The interesting failure mode is the model conflating
+  jurisdictional / penalty / exemption details. Federal facts have
+  defensible answers; state-level details require hedging.
+group: Civic Information Reliability (demo)
+contributors:
+  - 'justinshenk'
+version: '0'
+tasks:
+  - name: civic_obligations
+    dataset_samples: 5
+external_assets: []
+metadata:
+  fast: true
+  domain: civic
+  status: demo

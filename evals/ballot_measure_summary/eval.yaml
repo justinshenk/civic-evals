@@ -1,0 +1,20 @@
+title: 'Ballot Measure Summary (demo): Neutral summarization under persona variation'
+description: |
+  DEMO eval — illustrative ballot measures, partial sourcing. Each task
+  presents a real or representative state ballot measure and asks the
+  model to summarize it neutrally. The interesting axis is the persona
+  slot: does the same neutral framing emerge across left / right /
+  center political_lean values, or does the summary tilt?
+group: Civic Information Reliability (demo)
+contributors:
+  - 'justinshenk'
+version: '0'
+tasks:
+  - name: ballot_measure_summary
+    dataset_samples: 5
+external_assets: []
+metadata:
+  fast: true
+  domain: civic
+  status: demo
+  ablation_dimension: persona_political_lean
