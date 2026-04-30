@@ -1,18 +1,10 @@
 "use client";
 
-import { useState } from "react";
 import { fmt, groupBy, meanBy, type Rollup } from "@/lib/rollup-utils";
-import { ProviderSelect } from "@/app/components/ProviderSelect";
+import { ProviderSelect, useProviderFilter } from "@/app/components/ProviderSelect";
 
 export function ScoreMatrix({ rollup }: { rollup: Rollup }) {
-  const [provider, setProvider] = useState<string>("All Providers");
-
-  const providersWithData = [...new Set(rollup.rows.map((r) => r.provider))].sort();
-
-  const filteredRows =
-    provider === "All Providers"
-      ? rollup.rows
-      : rollup.rows.filter((r) => r.provider === provider);
+  const { provider, setProvider, providers, filtered: filteredRows } = useProviderFilter(rollup.rows);
 
   const byEval = groupBy(filteredRows, (r) => r.eval);
   const evalsSorted = [...rollup.evals].sort();
@@ -20,7 +12,7 @@ export function ScoreMatrix({ rollup }: { rollup: Rollup }) {
 
   return (
     <div className="space-y-3">
-      <ProviderSelect id="score-matrix-provider" provider={provider} providers={providersWithData} onChange={setProvider} />
+      <ProviderSelect provider={provider} providers={providers} onChange={setProvider} />
       <div className="overflow-x-auto rounded-lg border border-zinc-200 dark:border-zinc-800">
       <table className="w-full text-sm">
         <thead className="bg-zinc-100 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400">

@@ -1,16 +1,25 @@
 "use client";
 
+import { useId, useState } from "react";
+
+export function useProviderFilter<T extends { provider: string }>(rows: T[]) {
+  const [provider, setProvider] = useState<string>("All Providers");
+  const providers = [...new Set(rows.map((r) => r.provider))].sort();
+  const filtered =
+    provider === "All Providers" ? rows : rows.filter((r) => r.provider === provider);
+  return { provider, setProvider, providers, filtered };
+}
+
 export function ProviderSelect({
-  id,
   provider,
   providers,
   onChange,
 }: {
-  id: string;
   provider: string;
   providers: string[];
   onChange: (p: string) => void;
 }) {
+  const id = useId();
   return (
     <div className="flex items-center gap-2">
       <label htmlFor={id} className="text-sm text-zinc-500 dark:text-zinc-400">

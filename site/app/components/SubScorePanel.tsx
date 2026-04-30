@@ -1,8 +1,7 @@
 "use client";
 
-import { useState } from "react";
 import { fmt, meanBy, type Rollup } from "@/lib/rollup-utils";
-import { ProviderSelect } from "@/app/components/ProviderSelect";
+import { ProviderSelect, useProviderFilter } from "@/app/components/ProviderSelect";
 
 const DIMENSIONS = [
   { key: "accuracy", label: "Accuracy" },
@@ -11,20 +10,14 @@ const DIMENSIONS = [
 ] as const;
 
 export function SubScorePanel({ rollup }: { rollup: Rollup }) {
-  const [provider, setProvider] = useState<string>("All Providers");
-
   const allRubricRows = rollup.rows.filter((r) => r.scorer === "rubric_judge" && r.sub_scores);
-  const providersWithData = new Set(allRubricRows.map((r) => r.provider));
-
-  const rubricRows = allRubricRows.filter(
-    (r) => provider === "All Providers" || r.provider === provider,
-  );
+  const { provider, setProvider, providers, filtered: rubricRows } = useProviderFilter(allRubricRows);
 
   const evals = [...new Set(rubricRows.map((r) => r.eval))].sort();
 
   return (
     <div className="space-y-3">
-      <ProviderSelect id="subscore-provider" provider={provider} providers={[...providersWithData].sort()} onChange={setProvider} />
+      <ProviderSelect provider={provider} providers={providers} onChange={setProvider} />
       {rubricRows.length === 0 ? (
         <p className="text-sm text-zinc-500 dark:text-zinc-400">No rubric_judge runs for this provider.</p>
       ) : (
