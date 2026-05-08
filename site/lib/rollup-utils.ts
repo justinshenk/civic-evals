@@ -120,6 +120,23 @@ export type ExternalBaseline = {
   n_rows: number;
 };
 
+// Token-usage and cost per (eval, model). cost_source distinguishes
+// "reported" (provider sent it) from "computed" (priced via the local
+// table) so the UI can footnote estimates.
+export type UsageRow = {
+  eval: string;
+  model: string;
+  n_runs: number;
+  input_tokens: number;
+  output_tokens: number;
+  cache_read_tokens: number;
+  cache_write_tokens: number;
+  reasoning_tokens: number;
+  total_tokens: number;
+  cost_usd: number | null;
+  cost_source: "reported" | "computed" | "mixed" | "unknown";
+};
+
 export type Rollup = {
   generated_at: string;
   n_rows: number;
@@ -132,6 +149,8 @@ export type Rollup = {
   failures: FailureRow[];
   failure_thresholds: Record<string, number>;
   failure_summary: FailureSummary;
+  // Optional so older rollups (pre-usage feature) still parse.
+  usage?: UsageRow[];
   rows: RollupRow[];
 };
 

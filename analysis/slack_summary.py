@@ -92,6 +92,7 @@ def _success_payload(
     summary_lines = _format_eval_table(means, prior_means)
     baseline_lines = _format_baselines(current)
     calib_lines = _format_calibration(current)
+    cost_chip = _format_total_cost(current, prior)
 
     header_text = ":bar_chart: *civic-evals refresh complete*"
     meta_bits = []
@@ -99,6 +100,8 @@ def _success_payload(
         meta_bits.append(f"`{commit_sha}`")
     meta_bits.append(f"{current.get('n_rows', 0)} rows")
     meta_bits.append(f"{len(current.get('providers') or [])} providers")
+    if cost_chip:
+        meta_bits.append(cost_chip)
     if run_url:
         meta_bits.append(f"<{run_url}|run>")
     meta_bits.append(f"<{SITE_URL}|site>")
@@ -219,6 +222,49 @@ def _format_calibration(rollup: dict[str, Any]) -> list[str]:
             tag = f"AUROC *{v:.3f}* (n={s.get('n', 0)}, {s.get('n_correct', 0)} correct)"
         out.append(f"• `{s.get('eval')}` · `{s.get('provider')}` — {tag}")
     return out
+
+
+def _format_total_cost(
+    current: dict[str, Any], prior: dict[str, Any] | None
+) -> str | None:
+    """Single chip for the meta line: ``$0.33`` or ``$0.33 (▲ +0.05)``.
+
+    Returns ``None`` when the rollup has no usage block (older rollup,
+    or pre-feature) so the meta line stays clean. Marks estimates with
+    a trailing ``*`` when any contributing row was priced from the
+    table rather than reported by the provider.
+    """
+    cur_total, cur_estimated = _sum_cost(current)
+    if cur_total is None:
+        return None
+    chip = f"${cur_total:,.2f}" + ("*" if cur_estimated else "")
+    if prior:
+        prv_total, _ = _sum_cost(prior)
+        if prv_total is not None and abs(cur_total - prv_total) >= 0.005:
+            arrow = "▲" if cur_total > prv_total else "▼"
+            chip += f" ({arrow} {abs(cur_total - prv_total):+.2f})"
+    return chip
+
+
+def _sum_cost(rollup: dict[str, Any] | None) -> tuple[float | None, bool]:
+    """Sum ``cost_usd`` across the usage block. Second tuple element is
+    True if any row's source was non-reported (estimate marker for the UI)."""
+    if not rollup:
+        return None, False
+    rows = rollup.get("usage") or []
+    if not rows:
+        return None, False
+    total = 0.0
+    estimated = False
+    for r in rows:
+        c = r.get("cost_usd")
+        if c is None:
+            # An unknown-priced row poisons the total — be honest about it.
+            return None, False
+        total += float(c)
+        if r.get("cost_source") in ("computed", "mixed"):
+            estimated = True
+    return total, estimated
 
 
 def _format_baselines(rollup: dict[str, Any]) -> list[str]:

@@ -332,6 +332,30 @@ def collect_external_baselines(df: pd.DataFrame) -> list[dict[str, Any]]:
     return out
 
 
+def _collect_usage(log_dir: Path) -> list[dict[str, Any]]:
+    """Token-usage and cost rows per (eval, model). Same script-vs-module
+    import dance as ``_staleness_helpers``.
+
+    Failures here (missing inspect-ai, malformed logs) shouldn't block a
+    rollup; degrade to an empty list and let the caller render an empty
+    usage block.
+    """
+    try:
+        from analysis.usage import collect_usage
+    except ModuleNotFoundError:
+        try:
+            from usage import collect_usage  # type: ignore[import-not-found, no-redef]
+        except ModuleNotFoundError:
+            return []
+    try:
+        return collect_usage(log_dir)
+    except Exception as e:  # malformed log, etc. — don't kill the rollup
+        import logging
+
+        logging.getLogger(__name__).warning("usage collection failed: %s", e)
+        return []
+
+
 def _staleness_helpers() -> tuple[Any, Any]:
     """Local import that works both as a script and as a module.
 
@@ -665,6 +689,10 @@ def main() -> int:
     _, judge_failures = _staleness_helpers()
     judge_failures(failures)
     fail_summary = failure_summary(failures)
+    # Token usage + cost. Re-traverses the logs (separate ModelUsage path
+    # from the per-sample row extraction above) — cheap relative to the
+    # full rollup and cleanly isolated.
+    usage_rows = _collect_usage(args.log_dir)
 
     if args.format == "csv":
         if args.output:
@@ -689,6 +717,7 @@ def main() -> int:
             "failures": failures,
             "failure_thresholds": _FAILURE_THRESHOLDS,
             "failure_summary": fail_summary,
+            "usage": usage_rows,
             "rows": records,
         }
         text = _json.dumps(payload, default=str, indent=2, allow_nan=False)
