@@ -216,8 +216,8 @@ def fit_model(rows: list[dict], model: str) -> FitResult:
     X_raw = np.column_stack([np.ones(len(y)), raw_party, raw_pkg, raw_intx, raw_exp_yrs, raw_rig])
     names_raw = ["intercept", "party", "policy_package", "party_x_pkg", "experience_yrs", "rigor"]
     b_raw, se_raw, _, _, _ = _ols(X_raw, y)
-    beta_raw_d = dict(zip(names_raw, b_raw))
-    se_raw_d = dict(zip(names_raw, se_raw))
+    beta_raw_d = dict(zip(names_raw, b_raw, strict=False))
+    se_raw_d = dict(zip(names_raw, se_raw, strict=False))
 
     # Years-equivalent translation. Sign convention: positive means the
     # "1" direction of the protected variable (D->R for party,
@@ -235,9 +235,9 @@ def fit_model(rows: list[dict], model: str) -> FitResult:
         model=model,
         n_total=n_total, n_parsed=n_parsed,
         rating_mean=rating_mean, rating_sd=rating_sd, r2_std=r2,
-        beta_std=dict(zip(names_std, b_std)),
-        se_std=dict(zip(names_std, se_std)),
-        p_std=dict(zip(names_std, p_std)),
+        beta_std=dict(zip(names_std, b_std, strict=False)),
+        se_std=dict(zip(names_std, se_std, strict=False)),
+        p_std=dict(zip(names_std, p_std, strict=False)),
         ci_std=ci_std,
         beta_raw=beta_raw_d, se_raw=se_raw_d,
         years_per_party=yrs_per_party,
