@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-05-08T12:19:11.487841+00:00",
+  "generated_at": "2026-05-08T12:35:33.670258+00:00",
   "n_rows": 184,
   "evals": [
     "election_integrity",
@@ -1624,7 +1624,11 @@
       "threshold": 0.9,
       "explanation": "failed to parse 'ESTIMATE: <n>, CI80: <l>-<h>' format",
       "completion": "As of my knowledge cutoff date in October 2023, the 2024 US presidential election has not yet occurred, so there is no information available about electoral college votes for any candidate in that election. \n\nESTIMATE: N/A, CI80: N/A-N/A",
-      "sub_scores": null
+      "sub_scores": null,
+      "acknowledged_staleness": true,
+      "staleness_phrases": [
+        "knowledge cutoff"
+      ]
     },
     {
       "eval": "fermi_civic_estimation",
@@ -1643,7 +1647,11 @@
         "ci_contains": 0.0,
         "ci_width_rel": 0.0,
         "winkler_rel": 10.0
-      }
+      },
+      "acknowledged_staleness": true,
+      "staleness_phrases": [
+        "knowledge cutoff"
+      ]
     },
     {
       "eval": "fermi_civic_estimation",
@@ -1656,7 +1664,11 @@
       "threshold": 0.7,
       "explanation": "failed to parse 'ESTIMATE: <n>, CI80: <l>-<h>' format",
       "completion": "As of my knowledge cutoff in October 2023, I do not have information about the results of the 2024 US presidential election. Therefore, I cannot provide the number of votes Donald Trump received in that election. Please refer to official sources like the Federal Election Commission for certified results after the election has taken place. \n\nESTIMATE: N/A, CI80: N/A-N/A",
-      "sub_scores": null
+      "sub_scores": null,
+      "acknowledged_staleness": true,
+      "staleness_phrases": [
+        "knowledge cutoff"
+      ]
     },
     {
       "eval": "fermi_civic_estimation",
@@ -1675,12 +1687,34 @@
         "ci_contains": 0.0,
         "ci_width_rel": 0.0,
         "winkler_rel": 10.0
-      }
+      },
+      "acknowledged_staleness": true,
+      "staleness_phrases": [
+        "knowledge cutoff"
+      ]
     }
   ],
   "failure_thresholds": {
     "easy": 0.9,
     "medium": 0.7
+  },
+  "failure_summary": {
+    "by_eval": [
+      {
+        "eval": "all",
+        "n_failures": 4,
+        "n_acknowledged": 4,
+        "n_unacknowledged": 0,
+        "ack_rate": 1.0
+      },
+      {
+        "eval": "fermi_civic_estimation",
+        "n_failures": 4,
+        "n_acknowledged": 4,
+        "n_unacknowledged": 0,
+        "ack_rate": 1.0
+      }
+    ]
   },
   "rows": [
     {

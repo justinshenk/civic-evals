@@ -47,6 +47,7 @@ _DIFFICULTY_BADGE = {
 
 def render(
     failures: list[dict[str, Any]],
+    summary: dict[str, Any] | None = None,
     *,
     eval_filter: str | None = None,
     limit: int | None = None,
@@ -62,29 +63,52 @@ def render(
         by_eval[f.get("eval", "?")].append(f)
 
     out: list[str] = []
+
+    # Lead with the staleness-acknowledgement rate — the reviewer's
+    # "is this alarming or just stale-data alarming" cut.
+    if summary and summary.get("by_eval"):
+        all_row = next((r for r in summary["by_eval"] if r.get("eval") == "all"), None)
+        if all_row and all_row.get("n_failures"):
+            rate = all_row.get("ack_rate") or 0.0
+            out.append(
+                f"**{all_row['n_acknowledged']}/{all_row['n_failures']} failures "
+                f"({rate:.0%}) came with a staleness or jurisdiction hedge.** "
+                "The remainder are confidently-wrong without epistemic caveat — "
+                "those are the ones to inspect first.\n"
+            )
+
     for eval_name in sorted(by_eval.keys()):
         rows = by_eval[eval_name]
         if limit is not None:
             rows = rows[:limit]
         out.append(f"## {eval_name} — {len(by_eval[eval_name])} failures\n")
         out.append(
-            "| difficulty | task | persona | provider | scorer | score | judge note | response |"
+            "| difficulty | task | persona | provider | scorer | score | hedge | judge note | response |"
         )
-        out.append("|---|---|---|---|---|---|---|---|")
+        out.append("|---|---|---|---|---|---|---|---|---|")
         for f in rows:
             difficulty = _DIFFICULTY_BADGE.get(f.get("difficulty", ""), f.get("difficulty", "?"))
             score = f.get("score")
             score_s = f"{score:.2f}" if isinstance(score, (int, float)) else "?"
             threshold = f.get("threshold")
             score_cell = f"**{score_s}** (< {threshold:.2f})" if threshold else f"**{score_s}**"
+            ack = f.get("acknowledged_staleness")
+            if ack is True:
+                phrases = f.get("staleness_phrases") or []
+                hedge_cell = "🟢 yes" + (f" ({_pipe_safe(', '.join(phrases))})" if phrases else "")
+            elif ack is False:
+                hedge_cell = "🔴 no"
+            else:
+                hedge_cell = "—"
             out.append(
-                "| {diff} | `{task}` | `{persona}` | `{provider}` | `{scorer}` | {score} | {note} | {comp} |".format(
+                "| {diff} | `{task}` | `{persona}` | `{provider}` | `{scorer}` | {score} | {hedge} | {note} | {comp} |".format(
                     diff=difficulty,
                     task=_pipe_safe(str(f.get("task_id", "?"))),
                     persona=_pipe_safe(str(f.get("persona", "?"))),
                     provider=_pipe_safe(str(f.get("provider", "?"))),
                     scorer=_pipe_safe(str(f.get("scorer", "?"))),
                     score=score_cell,
+                    hedge=hedge_cell,
                     note=_pipe_safe(_truncate(str(f.get("explanation", "")), 120)),
                     comp=_pipe_safe(_truncate(str(f.get("completion", "")), completion_chars)),
                 )
@@ -110,8 +134,10 @@ def main() -> int:
 
     payload = json.loads(args.rollup_json.read_text())
     failures = payload.get("failures") or []
+    summary = payload.get("failure_summary")
     text = render(
         failures,
+        summary,
         eval_filter=args.eval_filter,
         limit=args.limit,
         completion_chars=args.completion_chars,

@@ -11,6 +11,8 @@ export type {
   CalibrationStat,
   ExternalBaseline,
   FailureRow,
+  FailureSummary,
+  FailureSummaryRow,
   Rollup,
 } from "@/lib/rollup-utils";
 export { meanBy, groupBy, fmt } from "@/lib/rollup-utils";
@@ -28,6 +30,7 @@ const EMPTY: Rollup = {
   external_baselines: [],
   failures: [],
   failure_thresholds: {},
+  failure_summary: { by_eval: [] },
   rows: [],
 };
 
