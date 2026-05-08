@@ -7,12 +7,15 @@ import { fmt } from "@/lib/rollup";
  * `_FAILURE_THRESHOLDS`). Aggregate means hide the alarming-but-rare
  * cases; this panel makes them visible.
  *
- * Each failure carries a ``acknowledged_staleness`` boolean: did the
- * model hedge on training-data freshness or point to an authoritative
- * source? If yes, the failure is "knew it didn't know" — concerning,
- * but the right intervention is web search, not retraining. If no, the
- * model was confidently wrong without epistemic caveat — that's the
- * truly alarming bucket and gets a red badge.
+ * Each failure carries a ``acknowledged_staleness`` verdict from an
+ * LLM judge (Haiku by default): did the model hedge on training-data
+ * freshness or point to an authoritative source? If yes, the failure
+ * is "knew it didn't know" — concerning, but the right intervention
+ * is web search, not retraining. If no, the model was confidently
+ * wrong without epistemic caveat — that's the truly alarming bucket
+ * and gets a red badge. ``staleness_kind`` distinguishes cutoff /
+ * source / variation hedges; ``staleness_evidence`` is a short quote
+ * the judge used to justify the verdict.
  *
  * Empty state is intentional and reassuring — "nothing to see here" is
  * a meaningful signal, not a layout bug.
@@ -93,7 +96,8 @@ function FailureCard({ f }: { f: FailureRow }) {
         </span>
         <HedgeBadge
           acknowledged={f.acknowledged_staleness}
-          phrases={f.staleness_phrases}
+          kind={f.staleness_kind}
+          evidence={f.staleness_evidence}
         />
         <span className="ml-auto">
           score{" "}
@@ -123,20 +127,23 @@ function FailureCard({ f }: { f: FailureRow }) {
 
 function HedgeBadge({
   acknowledged,
-  phrases,
+  kind,
+  evidence,
 }: {
   acknowledged: boolean | null;
-  phrases: string[];
+  kind: string | null;
+  evidence: string | null;
 }) {
-  if (acknowledged === null) return null; // search-enabled eval; not applicable
+  if (acknowledged === null) return null; // not judged (search eval, missing key, judge crash)
   if (acknowledged) {
-    const title = phrases.length > 0 ? `matched: ${phrases.join(", ")}` : "";
+    const label = kind && kind !== "none" ? kind : "hedged";
+    const title = evidence ? `evidence: "${evidence}"` : "";
     return (
       <span
         className="inline-flex items-center rounded border border-emerald-200 bg-emerald-50 px-1.5 py-0.5 text-[10px] font-mono text-emerald-700 dark:border-emerald-900/50 dark:bg-emerald-950/40 dark:text-emerald-400"
         title={title}
       >
-        hedged
+        {label}
       </span>
     );
   }

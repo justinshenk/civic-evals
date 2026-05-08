@@ -27,6 +27,16 @@ from inspect_ai.log import list_eval_logs, read_eval_log
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 
+# Match inspect-ai's behavior: load .env from the repo root so the staleness
+# judge can find ANTHROPIC_API_KEY without manual exports. Best-effort —
+# missing dotenv or missing file is not an error.
+try:
+    from dotenv import load_dotenv
+
+    load_dotenv(REPO_ROOT / ".env", override=False)
+except ImportError:
+    pass
+
 
 def rollup(log_dir: Path) -> pd.DataFrame:
     rows: list[dict[str, Any]] = []
@@ -322,28 +332,23 @@ def collect_external_baselines(df: pd.DataFrame) -> list[dict[str, Any]]:
     return out
 
 
-def _staleness_helpers() -> tuple[Any, Any, Any]:
+def _staleness_helpers() -> tuple[Any, Any]:
     """Local import that works both as a script and as a module.
 
     ``python analysis/rollup.py`` puts ``analysis/`` on ``sys.path`` so
-    ``cutoff_check`` is importable as a top-level module. ``from
+    ``staleness_judge`` is importable as a top-level module. ``from
     analysis.rollup import …`` (test invocation) puts the repo root on
-    path, so the ``analysis.cutoff_check`` form resolves. Try the
+    path, so the ``analysis.staleness_judge`` form resolves. Try the
     package-qualified form first; fall back to the sibling-script form.
     """
     try:
-        from analysis.cutoff_check import (
-            acknowledged_staleness,
-            is_search_eval,
-            matched_phrases,
-        )
+        from analysis.staleness_judge import is_search_eval, judge_failures
     except ModuleNotFoundError:
-        from cutoff_check import (  # type: ignore[import-not-found, no-redef]
-            acknowledged_staleness,
+        from staleness_judge import (  # type: ignore[import-not-found, no-redef]
             is_search_eval,
-            matched_phrases,
+            judge_failures,
         )
-    return acknowledged_staleness, is_search_eval, matched_phrases
+    return is_search_eval, judge_failures
 
 
 def collect_failures(df: pd.DataFrame) -> list[dict[str, Any]]:
@@ -362,7 +367,7 @@ def collect_failures(df: pd.DataFrame) -> list[dict[str, Any]]:
     if df.empty:
         return []
 
-    ack_fn, is_search, match_fn = _staleness_helpers()
+    is_search, _ = _staleness_helpers()
 
     out: list[dict[str, Any]] = []
     # easy=0, medium=1, others=2 — used purely to sort easy failures first.
@@ -388,16 +393,6 @@ def collect_failures(df: pd.DataFrame) -> list[dict[str, Any]]:
         sub = row.get("sub_scores")
         completion = row.get("completion") or ""
         eval_name = row.get("eval")
-        # Search-enabled variants are expected to cite a fresh URL, not
-        # hedge on training cutoff. Skip the staleness check there so the
-        # site doesn't show a misleading "no hedge" warning on a response
-        # that was supposed to be sourced.
-        if is_search(eval_name):
-            ack: bool | None = None
-            phrases: list[str] = []
-        else:
-            ack = ack_fn(completion)
-            phrases = match_fn(completion) if ack else []
         out.append(
             {
                 "eval": eval_name,
@@ -411,8 +406,13 @@ def collect_failures(df: pd.DataFrame) -> list[dict[str, Any]]:
                 "explanation": row.get("explanation") or "",
                 "completion": completion,
                 "sub_scores": sub if isinstance(sub, dict) else None,
-                "acknowledged_staleness": ack,
-                "staleness_phrases": phrases,
+                # Verdict fields are populated by ``judge_failures`` after
+                # collection. ``None`` here means "not yet judged"; the judge
+                # leaves it ``None`` for search-enabled evals or when no API
+                # key is set, so the site renders that as "not applicable."
+                "acknowledged_staleness": None,
+                "staleness_kind": None,
+                "staleness_evidence": None,
             }
         )
     out.sort(key=lambda r: (rank.get(r["difficulty"], 99), r["score"]))
@@ -643,6 +643,8 @@ def main() -> int:
     calib_stats = calibration_stats(df)
     external_baselines = collect_external_baselines(df)
     failures = collect_failures(df)
+    _, judge_failures = _staleness_helpers()
+    judge_failures(failures)
     fail_summary = failure_summary(failures)
 
     if args.format == "csv":

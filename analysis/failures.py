@@ -94,8 +94,11 @@ def render(
             score_cell = f"**{score_s}** (< {threshold:.2f})" if threshold else f"**{score_s}**"
             ack = f.get("acknowledged_staleness")
             if ack is True:
-                phrases = f.get("staleness_phrases") or []
-                hedge_cell = "🟢 yes" + (f" ({_pipe_safe(', '.join(phrases))})" if phrases else "")
+                kind = f.get("staleness_kind") or "?"
+                evidence = f.get("staleness_evidence") or ""
+                hedge_cell = (
+                    f"🟢 {kind}" + (f" — {_pipe_safe(_truncate(evidence, 80))}" if evidence else "")
+                )
             elif ack is False:
                 hedge_cell = "🔴 no"
             else:

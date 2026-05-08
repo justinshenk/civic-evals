@@ -89,9 +89,12 @@ export type FailureRow = {
   explanation: string;
   completion: string;
   sub_scores: SubScores | null;
-  // null = web-search-enabled eval; the staleness check doesn't apply.
+  // null = not judged (web-search-enabled eval, missing API key, judge crash).
   acknowledged_staleness: boolean | null;
-  staleness_phrases: string[];
+  // "cutoff" | "source" | "variation" | "none" — null when not judged.
+  staleness_kind: string | null;
+  // Short quote/paraphrase the judge used to justify the verdict.
+  staleness_evidence: string | null;
 };
 
 export type FailureSummaryRow = {
