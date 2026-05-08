@@ -16,6 +16,7 @@ Two deliberate choices worth calling out:
 from __future__ import annotations
 
 import json
+import re
 from collections.abc import Iterator
 from pathlib import Path
 from typing import Any, Literal
@@ -23,6 +24,8 @@ from typing import Any, Literal
 from pydantic import BaseModel, Field, ValidationError, model_validator
 
 Difficulty = Literal["easy", "medium", "hard"]
+
+_ISO_DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 
 
 class TaskMetadata(BaseModel):
@@ -34,6 +37,19 @@ class TaskMetadata(BaseModel):
     )
     tags: list[str] = Field(..., min_length=1)
     notes: str | None = None
+    last_verified: str | None = Field(
+        default=None,
+        description=(
+            "ISO date (YYYY-MM-DD) when the task's ground truth was last "
+            "checked against its source. Civic facts drift — election rules "
+            "change, statutes get amended, agency URLs reorganize. The site "
+            "surfaces tasks with no last_verified date or one older than 12 "
+            "months as a maintenance signal so they get re-verified before "
+            "the eval's mean is trusted. Optional today (existing tasks "
+            "predate this field); enforce in CI for new tasks once the "
+            "backlog is clean."
+        ),
+    )
     extras: dict[str, Any] | None = Field(
         default=None,
         description=(
@@ -42,6 +58,16 @@ class TaskMetadata(BaseModel):
             "stash truth_value here for the calibration scorer to read)."
         ),
     )
+
+    @model_validator(mode="after")
+    def _last_verified_format(self) -> TaskMetadata:
+        if self.last_verified is None:
+            return self
+        if not _ISO_DATE_RE.match(self.last_verified):
+            raise ValueError(
+                f"last_verified must be an ISO date (YYYY-MM-DD); got {self.last_verified!r}."
+            )
+        return self
 
 
 class PersonaSlot(BaseModel):

@@ -53,6 +53,10 @@ export type TaskSummary = {
   rubric_snippet: string | null;
   refusal_expected: "refuse" | "answer" | "hedge" | null;
   source: string;
+  // ISO date (YYYY-MM-DD) when ground truth was last checked. null when
+  // unverified — older than 12 months should be treated as needing
+  // re-verification before the eval's mean is fully trusted.
+  last_verified: string | null;
 };
 
 export type EvalMeta = {

@@ -197,6 +197,7 @@ def _task_summary(task: Any) -> dict[str, Any]:
         "rubric_snippet": rubric_snippet,
         "refusal_expected": refusal_expected,
         "source": task.metadata.source,
+        "last_verified": task.metadata.last_verified,
     }
 
 
