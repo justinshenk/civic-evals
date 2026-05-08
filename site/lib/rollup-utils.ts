@@ -77,6 +77,20 @@ export type CalibrationStat = {
   explanation: string;
 };
 
+export type FailureRow = {
+  eval: string;
+  task_id: string;
+  difficulty: "easy" | "medium" | "hard" | string;
+  persona: string;
+  provider: string;
+  scorer: string;
+  score: number;
+  threshold: number;
+  explanation: string;
+  completion: string;
+  sub_scores: SubScores | null;
+};
+
 export type ExternalBaseline = {
   name: string;
   short_name: string;
@@ -97,6 +111,8 @@ export type Rollup = {
   evals_meta: EvalMeta[];
   calibration_stats: CalibrationStat[];
   external_baselines: ExternalBaseline[];
+  failures: FailureRow[];
+  failure_thresholds: Record<string, number>;
   rows: RollupRow[];
 };
 

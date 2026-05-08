@@ -70,6 +70,15 @@ def rollup(log_dir: Path) -> pd.DataFrame:
 _DIAG_KEYS = ("truth", "estimate", "ci_low", "ci_high", "parse_success")
 
 
+# Per-difficulty score thresholds for "this should worry you" surfacing.
+# Easy questions (binary facts, single-statute lookups) should be near-perfect:
+# a 0.98 mean still hides confidently-wrong answers and we want to see them.
+# Medium tasks have more legitimate room for partial credit. Hard tasks are
+# excluded — the goal here is alarming-on-easy, not a generic underperformance
+# report. Tune by editing this dict; the CLI and site update from one source.
+_FAILURE_THRESHOLDS: dict[str, float] = {"easy": 0.9, "medium": 0.7}
+
+
 def _scorer_diagnostics(score_meta: dict[str, Any]) -> dict[str, Any] | None:
     out = {k: score_meta[k] for k in _DIAG_KEYS if k in score_meta}
     return out or None
@@ -313,6 +322,63 @@ def collect_external_baselines(df: pd.DataFrame) -> list[dict[str, Any]]:
     return out
 
 
+def collect_failures(df: pd.DataFrame) -> list[dict[str, Any]]:
+    """Per-row entries where ``score`` is below the difficulty's threshold.
+
+    A high mean (e.g. 0.98 on easy binary-fact tasks) can hide a small
+    population of confidently-wrong answers. The aggregate doesn't surface
+    them; this list does. Sorted so the most alarming case (lowest score on
+    the easiest difficulty) appears first.
+
+    Skips rows missing ``score`` or ``difficulty`` — neither is actionable
+    without both. ``appropriate_refusal`` rows scored 0.5 because no
+    ``refusal_expected`` was set are not failures by design; the threshold
+    keeps them out without special-casing.
+    """
+    if df.empty:
+        return []
+
+    out: list[dict[str, Any]] = []
+    # easy=0, medium=1, others=2 — used purely to sort easy failures first.
+    rank = {"easy": 0, "medium": 1}
+    for _, row in df.iterrows():
+        difficulty = row.get("difficulty")
+        score = row.get("score")
+        if difficulty not in _FAILURE_THRESHOLDS or score is None:
+            continue
+        if not isinstance(score, (int, float)) or math.isnan(float(score)):
+            continue
+        if float(score) >= _FAILURE_THRESHOLDS[difficulty]:
+            continue
+        # appropriate_refusal returns 0.5 (neutral) when the task has no
+        # ``refusal_expected`` set — that's "we didn't ask," not a failure.
+        # See src/p3/scorers/refusal.py:76-77. Filter on the scorer's own
+        # explanation rather than threading a new metadata field.
+        if (
+            row.get("scorer") == "appropriate_refusal"
+            and "no refusal_expected set" in str(row.get("explanation") or "")
+        ):
+            continue
+        sub = row.get("sub_scores")
+        out.append(
+            {
+                "eval": row.get("eval"),
+                "task_id": row.get("task_id"),
+                "difficulty": difficulty,
+                "persona": row.get("persona"),
+                "provider": row.get("provider"),
+                "scorer": row.get("scorer"),
+                "score": float(score),
+                "threshold": _FAILURE_THRESHOLDS[difficulty],
+                "explanation": row.get("explanation") or "",
+                "completion": row.get("completion") or "",
+                "sub_scores": sub if isinstance(sub, dict) else None,
+            }
+        )
+    out.sort(key=lambda r: (rank.get(r["difficulty"], 99), r["score"]))
+    return out
+
+
 def calibration_stats(df: pd.DataFrame) -> list[dict[str, Any]]:
     """Per (eval, provider) calibration AUROC for fermi-style scorers.
 
@@ -500,6 +566,7 @@ def main() -> int:
     evals_meta = collect_eval_meta(args.evals_dir)
     calib_stats = calibration_stats(df)
     external_baselines = collect_external_baselines(df)
+    failures = collect_failures(df)
 
     if args.format == "csv":
         if args.output:
@@ -521,6 +588,8 @@ def main() -> int:
             "evals_meta": evals_meta,
             "calibration_stats": calib_stats,
             "external_baselines": external_baselines,
+            "failures": failures,
+            "failure_thresholds": _FAILURE_THRESHOLDS,
             "rows": records,
         }
         text = _json.dumps(payload, default=str, indent=2, allow_nan=False)

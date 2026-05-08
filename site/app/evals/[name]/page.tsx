@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import { FailuresPanel } from "@/app/components/FailuresPanel";
 import { FermiRangeBar } from "@/app/components/FermiRangeBar";
 import {
   fmt,
@@ -24,6 +25,8 @@ export default async function EvalPage({ params }: { params: Promise<{ name: str
   const overall = meanBy(evalRows, (r) => r.score);
   const byTask = groupBy(evalRows, (r) => r.task_id);
   const scorers = Array.from(new Set(evalRows.map((r) => r.scorer))).sort();
+  const failures = (rollup.failures ?? []).filter((f) => f.eval === name);
+  const thresholds = rollup.failure_thresholds ?? {};
 
   return (
     <main className="flex-1 w-full">
@@ -65,6 +68,14 @@ export default async function EvalPage({ params }: { params: Promise<{ name: str
             </a>
           </div>
         </header>
+
+        <section className="space-y-3">
+          <SectionHeader
+            title="Worth a closer look"
+            hint={`Individual completions whose score fell below the per-difficulty alarm bar (easy < ${fmt(thresholds.easy ?? 0.9)}, medium < ${fmt(thresholds.medium ?? 0.7)}). A high overall mean can still hide confidently-wrong answers — these are them.`}
+          />
+          <FailuresPanel failures={failures} thresholds={thresholds} />
+        </section>
 
         <section className="space-y-3">
           <SectionHeader
