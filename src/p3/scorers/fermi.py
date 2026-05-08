@@ -29,8 +29,27 @@ The eval prompts the model to end its response with::
 
     ESTIMATE: <number>, CI80: <low>-<high>
 
-If parse fails, ``parse_success`` is False and ``value`` is 0 — format
-compliance is part of the test, not a graceful failure.
+**Refusal-shaped outputs are scored 0.5, not 0.0.** Two refusal patterns
+exist in observed runs:
+
+1. *Parse failure*: the model writes prose explaining it can't answer —
+   typically a training-cutoff hedge. The format isn't there to score.
+2. *Structural zero*: the model emits the format but with
+   ``ESTIMATE: 0, CI80: 0-0`` (zero point, zero-width interval) when
+   the truth is non-zero. This is a refusal disguised as a numeric
+   answer — no calibrated answer to a positive quantity is exactly 0
+   with no width.
+
+Both used to score 0.0 (parse-failure directly; structural-zero via
+``point_score(0, T≠0) = 0`` and a tiny Winkler interval that misses).
+That double-counted *calibrated uncertainty as confident error* —
+precisely the behavior the rest of the suite (``appropriate_refusal``,
+the rollup-time staleness judge) is designed to credit. 0.5 keeps the
+row in the mean (we still want to know the model couldn't answer)
+without dragging it toward "wrong."
+
+A genuine confident-zero answer to a question whose truth is 0 still
+scores 1.0 — the refusal heuristic only fires when truth ≠ 0.
 
 Truth and (optional) acceptable units are read from
 ``state.metadata["extras"]``: ``{"truth_value": float, "tolerance_pct":
@@ -78,16 +97,54 @@ def fermi_calibration() -> Scorer:
         truth = float(truth)
         parsed = _parse(output)
         if parsed is None:
+            # Refusal in prose. Don't conflate "model declined to commit
+            # to a number" with "model said the wrong number." The
+            # rollup-time staleness judge still annotates this row with
+            # the hedge kind (cutoff / source / variation) so the
+            # failure-surfacing UI shows the full context.
             return Score(
-                value=0.0,
+                value=0.5,
                 answer=output,
-                explanation="failed to parse 'ESTIMATE: <n>, CI80: <l>-<h>' format",
-                metadata={"parse_success": False, "truth": truth},
+                explanation=(
+                    "failed to parse 'ESTIMATE: <n>, CI80: <l>-<h>' format "
+                    "— scored as refusal (0.5) rather than confident error (0.0)"
+                ),
+                metadata={
+                    "parse_success": False,
+                    "refused": True,
+                    "truth": truth,
+                },
             )
 
         est, low, high = parsed
         if low > high:
             low, high = high, low
+
+        # Structural-zero refusal: the model emitted the requested format
+        # but filled it with a zero point and zero-width interval despite
+        # the truth being non-zero. No calibrated answer to a positive
+        # quantity claims 80% confidence on exactly 0 with no width —
+        # this is "I won't guess" written in the parser's grammar.
+        # If the truth genuinely is 0, a confident zero is correct and
+        # falls through to the normal scoring path (point_score(0, 0) = 1).
+        if est == 0 and low == 0 and high == 0 and truth != 0:
+            return Score(
+                value=0.5,
+                answer=output,
+                explanation=(
+                    f"truth={truth:g}, estimate=0, CI=[0, 0] "
+                    "— refusal-shaped output (zero point, zero-width interval); "
+                    "scored 0.5 rather than rolling to 0.0 via point_score."
+                ),
+                metadata={
+                    "parse_success": True,
+                    "refused": True,
+                    "truth": truth,
+                    "estimate": est,
+                    "ci_low": low,
+                    "ci_high": high,
+                },
+            )
 
         point = _point_score(est, truth)
         interval, w_rel, contains, width_rel = _interval_score(low, high, truth)

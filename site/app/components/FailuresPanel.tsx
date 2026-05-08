@@ -94,6 +94,7 @@ function FailureCard({ f }: { f: FailureRow }) {
         <span className="text-rose-600/80 dark:text-rose-400/80">
           {f.scorer}
         </span>
+        {f.refused && <RefusalBadge />}
         <HedgeBadge
           acknowledged={f.acknowledged_staleness}
           kind={f.staleness_kind}
@@ -153,6 +154,25 @@ function HedgeBadge({
       title="No staleness or authoritative-source hedge detected — confidently wrong."
     >
       no hedge
+    </span>
+  );
+}
+
+/**
+ * Marks a failure whose score is a refusal credit (0.5 in fermi) rather
+ * than a real numeric measurement. The model declined to commit to a
+ * number — either by writing prose or by emitting a zero point with
+ * zero-width interval against a non-zero truth. Distinct from the
+ * staleness hedge: the refusal label is about the *score*, the hedge
+ * label is about *why* the model refused.
+ */
+function RefusalBadge() {
+  return (
+    <span
+      className="inline-flex items-center rounded border border-amber-300 bg-amber-50 px-1.5 py-0.5 text-[10px] font-mono text-amber-800 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-300"
+      title="Model declined to commit to a number; scored 0.5 (refusal credit) rather than as a confident wrong answer."
+    >
+      refusal-shaped
     </span>
   );
 }

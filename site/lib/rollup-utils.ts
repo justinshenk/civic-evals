@@ -89,6 +89,13 @@ export type FailureRow = {
   explanation: string;
   completion: string;
   sub_scores: SubScores | null;
+  // True when the scorer marked this row as a refusal-shaped output —
+  // model declined to commit to a number rather than emitting a wrong
+  // one. Currently only set by fermi_calibration. Distinct from the
+  // rollup-time staleness verdict below: refused=True means the score
+  // itself is a refusal credit (0.5 by convention), while
+  // acknowledged_staleness is a post-hoc judgment about *why*.
+  refused: boolean | null;
   // null = not judged (web-search-enabled eval, missing API key, judge crash).
   acknowledged_staleness: boolean | null;
   // "cutoff" | "source" | "variation" | "none" — null when not judged.

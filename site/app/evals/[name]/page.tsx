@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { FailuresPanel } from "@/app/components/FailuresPanel";
 import { FermiRangeBar } from "@/app/components/FermiRangeBar";
+import { MethodsPanel } from "@/app/components/MethodsPanel";
 import {
   fmt,
   groupBy,
@@ -71,6 +72,18 @@ export default async function EvalPage({ params }: { params: Promise<{ name: str
             </a>
           </div>
         </header>
+
+        <section className="space-y-3">
+          <SectionHeader
+            title="How this is scored"
+            hint="One short paragraph per scorer used on this eval. The README link in the header has the full spec; this is enough context to read the tables honestly."
+          />
+          <MethodsPanel
+            scorers={scorers}
+            hasFailures={failures.length > 0}
+            hasFermi={scorers.includes("fermi_calibration")}
+          />
+        </section>
 
         <section className="space-y-3">
           <SectionHeader

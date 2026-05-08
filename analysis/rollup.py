@@ -77,7 +77,7 @@ def rollup(log_dir: Path) -> pd.DataFrame:
 
 # Whitelist of scorer-metadata keys the site needs (e.g. fermi range bar).
 # Pass-through would bloat the rollup; named keys keep the contract explicit.
-_DIAG_KEYS = ("truth", "estimate", "ci_low", "ci_high", "parse_success")
+_DIAG_KEYS = ("truth", "estimate", "ci_low", "ci_high", "parse_success", "refused")
 
 
 # Per-difficulty score thresholds for "this should worry you" surfacing.
@@ -393,6 +393,13 @@ def collect_failures(df: pd.DataFrame) -> list[dict[str, Any]]:
         sub = row.get("sub_scores")
         completion = row.get("completion") or ""
         eval_name = row.get("eval")
+        meta = row.get("score_metadata")
+        # Surface the scorer's own ``refused`` marker as a flat field so the
+        # site can render a "refusal-shaped" indicator on the failure card.
+        # The fermi scorer sets this when the model declined to commit to a
+        # number (parse failure or zero-point/zero-width interval against
+        # non-zero truth) — distinct from the rollup-time staleness verdict.
+        refused = bool(meta.get("refused")) if isinstance(meta, dict) else None
         out.append(
             {
                 "eval": eval_name,
@@ -406,6 +413,7 @@ def collect_failures(df: pd.DataFrame) -> list[dict[str, Any]]:
                 "explanation": row.get("explanation") or "",
                 "completion": completion,
                 "sub_scores": sub if isinstance(sub, dict) else None,
+                "refused": refused,
                 # Verdict fields are populated by ``judge_failures`` after
                 # collection. ``None`` here means "not yet judged"; the judge
                 # leaves it ``None`` for search-enabled evals or when no API
