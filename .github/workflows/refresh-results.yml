@@ -116,6 +116,33 @@ jobs:
           uv run python analysis/rollup.py logs/ \
             --format json \
             -o site/public/data/rollup.json
+      - name: Cost budget gate
+        # Reads the usage block written by analysis/usage.py (via rollup.py)
+        # and fails the run if total cost exceeds the budget. Catches a
+        # misconfigured --limit or a runaway loop before the bill arrives.
+        # Tune REFRESH_COST_BUDGET to match expected weekly spend; the
+        # default $5 is ~10x the current ~$0.33/run baseline so genuine
+        # growth (more evals, more providers) won't trip it but a
+        # 100x runaway will.
+        env:
+          REFRESH_COST_BUDGET: "5.00"
+        run: |
+          # Sum cost_usd across the usage block, treating null (unknown
+          # model) as 0 — better to under-report than to fail a run because
+          # one row's price isn't in the table.
+          cost=$(uv run python -c "
+          import json, sys
+          rows = json.load(open('site/public/data/rollup.json')).get('usage', [])
+          total = sum((r.get('cost_usd') or 0) for r in rows)
+          print(f'{total:.4f}')
+          ")
+          echo "refresh cost: \$$cost (budget \$$REFRESH_COST_BUDGET)"
+          # bc not always present on minimal runners; use awk for the compare.
+          over=$(awk -v c="$cost" -v b="$REFRESH_COST_BUDGET" 'BEGIN{print (c+0 > b+0) ? 1 : 0}')
+          if [ "$over" = "1" ]; then
+            echo "::error::refresh cost \$$cost exceeded budget \$$REFRESH_COST_BUDGET"
+            exit 1
+          fi
       - name: Commit if changed
         id: commit
         run: |
