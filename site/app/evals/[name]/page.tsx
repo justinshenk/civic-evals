@@ -27,6 +27,9 @@ export default async function EvalPage({ params }: { params: Promise<{ name: str
   const scorers = Array.from(new Set(evalRows.map((r) => r.scorer))).sort();
   const failures = (rollup.failures ?? []).filter((f) => f.eval === name);
   const thresholds = rollup.failure_thresholds ?? {};
+  const failureSummary = rollup.failure_summary?.by_eval?.find(
+    (r) => r.eval === name,
+  );
 
   return (
     <main className="flex-1 w-full">
@@ -74,7 +77,11 @@ export default async function EvalPage({ params }: { params: Promise<{ name: str
             title="Worth a closer look"
             hint={`Individual completions whose score fell below the per-difficulty alarm bar (easy < ${fmt(thresholds.easy ?? 0.9)}, medium < ${fmt(thresholds.medium ?? 0.7)}). A high overall mean can still hide confidently-wrong answers — these are them.`}
           />
-          <FailuresPanel failures={failures} thresholds={thresholds} />
+          <FailuresPanel
+            failures={failures}
+            thresholds={thresholds}
+            summary={failureSummary}
+          />
         </section>
 
         <section className="space-y-3">

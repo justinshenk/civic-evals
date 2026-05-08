@@ -1,4 +1,4 @@
-import type { FailureRow } from "@/lib/rollup";
+import type { FailureRow, FailureSummaryRow } from "@/lib/rollup";
 import { fmt } from "@/lib/rollup";
 
 /**
@@ -7,15 +7,24 @@ import { fmt } from "@/lib/rollup";
  * `_FAILURE_THRESHOLDS`). Aggregate means hide the alarming-but-rare
  * cases; this panel makes them visible.
  *
+ * Each failure carries a ``acknowledged_staleness`` boolean: did the
+ * model hedge on training-data freshness or point to an authoritative
+ * source? If yes, the failure is "knew it didn't know" — concerning,
+ * but the right intervention is web search, not retraining. If no, the
+ * model was confidently wrong without epistemic caveat — that's the
+ * truly alarming bucket and gets a red badge.
+ *
  * Empty state is intentional and reassuring — "nothing to see here" is
  * a meaningful signal, not a layout bug.
  */
 export function FailuresPanel({
   failures,
   thresholds,
+  summary,
 }: {
   failures: FailureRow[];
   thresholds: Record<string, number>;
+  summary: FailureSummaryRow | undefined;
 }) {
   if (failures.length === 0) {
     return (
@@ -29,9 +38,40 @@ export function FailuresPanel({
 
   return (
     <div className="space-y-3">
+      {summary && summary.n_failures > 0 && (
+        <StalenessSummary summary={summary} />
+      )}
       {failures.map((f, i) => (
         <FailureCard key={`${f.task_id}-${f.provider}-${f.scorer}-${i}`} f={f} />
       ))}
+    </div>
+  );
+}
+
+function StalenessSummary({ summary }: { summary: FailureSummaryRow }) {
+  const rate = summary.ack_rate ?? 0;
+  const allHedged = summary.n_acknowledged === summary.n_failures;
+  const noneHedged = summary.n_acknowledged === 0;
+  const tone = allHedged
+    ? "border-amber-200 bg-amber-50/60 text-amber-900 dark:border-amber-900/40 dark:bg-amber-950/30 dark:text-amber-200"
+    : noneHedged
+      ? "border-rose-200 bg-rose-50/60 text-rose-900 dark:border-rose-900/40 dark:bg-rose-950/30 dark:text-rose-200"
+      : "border-zinc-200 bg-zinc-50 text-zinc-700 dark:border-zinc-800 dark:bg-zinc-900/40 dark:text-zinc-300";
+  return (
+    <div className={`rounded-lg border ${tone} px-4 py-3 text-sm leading-relaxed`}>
+      <strong>
+        {summary.n_acknowledged}/{summary.n_failures} ({(rate * 100).toFixed(0)}%)
+      </strong>{" "}
+      of failures came with a staleness or jurisdiction hedge — the model
+      acknowledged its training data may be out of date, or pointed the
+      asker at a Secretary of State / EAC / state-office source.{" "}
+      {summary.n_unacknowledged > 0 && (
+        <span>
+          The remaining{" "}
+          <strong>{summary.n_unacknowledged}</strong> were confidently wrong
+          with no epistemic caveat — those are the cards to inspect first.
+        </span>
+      )}
     </div>
   );
 }
@@ -51,6 +91,10 @@ function FailureCard({ f }: { f: FailureRow }) {
         <span className="text-rose-600/80 dark:text-rose-400/80">
           {f.scorer}
         </span>
+        <HedgeBadge
+          acknowledged={f.acknowledged_staleness}
+          phrases={f.staleness_phrases}
+        />
         <span className="ml-auto">
           score{" "}
           <strong className="tabular-nums">{fmt(f.score)}</strong>
@@ -74,6 +118,35 @@ function FailureCard({ f }: { f: FailureRow }) {
         </pre>
       )}
     </div>
+  );
+}
+
+function HedgeBadge({
+  acknowledged,
+  phrases,
+}: {
+  acknowledged: boolean | null;
+  phrases: string[];
+}) {
+  if (acknowledged === null) return null; // search-enabled eval; not applicable
+  if (acknowledged) {
+    const title = phrases.length > 0 ? `matched: ${phrases.join(", ")}` : "";
+    return (
+      <span
+        className="inline-flex items-center rounded border border-emerald-200 bg-emerald-50 px-1.5 py-0.5 text-[10px] font-mono text-emerald-700 dark:border-emerald-900/50 dark:bg-emerald-950/40 dark:text-emerald-400"
+        title={title}
+      >
+        hedged
+      </span>
+    );
+  }
+  return (
+    <span
+      className="inline-flex items-center rounded border border-rose-300 bg-rose-100 px-1.5 py-0.5 text-[10px] font-mono text-rose-700 dark:border-rose-800 dark:bg-rose-950/60 dark:text-rose-300"
+      title="No staleness or authoritative-source hedge detected — confidently wrong."
+    >
+      no hedge
+    </span>
   );
 }
 
