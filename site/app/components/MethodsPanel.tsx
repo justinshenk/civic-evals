@@ -11,8 +11,10 @@
  *
  * Adding a new scorer: add a row to ``METHODS`` keyed on the scorer
  * function name (the canonical name returned in ``rollup.scorers``).
- * Unknown scorer names are silently ignored — the eval page won't
- * crash if a third-party scorer shows up before docs do.
+ * Unknown scorer names render with a placeholder
+ * "*methodology pending*" body rather than disappearing silently —
+ * surfaces the documentation gap to readers AND maintainers without
+ * crashing the page if a third-party scorer shows up before docs do.
  */
 
 const METHODS: Record<string, { title: string; body: string }> = {
@@ -86,21 +88,41 @@ export function MethodsPanel({
   hasFailures: boolean;
   hasFermi: boolean;
 }) {
-  const known = scorers.filter((s) => s in METHODS);
-  if (known.length === 0 && !hasFailures) return null;
+  if (scorers.length === 0 && !hasFailures) return null;
 
   return (
     <div className="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 divide-y divide-zinc-200 dark:divide-zinc-800">
-      {known.map((s) => (
-        <div key={s} className="px-4 py-3 space-y-1">
-          <h3 className="font-mono text-xs uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-            {METHODS[s].title}
-          </h3>
-          <p className="text-sm leading-relaxed text-zinc-700 dark:text-zinc-300">
-            {METHODS[s].body}
-          </p>
-        </div>
-      ))}
+      {scorers.map((s) => {
+        const entry = METHODS[s];
+        if (entry) {
+          return (
+            <div key={s} className="px-4 py-3 space-y-1">
+              <h3 className="font-mono text-xs uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                {entry.title}
+              </h3>
+              <p className="text-sm leading-relaxed text-zinc-700 dark:text-zinc-300">
+                {entry.body}
+              </p>
+            </div>
+          );
+        }
+        // Pending placeholder. Stays visible so documentation gaps
+        // are obvious to readers (and reviewers); also nudges a
+        // maintainer to backfill before merging a new scorer.
+        return (
+          <div key={s} className="px-4 py-3 space-y-1">
+            <h3 className="font-mono text-xs uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+              {s}
+            </h3>
+            <p className="text-sm leading-relaxed italic text-zinc-500 dark:text-zinc-500">
+              <em>methodology pending</em> — this scorer doesn&rsquo;t yet
+              have a per-eval explainer. Add a row to
+              {" "}<code className="font-mono not-italic text-xs bg-zinc-100 dark:bg-zinc-800 rounded px-1 py-0.5">METHODS</code>{" "}
+              in <code className="font-mono not-italic text-xs">site/app/components/MethodsPanel.tsx</code>.
+            </p>
+          </div>
+        );
+      })}
       {hasFailures && (
         <div className="px-4 py-3 space-y-1">
           <h3 className="font-mono text-xs uppercase tracking-wider text-zinc-500 dark:text-zinc-400">

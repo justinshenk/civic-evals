@@ -2,6 +2,7 @@ import { ScoreMatrix } from "./components/ScoreMatrix";
 import { PersonaChart } from "./components/PersonaChart";
 import { SubScorePanel } from "./components/SubScorePanel";
 import { EvalCards } from "./components/EvalCards";
+import { ModelCards } from "./components/ModelCards";
 import { CalibrationPanel } from "./components/CalibrationPanel";
 import { BaselinePanel } from "./components/BaselinePanel";
 import { loadRollup } from "@/lib/rollup";
@@ -68,6 +69,16 @@ export default function Home() {
           />
           <EvalCards rollup={rollup} />
         </section>
+
+        {!empty && rollup.providers.length > 0 && (
+          <section className="space-y-4">
+            <SectionHeader
+              title="Models evaluated"
+              hint="Per-model report cards. The reader's trust question — should I rely on this model for civic info? — has model as the unit, not eval."
+            />
+            <ModelCards rollup={rollup} />
+          </section>
+        )}
 
         {empty ? (
           <EmptyState />

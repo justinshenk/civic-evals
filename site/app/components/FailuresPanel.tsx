@@ -1,3 +1,7 @@
+"use client";
+
+import { useMemo, useState } from "react";
+
 import type { FailureRow, FailureSummaryRow } from "@/lib/rollup";
 import { fmt } from "@/lib/rollup";
 
@@ -17,6 +21,11 @@ import { fmt } from "@/lib/rollup";
  * source / variation hedges; ``staleness_evidence`` is a short quote
  * the judge used to justify the verdict.
  *
+ * Filter chips appear when there are more than 3 failures — below
+ * that, a filter UI is more visual noise than help. Filters are
+ * client-side only (the panel is a "use client" component); they
+ * don't change the rollup or the URL, so the page is still SSG.
+ *
  * Empty state is intentional and reassuring — "nothing to see here" is
  * a meaningful signal, not a layout bug.
  */
@@ -29,6 +38,35 @@ export function FailuresPanel({
   thresholds: Record<string, number>;
   summary: FailureSummaryRow | undefined;
 }) {
+  const [provider, setProvider] = useState<string>("all");
+  const [hedge, setHedge] = useState<"all" | "hedged" | "no-hedge">("all");
+  const [scorer, setScorer] = useState<string>("all");
+
+  const providers = useMemo(
+    () => Array.from(new Set(failures.map((f) => f.provider))).sort(),
+    [failures],
+  );
+  const scorers = useMemo(
+    () => Array.from(new Set(failures.map((f) => f.scorer))).sort(),
+    [failures],
+  );
+
+  const filtered = useMemo(
+    () =>
+      failures.filter((f) => {
+        if (provider !== "all" && f.provider !== provider) return false;
+        if (scorer !== "all" && f.scorer !== scorer) return false;
+        if (hedge === "hedged" && !f.acknowledged_staleness) return false;
+        if (hedge === "no-hedge" && f.acknowledged_staleness !== false) {
+          // false (judged, no hedge) is the "no-hedge" bucket; null
+          // (not judged) is excluded from both buckets.
+          return false;
+        }
+        return true;
+      }),
+    [failures, provider, hedge, scorer],
+  );
+
   if (failures.length === 0) {
     return (
       <div className="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-4 text-sm text-zinc-500 dark:text-zinc-400">
@@ -39,15 +77,139 @@ export function FailuresPanel({
     );
   }
 
+  // 3 was picked by feel: with ≤3 cards, scrolling is faster than
+  // reading filter chips. Above that, filters earn their pixels.
+  const showFilters = failures.length > 3;
+
   return (
     <div className="space-y-3">
       {summary && summary.n_failures > 0 && (
         <StalenessSummary summary={summary} />
       )}
-      {failures.map((f, i) => (
-        <FailureCard key={`${f.task_id}-${f.provider}-${f.scorer}-${i}`} f={f} />
-      ))}
+      {showFilters && (
+        <FailureFilters
+          providers={providers}
+          scorers={scorers}
+          provider={provider}
+          setProvider={setProvider}
+          hedge={hedge}
+          setHedge={setHedge}
+          scorer={scorer}
+          setScorer={setScorer}
+          total={failures.length}
+          shown={filtered.length}
+        />
+      )}
+      {filtered.length === 0 ? (
+        <div className="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/40 p-4 text-sm text-zinc-600 dark:text-zinc-400">
+          No failures match the current filter. Clear it to see all{" "}
+          {failures.length}.
+        </div>
+      ) : (
+        filtered.map((f, i) => (
+          <FailureCard key={`${f.task_id}-${f.provider}-${f.scorer}-${i}`} f={f} />
+        ))
+      )}
     </div>
+  );
+}
+
+/**
+ * Three small segmented controls. Each shows current selection and
+ * clicking a chip toggles that filter back to "all" — there's no
+ * separate clear button because the controls are themselves the clear
+ * affordance.
+ */
+function FailureFilters({
+  providers,
+  scorers,
+  provider,
+  setProvider,
+  hedge,
+  setHedge,
+  scorer,
+  setScorer,
+  total,
+  shown,
+}: {
+  providers: string[];
+  scorers: string[];
+  provider: string;
+  setProvider: (v: string) => void;
+  hedge: "all" | "hedged" | "no-hedge";
+  setHedge: (v: "all" | "hedged" | "no-hedge") => void;
+  scorer: string;
+  setScorer: (v: string) => void;
+  total: number;
+  shown: number;
+}) {
+  return (
+    <div className="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 px-3 py-2 text-xs">
+      <span className="text-zinc-500 dark:text-zinc-400">
+        Showing <strong className="text-zinc-900 dark:text-zinc-100">{shown}</strong> of {total}
+      </span>
+      {providers.length > 1 && (
+        <FilterGroup
+          label="provider"
+          value={provider}
+          onChange={setProvider}
+          options={["all", ...providers]}
+        />
+      )}
+      <FilterGroup
+        label="hedge"
+        value={hedge}
+        onChange={(v) => setHedge(v as "all" | "hedged" | "no-hedge")}
+        options={["all", "hedged", "no-hedge"]}
+      />
+      {scorers.length > 1 && (
+        <FilterGroup
+          label="scorer"
+          value={scorer}
+          onChange={setScorer}
+          options={["all", ...scorers]}
+        />
+      )}
+    </div>
+  );
+}
+
+function FilterGroup({
+  label,
+  value,
+  onChange,
+  options,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  options: string[];
+}) {
+  return (
+    <span className="inline-flex items-center gap-1.5">
+      <span className="font-mono uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
+        {label}:
+      </span>
+      <span className="inline-flex flex-wrap gap-1">
+        {options.map((opt) => {
+          const active = opt === value;
+          return (
+            <button
+              key={opt}
+              type="button"
+              onClick={() => onChange(opt)}
+              className={
+                active
+                  ? "rounded border border-zinc-400 bg-zinc-100 px-1.5 py-0.5 font-mono text-[10px] text-zinc-900 dark:border-zinc-500 dark:bg-zinc-800 dark:text-zinc-100"
+                  : "rounded border border-zinc-200 bg-white px-1.5 py-0.5 font-mono text-[10px] text-zinc-500 hover:border-zinc-400 hover:text-zinc-700 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-400 dark:hover:border-zinc-600 dark:hover:text-zinc-200"
+              }
+            >
+              {opt}
+            </button>
+          );
+        })}
+      </span>
+    </span>
   );
 }
 
