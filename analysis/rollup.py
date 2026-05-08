@@ -500,8 +500,11 @@ def calibration_stats(df: pd.DataFrame) -> list[dict[str, Any]]:
                 "n": len(scores),
                 "n_correct": n_correct,
                 "explanation": (
-                    "AUROC of (1/CI-width) vs (point estimate within ±10% of truth). "
-                    "Higher = narrower CIs on questions the model gets right."
+                    "AUROC of (1/CI-width) vs (point_score ≥ 0.9). The 0.9 "
+                    "threshold covers the full ±10% credit zone plus the "
+                    "tightest portion of the linear-decay range (~±19% of "
+                    "truth). Higher = narrower CIs on questions the model "
+                    "gets right."
                 ),
             }
         )
@@ -536,14 +539,30 @@ def _calibration_inputs(row: Any) -> tuple[float | None, float | None]:
         truth = sm.get("truth")
         est = sm.get("estimate")
         if all(isinstance(x, (int, float)) for x in (truth, est)):
-            t = float(truth)
-            if t == 0:
-                point = 1.0 if float(est) == 0 else 0.0
-            else:
-                rel = abs(float(est) - t) / abs(t)
-                point = 1.0 if rel <= 0.10 else max(0.0, 1.0 - (rel - 0.10) / 0.90)
+            point = _reconstruct_point_score(float(truth), float(est))
 
     return width_rel, point
+
+
+def _reconstruct_point_score(truth: float, estimate: float) -> float:
+    """Re-derive ``point_score`` from raw (truth, estimate) for historical logs.
+
+    Mirrors ``p3.scorers.fermi._point_score``: 1.0 within ±10%, linear decay to
+    0 at ±100%, *exponential* decay past that with half-life one factor of 2.
+    The earlier implementation cut off at the linear branch and clamped to 0
+    for any rel > 1.0, which made the AUROC reconstruction disagree with the
+    live scorer for very-wrong estimates (see fc-018: estimate=0 vs truth=226
+    is rel ≈ 1.0, dead on the boundary; rel just above gave 0 here but ~0.4
+    in the live scorer).
+    """
+    if truth == 0:
+        return 1.0 if estimate == 0 else 0.0
+    rel = abs(estimate - truth) / abs(truth)
+    if rel <= 0.10:
+        return 1.0
+    if rel <= 1.0:
+        return 1.0 - (rel - 0.10) / 0.90
+    return max(0.0, math.exp(-(rel - 1.0)))
 
 
 def _auroc(scores: list[float], labels: list[int]) -> float | None:

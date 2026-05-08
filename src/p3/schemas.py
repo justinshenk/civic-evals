@@ -74,8 +74,20 @@ class Task(BaseModel):
 
     @model_validator(mode="after")
     def _target_or_rubric(self) -> Task:
-        if self.target is None and self.rubric is None:
+        # Exactly one. The loader writes ``target`` into ``Sample.target`` and
+        # the rubric into ``metadata["rubric"]``; if both are set, the rubric
+        # would silently shadow itself behind the target field for any scorer
+        # reading from ``Sample.target``. Make the conflict loud at load time.
+        target_set = self.target is not None
+        rubric_set = self.rubric is not None
+        if not target_set and not rubric_set:
             raise ValueError(f"Task {self.id!r}: must set either target or rubric.")
+        if target_set and rubric_set:
+            raise ValueError(
+                f"Task {self.id!r}: set target OR rubric, not both — they're "
+                "scored by different scorers and combining them silently drops "
+                "one branch downstream."
+            )
         return self
 
     @model_validator(mode="after")
