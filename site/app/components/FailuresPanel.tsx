@@ -2,8 +2,10 @@
 
 import { useMemo, useState } from "react";
 
-import type { FailureRow, FailureSummaryRow } from "@/lib/rollup";
-import { fmt } from "@/lib/rollup";
+// Import from the client-safe utils module rather than @/lib/rollup —
+// the latter transitively imports node:fs (loadRollup reads the JSON
+// file from disk) which Turbopack rejects from a "use client" component.
+import { fmt, type FailureRow, type FailureSummaryRow } from "@/lib/rollup-utils";
 
 /**
  * Surfaces individual completions whose score fell below the difficulty
