@@ -60,13 +60,18 @@ jobs:
           if [ -n "$LIMIT" ]; then LIMIT_FLAG="--limit $LIMIT"; fi
 
           # Build the model list. Manual override beats auto-selection.
+          # Default models are pinned to dated suffixes so weekly refreshes
+          # don't silently shift to a new incremental version (see
+          # src/p3/providers.py for the bump policy). When Anthropic /
+          # OpenAI ship a successor and a maintainer is ready to adopt,
+          # bump these alongside the canonical constants.
           MODELS_INPUT="${{ inputs.models }}"
           if [ -n "$MODELS_INPUT" ]; then
             IFS=',' read -ra MODELS <<< "$MODELS_INPUT"
           else
             MODELS=("anthropic/claude-sonnet-4-6")
             if [ "$HAS_OPENAI_KEY" = "true" ]; then
-              MODELS+=("openai/gpt-4o")
+              MODELS+=("openai/gpt-4o-2024-08-06")
             fi
           fi
 

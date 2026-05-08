@@ -5,6 +5,22 @@ model strings. This module exists to (a) name the canonical models used
 across the suite so eval code doesn't hardcode version strings, (b) pick
 a judge provider different from the subject to avoid same-model self-bias
 in rubric scoring, and (c) fail loudly when required env vars are missing.
+
+**Version pinning.** Where vendors expose dated model aliases, the
+canonical constants below pin to the dated form rather than the
+floating short alias. This trades a manual bump cadence for measurement
+reproducibility: when Anthropic or OpenAI ships an incremental version
+under the same family name, the suite keeps measuring the *same model*
+until a maintainer reviews and bumps the suffix. Without pinning, a
+silent shift would conflate "the model changed" with "the suite found
+different behavior" — bad for a benchmark that tracks model behavior
+across time.
+
+Bump policy: when a new dated suffix lands and a maintainer wants to
+adopt it, edit the suffix here and re-run the full eval suite under
+both versions before promoting. The resulting paired run is a clean
+delta. analysis/pricing.py strips trailing date suffixes when looking
+up prices, so the price table doesn't need parallel updates.
 """
 
 from __future__ import annotations
@@ -26,10 +42,17 @@ class Model:
         return f"{self.provider}/{self.name}"
 
 
-# Canonical model set. Bump version strings here and every eval picks up the change.
+# Canonical model set. Bump version strings here (see "Version pinning"
+# in the module docstring for the bump policy) and every eval picks up
+# the change.
+#
+# Sonnet 4.6 is currently aliased without a dated suffix — the API
+# returns just "claude-sonnet-4-6" rather than a dated form, so the
+# alias *is* the canonical pin until Anthropic ships a successor.
+# Revisit when the next dated form appears in eval logs.
 CLAUDE_SONNET = Model("anthropic", "claude-sonnet-4-6")
-CLAUDE_HAIKU = Model("anthropic", "claude-haiku-4-5")
-GPT_FLAGSHIP = Model("openai", "gpt-4o")
+CLAUDE_HAIKU = Model("anthropic", "claude-haiku-4-5-20251001")
+GPT_FLAGSHIP = Model("openai", "gpt-4o-2024-08-06")
 LLAMA_OPEN = Model("together", "meta-llama/Llama-3.3-70B-Instruct-Turbo")
 
 ALL_SUBJECTS: list[Model] = [CLAUDE_SONNET, GPT_FLAGSHIP, LLAMA_OPEN]

@@ -258,10 +258,16 @@ def judge_failures(
 
 
 def _default_judge() -> str:
-    """Cheapest model in the suite; matches the CI smoke default."""
+    """Cheapest model in the suite; matches the CI smoke default.
+
+    Pinned to the dated form so rerunning a rollup against unchanged
+    failures produces an identical verdict. See ``src/p3/providers.py``
+    docstring for the version-pinning rationale.
+    """
     # Avoid importing p3.providers at module load to keep this file
-    # importable from minimal environments.
-    return "anthropic/claude-haiku-4-5"
+    # importable from minimal environments. Keep this in sync with
+    # CLAUDE_HAIKU.id when the date suffix is bumped.
+    return "anthropic/claude-haiku-4-5-20251001"
 
 
 _PROVIDER_ENV: dict[str, str] = {
