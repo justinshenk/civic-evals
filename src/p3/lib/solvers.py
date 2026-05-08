@@ -6,10 +6,12 @@ wants to expose as one-liners.
 
 from __future__ import annotations
 
+import asyncio
+
 from inspect_ai.model import ChatMessageUser, get_model
 from inspect_ai.solver import Generate, Solver, TaskState, solver
 
-from p3.personas import Persona, render
+from p3.personas import render
 from p3.providers import CLAUDE_SONNET
 
 _PARAPHRASE_PROMPT = """Rewrite the following civic question in {n} different ways.
@@ -38,13 +40,18 @@ def paraphrase_then_generate(n_paraphrases: int = 3, paraphraser: str | None = N
         if not variants:
             variants = [state.input_text]
 
-        outputs: list[str] = []
-        for v in variants:
-            out = await get_model().generate([ChatMessageUser(content=v)])
-            outputs.append(out.completion)
-
-        # Also run the original input once — that becomes state.output.
-        state = await generate(state)
+        # Fan out variant generations alongside the canonical run. Subject
+        # latency is the bottleneck of a paraphrase-consistency sample; doing
+        # this sequentially multiplies wall time by (n_paraphrases + 1) for
+        # no benefit. Concurrency is bounded by inspect-ai's per-model
+        # connection pool so this won't fan past the global rate limit.
+        subject = get_model()
+        canonical_task = generate(state)
+        variant_tasks = [
+            subject.generate([ChatMessageUser(content=v)]) for v in variants
+        ]
+        state, *variant_outs = await asyncio.gather(canonical_task, *variant_tasks)
+        outputs = [out.completion for out in variant_outs]
 
         state.metadata = dict(state.metadata or {})
         state.metadata["variants"] = variants
@@ -100,14 +107,24 @@ def persona_sweep(persona_names: list[str]) -> Solver:
 
     async def solve(state: TaskState, generate: Generate) -> TaskState:
         original = state.input_text
-        per_persona: dict[str, str] = {}
-        for name in persona_names:
-            p: Persona = by_name(name)
-            prompt = f"{render(p)}\n\n---\n\n{original}"
-            out = await get_model().generate([ChatMessageUser(content=prompt)])
-            per_persona[name] = out.completion
+        # Fan out per-persona generations alongside the canonical run.
+        # See paraphrase_then_generate for the rationale.
+        subject = get_model()
+        prompts = [
+            (name, f"{render(by_name(name))}\n\n---\n\n{original}")
+            for name in persona_names
+        ]
+        canonical_task = generate(state)
+        persona_tasks = [
+            subject.generate([ChatMessageUser(content=prompt)])
+            for _, prompt in prompts
+        ]
+        state, *persona_outs = await asyncio.gather(canonical_task, *persona_tasks)
+        per_persona: dict[str, str] = {
+            name: out.completion
+            for (name, _), out in zip(prompts, persona_outs, strict=True)
+        }
 
-        state = await generate(state)
         state.metadata = dict(state.metadata or {})
         state.metadata["per_persona_outputs"] = per_persona
         return state
