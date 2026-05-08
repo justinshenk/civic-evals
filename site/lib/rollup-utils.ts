@@ -89,6 +89,21 @@ export type FailureRow = {
   explanation: string;
   completion: string;
   sub_scores: SubScores | null;
+  // null = web-search-enabled eval; the staleness check doesn't apply.
+  acknowledged_staleness: boolean | null;
+  staleness_phrases: string[];
+};
+
+export type FailureSummaryRow = {
+  eval: string;
+  n_failures: number;
+  n_acknowledged: number;
+  n_unacknowledged: number;
+  ack_rate: number | null;
+};
+
+export type FailureSummary = {
+  by_eval: FailureSummaryRow[];
 };
 
 export type ExternalBaseline = {
@@ -113,6 +128,7 @@ export type Rollup = {
   external_baselines: ExternalBaseline[];
   failures: FailureRow[];
   failure_thresholds: Record<string, number>;
+  failure_summary: FailureSummary;
   rows: RollupRow[];
 };
 

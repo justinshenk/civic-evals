@@ -322,6 +322,30 @@ def collect_external_baselines(df: pd.DataFrame) -> list[dict[str, Any]]:
     return out
 
 
+def _staleness_helpers() -> tuple[Any, Any, Any]:
+    """Local import that works both as a script and as a module.
+
+    ``python analysis/rollup.py`` puts ``analysis/`` on ``sys.path`` so
+    ``cutoff_check`` is importable as a top-level module. ``from
+    analysis.rollup import …`` (test invocation) puts the repo root on
+    path, so the ``analysis.cutoff_check`` form resolves. Try the
+    package-qualified form first; fall back to the sibling-script form.
+    """
+    try:
+        from analysis.cutoff_check import (
+            acknowledged_staleness,
+            is_search_eval,
+            matched_phrases,
+        )
+    except ModuleNotFoundError:
+        from cutoff_check import (  # type: ignore[import-not-found, no-redef]
+            acknowledged_staleness,
+            is_search_eval,
+            matched_phrases,
+        )
+    return acknowledged_staleness, is_search_eval, matched_phrases
+
+
 def collect_failures(df: pd.DataFrame) -> list[dict[str, Any]]:
     """Per-row entries where ``score`` is below the difficulty's threshold.
 
@@ -337,6 +361,8 @@ def collect_failures(df: pd.DataFrame) -> list[dict[str, Any]]:
     """
     if df.empty:
         return []
+
+    ack_fn, is_search, match_fn = _staleness_helpers()
 
     out: list[dict[str, Any]] = []
     # easy=0, medium=1, others=2 — used purely to sort easy failures first.
@@ -360,9 +386,21 @@ def collect_failures(df: pd.DataFrame) -> list[dict[str, Any]]:
         ):
             continue
         sub = row.get("sub_scores")
+        completion = row.get("completion") or ""
+        eval_name = row.get("eval")
+        # Search-enabled variants are expected to cite a fresh URL, not
+        # hedge on training cutoff. Skip the staleness check there so the
+        # site doesn't show a misleading "no hedge" warning on a response
+        # that was supposed to be sourced.
+        if is_search(eval_name):
+            ack: bool | None = None
+            phrases: list[str] = []
+        else:
+            ack = ack_fn(completion)
+            phrases = match_fn(completion) if ack else []
         out.append(
             {
-                "eval": row.get("eval"),
+                "eval": eval_name,
                 "task_id": row.get("task_id"),
                 "difficulty": difficulty,
                 "persona": row.get("persona"),
@@ -371,12 +409,50 @@ def collect_failures(df: pd.DataFrame) -> list[dict[str, Any]]:
                 "score": float(score),
                 "threshold": _FAILURE_THRESHOLDS[difficulty],
                 "explanation": row.get("explanation") or "",
-                "completion": row.get("completion") or "",
+                "completion": completion,
                 "sub_scores": sub if isinstance(sub, dict) else None,
+                "acknowledged_staleness": ack,
+                "staleness_phrases": phrases,
             }
         )
     out.sort(key=lambda r: (rank.get(r["difficulty"], 99), r["score"]))
     return out
+
+
+def failure_summary(failures: list[dict[str, Any]]) -> dict[str, Any]:
+    """Aggregate counts for the staleness-acknowledgement check.
+
+    Splits failures into the populations the reviewer cared about: those
+    that arrived with epistemic-humility hedging (model knows it might be
+    stale or pointed at an authoritative source) vs those that did not.
+    Search-enabled evals are excluded — their failures should be measured
+    by ``citation_verifiability``, not by hedge phrases.
+
+    Returns one row per eval and a ``"all"`` rollup row, so the site can
+    show both per-eval and overall numbers without recomputation.
+    """
+    rows: dict[str, dict[str, int]] = {"all": {"n": 0, "ack": 0, "no_ack": 0}}
+    for f in failures:
+        ack = f.get("acknowledged_staleness")
+        if ack is None:  # search-enabled; not in the population
+            continue
+        eval_name = f.get("eval") or "?"
+        for bucket in (eval_name, "all"):
+            rows.setdefault(bucket, {"n": 0, "ack": 0, "no_ack": 0})
+            rows[bucket]["n"] += 1
+            rows[bucket]["ack" if ack else "no_ack"] += 1
+
+    out: list[dict[str, Any]] = []
+    for name, c in sorted(rows.items()):
+        n = c["n"]
+        out.append({
+            "eval": name,
+            "n_failures": n,
+            "n_acknowledged": c["ack"],
+            "n_unacknowledged": c["no_ack"],
+            "ack_rate": (c["ack"] / n) if n else None,
+        })
+    return {"by_eval": out}
 
 
 def calibration_stats(df: pd.DataFrame) -> list[dict[str, Any]]:
@@ -567,6 +643,7 @@ def main() -> int:
     calib_stats = calibration_stats(df)
     external_baselines = collect_external_baselines(df)
     failures = collect_failures(df)
+    fail_summary = failure_summary(failures)
 
     if args.format == "csv":
         if args.output:
@@ -590,6 +667,7 @@ def main() -> int:
             "external_baselines": external_baselines,
             "failures": failures,
             "failure_thresholds": _FAILURE_THRESHOLDS,
+            "failure_summary": fail_summary,
             "rows": records,
         }
         text = _json.dumps(payload, default=str, indent=2, allow_nan=False)
