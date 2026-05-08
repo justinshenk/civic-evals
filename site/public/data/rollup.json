@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-05-08T13:10:16.697123+00:00",
+  "generated_at": "2026-05-08T13:35:01.695597+00:00",
   "n_rows": 184,
   "evals": [
     "election_integrity",
@@ -1563,7 +1563,7 @@
       "value": null,
       "n": 3,
       "n_correct": 3,
-      "explanation": "AUROC of (1/CI-width) vs (point estimate within \u00b110% of truth). Higher = narrower CIs on questions the model gets right."
+      "explanation": "AUROC of (1/CI-width) vs (point_score \u2265 0.9). The 0.9 threshold covers the full \u00b110% credit zone plus the tightest portion of the linear-decay range (~\u00b119% of truth). Higher = narrower CIs on questions the model gets right."
     },
     {
       "eval": "fermi_civic_estimation",
@@ -1572,7 +1572,7 @@
       "value": 0.6854838709677419,
       "n": 35,
       "n_correct": 31,
-      "explanation": "AUROC of (1/CI-width) vs (point estimate within \u00b110% of truth). Higher = narrower CIs on questions the model gets right."
+      "explanation": "AUROC of (1/CI-width) vs (point_score \u2265 0.9). The 0.9 threshold covers the full \u00b110% credit zone plus the tightest portion of the linear-decay range (~\u00b119% of truth). Higher = narrower CIs on questions the model gets right."
     },
     {
       "eval": "fermi_civic_estimation",
@@ -1581,7 +1581,7 @@
       "value": 0.6145833333333334,
       "n": 32,
       "n_correct": 24,
-      "explanation": "AUROC of (1/CI-width) vs (point estimate within \u00b110% of truth). Higher = narrower CIs on questions the model gets right."
+      "explanation": "AUROC of (1/CI-width) vs (point_score \u2265 0.9). The 0.9 threshold covers the full \u00b110% credit zone plus the tightest portion of the linear-decay range (~\u00b119% of truth). Higher = narrower CIs on questions the model gets right."
     }
   ],
   "external_baselines": [

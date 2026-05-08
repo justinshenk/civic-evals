@@ -39,6 +39,37 @@ def _stub_rollup(rows: list[dict]) -> dict:
     }
 
 
+def test_logprob_sentinel_excluded_from_provider_means() -> None:
+    """Anthropic returns score=0.0 + parse_success=False for logprob rows
+    because it doesn't expose token logprobs. Including that sentinel in the
+    per-provider mean drags Anthropic down for cosmetic reasons. The mean
+    must filter on score_metadata.parse_success."""
+    rows = [
+        # Real rubric_judge row, full credit.
+        {"eval": "voting_access", "provider": "anthropic/claude-sonnet-4-6",
+         "scorer": "rubric_judge", "score": 1.0, "score_metadata": None},
+        # Logprob sentinel — should be excluded, not averaged into Anthropic's mean.
+        {"eval": "voting_access", "provider": "anthropic/claude-sonnet-4-6",
+         "scorer": "token_logprob_uncertainty", "score": 0.0,
+         "score_metadata": {"parse_success": False}},
+    ]
+    means = _eval_provider_means(_stub_rollup(rows))
+    # Mean over the surviving row alone — the sentinel was filtered.
+    assert means[("voting_access", "anthropic/claude-sonnet-4-6")] == 1.0
+
+
+def test_real_zero_score_still_counted() -> None:
+    """A genuine 0.0 (parse_success=True or absent) is real data and must count."""
+    rows = [
+        {"eval": "voting_access", "provider": "openai/gpt-4o",
+         "scorer": "rubric_judge", "score": 0.0, "score_metadata": None},
+        {"eval": "voting_access", "provider": "openai/gpt-4o",
+         "scorer": "rubric_judge", "score": 1.0, "score_metadata": None},
+    ]
+    means = _eval_provider_means(_stub_rollup(rows))
+    assert means[("voting_access", "openai/gpt-4o")] == 0.5
+
+
 def test_means_skip_none_and_string_scores() -> None:
     rows = [
         {"eval": "x", "provider": "p1", "score": 1.0},

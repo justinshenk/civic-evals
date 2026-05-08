@@ -21,6 +21,23 @@ def test_missing_target_and_rubric_rejected() -> None:
         )
 
 
+def test_both_target_and_rubric_rejected() -> None:
+    """Setting both silently drops the rubric — the loader uses ``target or ""``
+    so any scorer reading ``Sample.target`` ignores the rubric. Must be loud."""
+    with pytest.raises(ValidationError):
+        Task.model_validate(
+            {
+                "id": "x-both",
+                "domain": "x",
+                "subdomain": "y",
+                "input": "whatever",
+                "target": "yes",
+                "rubric": "Reward: …",
+                "metadata": {"difficulty": "easy", "source": "src", "tags": ["t"]},
+            }
+        )
+
+
 def test_persona_in_input_rejected() -> None:
     with pytest.raises(ValidationError):
         Task.model_validate(

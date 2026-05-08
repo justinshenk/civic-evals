@@ -78,15 +78,27 @@ def pick_judge(subject: Model) -> Model:
     falls back to a same-provider judge and emits a warning. Mentees
     running against one provider at a time still get results, but the
     log entry records the degradation so it shows up in the rollup.
+
+    Raises ``RuntimeError`` if neither the preferred nor the fallback
+    judge has an API key set — failing at setup is far better than
+    crashing mid-eval inside the scorer.
     """
     preferred = GPT_FLAGSHIP if subject.provider == "anthropic" else CLAUDE_SONNET
     if os.environ.get(_ENV_KEY[preferred.provider]):
         return preferred
 
-    import warnings
     # Same-provider fallback. For Anthropic subject we use Haiku (cheaper,
     # still a different model than Sonnet) rather than the subject itself.
     fallback = CLAUDE_HAIKU if subject.provider == "anthropic" else CLAUDE_SONNET
+    if not os.environ.get(_ENV_KEY[fallback.provider]):
+        raise RuntimeError(
+            f"pick_judge: neither {_ENV_KEY[preferred.provider]} (preferred "
+            f"judge {preferred.id}) nor {_ENV_KEY[fallback.provider]} "
+            f"(fallback {fallback.id}) is set. Set at least one provider's "
+            "API key before running rubric-judged or information-density evals."
+        )
+
+    import warnings
     warnings.warn(
         f"pick_judge: {_ENV_KEY[preferred.provider]} not set; falling back "
         f"to same-provider judge {fallback.id}. Cross-provider judging is "

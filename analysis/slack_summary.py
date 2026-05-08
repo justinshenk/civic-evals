@@ -140,13 +140,23 @@ def _success_payload(
 def _eval_provider_means(
     rollup: dict[str, Any] | None,
 ) -> dict[tuple[str, str], float]:
-    """Mean score per (eval, provider). Skips rows with score=None."""
+    """Mean score per (eval, provider). Skips rows with score=None.
+
+    Also skips rows where the scorer flagged ``parse_success=False`` —
+    notably the token-logprob scorer's 0.0 sentinel on Anthropic (which
+    doesn't expose token logprobs in its API). Including the sentinel
+    would drag Anthropic's per-(eval, provider) mean down for cosmetic
+    reasons unrelated to actual capability.
+    """
     if not rollup:
         return {}
     bucket: dict[tuple[str, str], list[float]] = defaultdict(list)
     for row in rollup.get("rows") or []:
         score = row.get("score")
         if not isinstance(score, (int, float)):
+            continue
+        score_meta = row.get("score_metadata") or {}
+        if score_meta.get("parse_success") is False:
             continue
         eval_name = row.get("eval")
         provider = row.get("provider")
