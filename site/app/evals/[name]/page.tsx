@@ -74,10 +74,7 @@ export default async function EvalPage({ params }: { params: Promise<{ name: str
         </header>
 
         <section className="space-y-3">
-          <SectionHeader
-            title="How this is scored"
-            hint="One short paragraph per scorer used on this eval. The README link in the header has the full spec; this is enough context to read the tables honestly."
-          />
+          <SectionHeader title="How this is scored" />
           <MethodsPanel
             scorers={scorers}
             hasFailures={failures.length > 0}
@@ -422,11 +419,13 @@ function CompletionBlock({
   );
 }
 
-function SectionHeader({ title, hint }: { title: string; hint: string }) {
+function SectionHeader({ title, hint }: { title: string; hint?: string }) {
   return (
     <div className="space-y-1">
       <h2 className="text-xl font-semibold tracking-tight">{title}</h2>
-      <p className="text-sm text-zinc-500 dark:text-zinc-400 max-w-3xl">{hint}</p>
+      {hint && (
+        <p className="text-sm text-zinc-500 dark:text-zinc-400 max-w-3xl">{hint}</p>
+      )}
     </div>
   );
 }
