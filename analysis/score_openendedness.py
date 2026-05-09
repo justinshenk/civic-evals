@@ -100,10 +100,12 @@ def parse_score(text: str) -> float | None:
 
 
 def collect_unique_stems() -> dict[tuple[str, int], str]:
-    """Map (topic, rung) → stem (the part after the priming sentence).
+    """Map (topic, rung) → stem.
 
-    The stem is invariant across L and R framings — that's the symmetry
-    contract — so 50 tasks reduce to 25 unique stems.
+    In the v2 design (no L/R priming), each prompt is just the stem,
+    so this is straightforward — 25 tasks, 25 unique stems. The
+    ``\\n\\n`` split fallback is preserved for forward-compat with
+    any future prompt shape that prepends contextual framing.
     """
     stems: dict[tuple[str, int], str] = {}
     for line in TASKS_PATH.read_text().splitlines():
@@ -112,7 +114,9 @@ def collect_unique_stems() -> dict[tuple[str, int], str]:
         t = json.loads(line)
         e = t["metadata"]["extras"]
         key = (e["topic"], int(e["rung"]))
-        # input = "<priming>\n\n<stem>"; the stem is what we score.
+        # If the input ever contains a "\n\n", treat what comes after
+        # as the stem (e.g. v1 had "<priming>\n\n<stem>"). v2 inputs are
+        # single-paragraph stems with no \n\n, so this is a no-op.
         parts = t["input"].split("\n\n", 1)
         stem = parts[1] if len(parts) == 2 else t["input"]
         stems.setdefault(key, stem)

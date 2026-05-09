@@ -60,8 +60,8 @@
     "openai": 0.25
   },
   "ranked_choice/r3": {
-    "anthropic": 0.75,
-    "mean": 0.625,
+    "anthropic": 0.62,
+    "mean": 0.56,
     "openai": 0.5
   },
   "ranked_choice/r4": {
