@@ -16,9 +16,8 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
-from pydantic import ValidationError
-
 from p3.schemas import Task, load_tasks
+from pydantic import ValidationError
 
 _BASE = {
     "id": "x-1",
@@ -89,5 +88,5 @@ def test_every_task_in_repo_declares_track() -> None:
     assert checked > 0, "expected at least one task in evals/"
     assert not missing, (
         "tasks missing metadata.track (declare 'factual' or 'interpretive' "
-        f"per the May 2026 research-direction split):\n  " + "\n  ".join(missing)
+        "per the May 2026 research-direction split):\n  " + "\n  ".join(missing)
     )
