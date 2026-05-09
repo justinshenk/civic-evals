@@ -141,6 +141,16 @@ def collect_eval_meta(evals_dir: Path) -> list[dict[str, Any]]:
         scorer_kinds = sorted(
             {("rubric" if t.rubric else "target") for t in tasks}
         )
+        # Per-eval track is the dominant value across its tasks. Mixed
+        # evals (some factual, some interpretive) are uncommon but
+        # represented faithfully — site can show the breakdown.
+        tracks = Counter(t.metadata.track for t in tasks)
+        if not tracks or all(k is None for k in tracks):
+            track = None
+        elif len(tracks) == 1:
+            track = next(iter(tracks))
+        else:
+            track = "mixed"
 
         out.append(
             {
@@ -151,6 +161,7 @@ def collect_eval_meta(evals_dir: Path) -> list[dict[str, Any]]:
                 "subdomains": subdomains,
                 "personas_used": personas,
                 "scorer_kinds": scorer_kinds,
+                "track": track,
                 "readme_url": (
                     f"https://github.com/justinshenk/civic-evals/blob/main/evals/{d.name}/README.md"
                 ),
@@ -198,6 +209,7 @@ def _task_summary(task: Any) -> dict[str, Any]:
         "refusal_expected": refusal_expected,
         "source": task.metadata.source,
         "last_verified": task.metadata.last_verified,
+        "track": task.metadata.track,
     }
 
 

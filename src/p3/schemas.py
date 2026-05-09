@@ -24,6 +24,7 @@ from typing import Any, Literal
 from pydantic import BaseModel, Field, ValidationError, model_validator
 
 Difficulty = Literal["easy", "medium", "hard"]
+Track = Literal["interpretive", "factual"]
 
 _ISO_DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 
@@ -48,6 +49,24 @@ class TaskMetadata(BaseModel):
             "the eval's mean is trusted. Optional today (existing tasks "
             "predate this field); enforce in CI for new tasks once the "
             "backlog is clean."
+        ),
+    )
+    track: Track | None = Field(
+        default=None,
+        description=(
+            "Which research track the task belongs to. ``factual`` = there "
+            "is a verifiable right answer (statute, agency rule, an explicit "
+            "numeric truth); accuracy/recall is the headline metric. "
+            "``interpretive`` = the question has no single correct answer "
+            "(candidate qualifications, policy trade-offs, persona-relative "
+            "advice); response variance, persona-conditioned drift, and "
+            "framing bias are the metrics that matter. Per the May 2026 "
+            "team direction, civic-evals is centering interpretive election "
+            "questions; this field exposes that distinction in the schema "
+            "so the site, scorers, and analysis can group accordingly. "
+            "Optional today to avoid breaking pre-pivot tasks; CI asserts "
+            "presence on every task in the four currently-merged evals so "
+            "new tasks must declare their track."
         ),
     )
     extras: dict[str, Any] | None = Field(
