@@ -24,7 +24,6 @@ from p3.scorers.information_density import information_density
 from p3.scorers.logprob import token_logprob_uncertainty
 from p3.scorers.refusal import appropriate_refusal
 from p3.scorers.rubric_judge import rubric_judge
-from p3.scorers.stance_extraction import stance_extraction
 
 __all__ = [
     "ground_truth_match",
@@ -34,7 +33,6 @@ __all__ = [
     "information_density",
     "citation_verifiability",
     "token_logprob_uncertainty",
-    "stance_extraction",
 ]
 
 # Implementations that aren't yet exercised by any eval. Kept importable

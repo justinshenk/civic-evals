@@ -16,9 +16,8 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
-from pydantic import ValidationError
-
 from p3.schemas import Task, load_tasks
+from pydantic import ValidationError
 
 _BASE = {
     "id": "x-1",
