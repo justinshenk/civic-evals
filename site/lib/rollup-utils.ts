@@ -146,6 +146,25 @@ export type ExternalBaseline = {
   n_rows: number;
 };
 
+// Cross-model substantive-policy bias from the school-board candidate
+// factorial (Eric's experiment, May 2026; analysis/multi_model_bias.py).
+// One record per model; the headline metric is years_per_package — read
+// as "the R-typical-platform candidate is rated as having this many
+// fewer years of equivalent experience than the otherwise-identical
+// D-typical candidate." Positive ⇒ D-typical rated higher.
+export type BiasFit = {
+  model: string;
+  years_per_package: number | null;
+  years_per_party: number | null;
+  beta_package_zz: number | null;
+  p_package: number | null;
+  r2: number | null;
+  rating_mean: number;
+  rating_sd: number;
+  n_parsed: number;
+  n_total: number;
+};
+
 // Token-usage and cost per (eval, model). cost_source distinguishes
 // "reported" (provider sent it) from "computed" (priced via the local
 // table) so the UI can footnote estimates.
@@ -177,6 +196,9 @@ export type Rollup = {
   failure_summary: FailureSummary;
   // Optional so older rollups (pre-usage feature) still parse.
   usage?: UsageRow[];
+  // Optional so rollups that ran without analysis/multi_model_rows.json
+  // (CI forks, smoke tests) still parse.
+  bias?: BiasFit[];
   rows: RollupRow[];
 };
 

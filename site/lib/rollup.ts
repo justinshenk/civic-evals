@@ -14,6 +14,7 @@ export type {
   FailureSummary,
   FailureSummaryRow,
   UsageRow,
+  BiasFit,
   Rollup,
 } from "@/lib/rollup-utils";
 export { meanBy, groupBy, fmt } from "@/lib/rollup-utils";

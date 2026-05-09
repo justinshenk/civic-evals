@@ -388,6 +388,93 @@ def _staleness_helpers() -> tuple[Any, Any]:
     return is_search_eval, judge_failures
 
 
+def collect_bias(rows_path: Path | None = None) -> list[dict[str, Any]]:
+    """Re-fit the school-board candidate factorial from the raw rows.
+
+    The bias measurement (Eric's experiment, May 2026) lives in
+    ``analysis/multi_model_rows.json`` as a flat list of 720 ratings.
+    Re-fitting at rollup time means the headline yrs-per-package
+    number on the site is *always* derivable from the raw data — no
+    hand-typed numbers in markdown to drift out of sync.
+
+    Returns one record per model with:
+
+    - ``model`` — provider/short id (e.g. ``anthropic/claude-haiku-4.5``)
+    - ``years_per_package`` — the headline metric. Positive = D-typical
+      platform rated higher than R-typical (controlling for label,
+      experience, and rigor), expressed as years of equivalent
+      experience the R-platform candidate "loses".
+    - ``years_per_party`` — same metric for party label alone. Usually
+      tiny / non-significant; included for completeness.
+    - ``beta_package_zz`` / ``p_package`` / ``r2`` — standardized
+      coefficient, two-sided p-value, and R² from the canonical
+      z-standardized OLS fit.
+    - ``rating_mean`` / ``rating_sd`` / ``n_parsed`` / ``n_total`` —
+      sanity / coverage stats per model.
+
+    Returns ``[]`` when the raw rows file is missing — keeps the rollup
+    resilient on forks that don't have OpenRouter access.
+    """
+    rows_path = rows_path or REPO_ROOT / "analysis" / "multi_model_rows.json"
+    if not rows_path.exists():
+        return []
+    try:
+        raw = _json.loads(rows_path.read_text())
+    except Exception:
+        return []
+    if not isinstance(raw, list) or not raw:
+        return []
+
+    # Local import. Two paths because rollup.py runs both as a script
+    # (`python analysis/rollup.py`, in which case ``analysis/`` is on
+    # sys.path but not the repo root) and as a module (`from
+    # analysis.rollup import ...`, in which case the package import
+    # works). Same pattern as ``_collect_usage`` above.
+    try:
+        from analysis.multi_model_bias import fit_model
+    except ImportError:
+        try:
+            from multi_model_bias import fit_model  # type: ignore[import-not-found, no-redef]
+        except Exception:
+            return []
+    except Exception:
+        return []
+
+    by_model: dict[str, list[dict[str, Any]]] = {}
+    for r in raw:
+        model = r.get("model")
+        if not model:
+            continue
+        by_model.setdefault(model, []).append(r)
+
+    out: list[dict[str, Any]] = []
+    for model, model_rows in sorted(by_model.items()):
+        try:
+            fit = fit_model(model_rows, model)
+        except Exception:
+            continue
+        out.append(
+            {
+                "model": model,
+                "years_per_package": fit.years_per_package,
+                "years_per_party": fit.years_per_party,
+                "beta_package_zz": fit.beta_std.get("policy_package"),
+                "p_package": fit.p_std.get("policy_package"),
+                "r2": fit.r2_std,
+                "rating_mean": fit.rating_mean,
+                "rating_sd": fit.rating_sd,
+                "n_parsed": fit.n_parsed,
+                "n_total": fit.n_total,
+            }
+        )
+    # Sort by magnitude of policy bias desc — the site's bar chart
+    # reads from this order.
+    out.sort(
+        key=lambda x: -abs(x["years_per_package"] or 0.0),
+    )
+    return out
+
+
 def collect_failures(df: pd.DataFrame) -> list[dict[str, Any]]:
     """Per-row entries where ``score`` is below the difficulty's threshold.
 
@@ -714,6 +801,7 @@ def main() -> int:
     # from the per-sample row extraction above) — cheap relative to the
     # full rollup and cleanly isolated.
     usage_rows = _collect_usage(args.log_dir)
+    bias_rows = collect_bias()
 
     if args.format == "csv":
         if args.output:
@@ -739,6 +827,7 @@ def main() -> int:
             "failure_thresholds": _FAILURE_THRESHOLDS,
             "failure_summary": fail_summary,
             "usage": usage_rows,
+            "bias": bias_rows,
             "rows": records,
         }
         text = _json.dumps(payload, default=str, indent=2, allow_nan=False)

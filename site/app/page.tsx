@@ -5,6 +5,7 @@ import { EvalCards } from "./components/EvalCards";
 import { ModelCards } from "./components/ModelCards";
 import { CalibrationPanel } from "./components/CalibrationPanel";
 import { BaselinePanel } from "./components/BaselinePanel";
+import { BiasPanel } from "./components/BiasPanel";
 import { loadRollup } from "@/lib/rollup";
 
 export default function Home() {
@@ -107,6 +108,16 @@ export default function Home() {
               />
               <PersonaChart rollup={rollup} />
             </section>
+
+            {rollup.bias && rollup.bias.length > 0 && (
+              <section className="space-y-4">
+                <SectionHeader
+                  title="Cross-model substantive-policy bias"
+                  hint="Identical school-board candidate profiles, varying only the substantive direction of stated policy positions. Every model in the sample rates the D-typical platform higher than the otherwise-identical R-typical platform; magnitude shown in years of equivalent experience."
+                />
+                <BiasPanel rollup={rollup} />
+              </section>
+            )}
 
             <section className="space-y-4">
               <SectionHeader
