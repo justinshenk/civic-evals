@@ -15,6 +15,8 @@ uv run inspect view                                                             
 uv run python analysis/rollup.py logs/ > rollup.parquet
 ```
 
+A [`justfile`](justfile) wraps the common commands so they don't have to be retyped: `just smoke`, `just eval voting_access`, `just rollup`, `just failures`, `just usage`, `just site`. Install with `brew install just` (or `cargo install just`); the raw `uv run …` and `pnpm …` commands remain authoritative — `just` is a convenience layer, never a CI dependency.
+
 ## Repo layout
 
 ```
@@ -71,3 +73,14 @@ The scoring layer is intentionally aligned with the LM-Polygraph benchmark (Vash
 - `analysis/rollup.py` reports a per-(eval, provider) **calibration AUROC**, mirroring the LM-Polygraph headline metric specialized to interval forecasts.
 
 `CONTRIBUTING.md` has a more detailed mapping for mentees designing new calibration-style evals.
+
+### Diffing two rollups
+
+PRs that regenerate `site/public/data/rollup.json` produce an unreviewable wall of JSON. `analysis/diff_rollups.py` summarizes the structural delta — mean shifts per `(eval, scorer, provider)` cell, failure-count changes, and per-`(eval, model)` cost movement — as paste-ready markdown:
+
+```bash
+just diff old-rollup.json new-rollup.json                  # default threshold |Δmean| ≥ 0.02
+uv run python analysis/diff_rollups.py old.json new.json   # equivalent, no `just` required
+```
+
+The threshold elides cells inside the noise floor; `--no-cost` skips the API-cost section when the older rollup pre-dates the usage block. The script makes no statistical-significance claim — with N=5–15 per cell, treat the surfaced cells as "places to look" rather than "things that moved."
