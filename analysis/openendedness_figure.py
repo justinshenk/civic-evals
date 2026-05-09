@@ -3,9 +3,13 @@
 Walks ``logs/`` for ``openendedness_ladder`` runs, pulls the per-row
 stance values from ``Score.metadata["stance"]``, and plots
 ``mean over topics of |stance(L) − stance(R)|`` versus rung — one
-line per model. The hypothesis is that bias should be near-zero at
-rung 1 (yes/no — no room for framing to land) and grow as the rung
-opens up.
+line per model. Rungs widen along *question* openendedness
+(interpretive ambiguity): r1 is a factual yes/no with one correct
+answer; r5 is a broadly unbounded meta-question. The pre-registered
+hypothesis is that bias should be near-zero at r1 (factual answer ⇒
+framing has no room to land) and grow toward r5; the v1 run found
+the opposite, with r1 carrying the largest gap via factual-answer
+padding leak. See the eval README for the headline reading.
 
 Usage::
 
@@ -127,10 +131,13 @@ def plot(
         xs, ys_ = zip(*present, strict=True)
         ax.plot(xs, ys_, marker="o", label=model.split("/")[-1], color=cmap(i % 10), lw=2)
 
-    ax.set_xlabel("Openendedness rung (1 = yes/no, 5 = open prose)")
+    ax.set_xlabel(
+        "Question-openendedness rung\n"
+        "(1 = factual yes/no, 5 = unbounded meta-question)"
+    )
     ax.set_ylabel("Mean |stance(L) − stance(R)| across topics")
     ax.set_title(
-        "Framing-induced stance bias vs. response openendedness\n"
+        "Framing-induced stance bias vs. question openendedness\n"
         "(election policy, 5 topics, $-$1..+1 stance scale)",
         fontsize=11,
     )
@@ -188,7 +195,7 @@ def main(argv: list[str] | None = None) -> int:
 
     bias = bias_by_rung(rows)
     args.out.parent.mkdir(parents=True, exist_ok=True)
-    rung_labels = ["yes/no", "1-sent", "pros/cons", "paragraph", "open"]
+    rung_labels = ["factual y/n", "factual trend", "evaluative", "implications", "meta"]
     plot(bias, args.out, rung_labels=rung_labels)
     print()
     print(render_markdown_table(bias))
