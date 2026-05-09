@@ -41,6 +41,17 @@ export type RollupRow = {
   score_metadata: ScoreDiagnostics | null;
 };
 
+// Research-direction split per the May 2026 team pivot. "factual" =
+// the task has a verifiable right answer (statute, rule, numeric truth);
+// accuracy/recall is the metric. "interpretive" = no single correct
+// answer (persona-conditioned advice, candidate qualifications,
+// policy trade-offs); persona-conditioned drift, framing bias, and
+// response variance are the metrics that matter. null on tasks that
+// pre-date the field; "mixed" only at the eval level when an eval
+// contains both.
+export type Track = "factual" | "interpretive";
+export type EvalTrack = Track | "mixed" | null;
+
 export type TaskSummary = {
   id: string;
   input: string;
@@ -57,6 +68,7 @@ export type TaskSummary = {
   // unverified — older than 12 months should be treated as needing
   // re-verification before the eval's mean is fully trusted.
   last_verified: string | null;
+  track: Track | null;
 };
 
 export type EvalMeta = {
@@ -67,6 +79,9 @@ export type EvalMeta = {
   subdomains: string[];
   personas_used: string[];
   scorer_kinds: string[];
+  // Dominant track across the eval's tasks; "mixed" when both are
+  // represented. null on rollups regenerated before the field was added.
+  track: EvalTrack;
   readme_url: string;
   tasks: TaskSummary[];
 };

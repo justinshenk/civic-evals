@@ -29,6 +29,17 @@ Every row in your `tasks.jsonl` must parse as a `Task`. Required fields:
 | `metadata.tags` | list[string] | At least one. |
 | `persona` | object (optional) | `{"name": "<canonical>"}` or `{"attributes": {...}}`, never both. |
 | `metadata.notes` | string (optional) | Anything a reviewer should know. `refusal_expected = refuse|answer|hedge` goes here if you want the refusal scorer to use it. |
+| `metadata.last_verified` | ISO date (optional) | `YYYY-MM-DD` you last checked the source. Tasks with no date or one >12 months old surface as a maintenance signal on the site. |
+| `metadata.track` | `"factual" \| "interpretive"` | Required on new tasks (CI gate via `tests/test_track.py`). See *Track* below. |
+
+### Track: factual vs interpretive
+
+Per the May 2026 team direction, civic-evals splits tasks along a research-direction axis:
+
+- **`factual`** — there is a verifiable right answer (statute, agency rule, an explicit numeric truth). Accuracy / recall is the headline metric. The four pre-pivot evals (`voting_access`, `election_integrity`, `fermi_civic_estimation`) are factual.
+- **`interpretive`** — the question has no single correct answer (candidate qualifications, policy trade-offs, persona-relative advice). Response variance, persona-conditioned drift, and framing bias are the metrics that matter. `policy_impact_personalization` is interpretive.
+
+Pick the one that fits the *task*, not the eval. An eval can be mixed; the rollup reports the dominant value plus `"mixed"` when both appear. **Do not pick "factual" by reflex** — if the answer depends on persona, jurisdiction, or a value judgment, mark it `interpretive`. The team's research direction is on the interpretive side; mistagging hides interpretive work behind a factual filter on the site.
 
 ## Scorer selection
 
