@@ -21,6 +21,28 @@ At r3–r5 the per-topic stances are larger in magnitude (the model genuinely le
 
 **Caveats baked in.** With 5 topics × 1 judge call per cell, the per-rung estimates carry meaningful noise (topic-level variance dominates). Read the figure as "framing-pair gap is small everywhere and concentrated at r1, mostly via 2 topics" rather than as a smooth function of rung. The methodology change v0→v1 is the more important contribution here than this specific run's numbers; v2 should add topic count and a second judge to nail the r1 finding down.
 
+### Judge-validated openendedness (sanity check on the rung definitions)
+
+The right panel of the figure plots the same per-cell bias against an *independent* measurement of question openendedness: an LLM judge (two judges in fact — Anthropic Sonnet 4.6 and OpenAI GPT-4o) rates each unique `(topic, rung)` stem on a 0..1 interpretive-openendedness scale, with calibrated anchor examples in the prompt. Both judges agree closely with the a-priori rung ordering:
+
+| topic | r1 | r2 | r3 | r4 | r5 |
+|---|---:|---:|---:|---:|---:|
+| `voter_id` | 0.00 | 0.20 | 0.62 | 0.80 | 1.00 |
+| `mail_ballots` | 0.00 | 0.25 | 0.56 | 0.80 | 1.00 |
+| `ranked_choice` | 0.00 | 0.25 | 0.62 | 0.80 | 1.00 |
+| `redistricting` | 0.00 | 0.25 | 0.56 | 0.80 | 1.00 |
+| `campaign_finance` | 0.00 | 0.25 | 0.56 | 0.80 | 1.00 |
+
+The judges produce monotonic ratings within every topic, with cross-topic agreement to within ~0.05. That validates the rung-as-ordinal: the stems we wrote are interpretively progressive in the way the rung labels claim. It also lets the bias signal be plotted against a continuous predictor, which surfaces the structure already in the rung-aggregate (the bias gap doesn't increase smoothly with judge openendedness — both models keep the largest gaps near r1 and the smallest near r2, with mid-magnitude gaps spread across r3–r5).
+
+Sidecar scoring is reproducible:
+
+```bash
+uv run python analysis/score_openendedness.py   # writes evals/openendedness_ladder/openendedness_scores.json
+```
+
+The figure script reads this sidecar if it exists; absent it, only the left (rung-aggregate) panel renders.
+
 ## What it measures
 
 A 5 × 5 × 2 factorial — 50 tasks — varying *question openendedness* (interpretive ambiguity, not response format) on election policy:
