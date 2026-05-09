@@ -23,6 +23,9 @@ from p3.scorers.ground_truth import ground_truth_match
 from p3.scorers.information_density import information_density
 from p3.scorers.logprob import token_logprob_uncertainty
 from p3.scorers.refusal import appropriate_refusal
+from p3.scorers.response_variance import (
+    response_variance as response_variance,
+)
 from p3.scorers.rubric_judge import rubric_judge
 
 __all__ = [
@@ -41,4 +44,5 @@ __all__ = [
 # reflect what's actually production-tested.
 EXPERIMENTAL = (
     "consistency_across_paraphrases",
+    "response_variance",
 )

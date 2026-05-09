@@ -57,7 +57,8 @@ Pick from `src/p3/scorers/`:
 
 | Scorer | Status |
 |---|---|
-| `consistency_across_paraphrases()` | Implementation ready; needs the `paraphrase_then_generate` solver, no eval currently uses it. |
+| `consistency_across_paraphrases()` | Implementation ready; needs the `paraphrase_then_generate` solver, no eval currently uses it. **Factual track** — clusters responses by claim, so meaningful only when there's a single right answer. |
+| `response_variance()` | Implementation ready; same `variant_outputs` contract as `consistency_across_paraphrases` but for **interpretive track**: extracts a -1..+1 stance per variant and scores `1 - std-dev`. Anchored views = high score, persuadable models = low. Requires `metadata.extras.stance_scale` per task. |
 | `citation_verifiability()` | Implementation ready; makes live HTTP calls so test setup needs network mocking. |
 
 **Do not invent new scorers without discussing on the PR first.** The rollup layer depends on scorers returning the standard shape; a bespoke scorer's numbers won't compare to anyone else's.
@@ -70,7 +71,8 @@ The Vashurin et al. benchmark (TACL 2025) groups UQ methods into ~8 families. Fo
 |---|---|---|
 | Verbalized / claim-level | `rubric_judge.calibrated_uncertainty` | Judge-mediated; expensive but judges natural-language hedging directly. |
 | Logit-based / token-level | `token_logprob_uncertainty` | OpenAI-only at the moment. |
-| Sampling-based / consistency | `consistency_across_paraphrases` | Varies the prompt, not the temperature. |
+| Sampling-based / consistency | `consistency_across_paraphrases` | Varies the prompt, not the temperature. Factual track. |
+| Sampling-based / stance dispersion | `response_variance` | Same paraphrase machinery, but scores std-dev of the model's *stance* on a -1..+1 scale. Interpretive track. |
 | Interval forecasts (Winkler) | `fermi_calibration.interval_score` | Specialized: requires the eval to extract an explicit CI from the model. |
 
 If your idea doesn't fit any of these, that's the conversation to start on the PR.
