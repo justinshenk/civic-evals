@@ -475,6 +475,69 @@ def collect_bias(rows_path: Path | None = None) -> list[dict[str, Any]]:
     return out
 
 
+def collect_cell_stats(df: pd.DataFrame) -> list[dict[str, Any]]:
+    """Per-(eval, scorer, provider) cell mean + bootstrap 95% CI + n.
+
+    The per-eval pages and ScoreMatrix on the home page render headline
+    means without any spread context. With N=5–15 per cell after persona
+    expansion, a 0.05 swing is well inside the noise floor — readers
+    can't tell which cell-to-cell deltas are real. This collection adds
+    a 95% bootstrap CI per cell so the site can render the spread.
+
+    Bootstrap rather than parametric (t-based) because:
+
+    - scores are bounded in [0, 1] and often near the boundary; t-based
+      CIs would routinely produce upper bounds > 1 or lower < 0,
+      which the site would have to clip and explain.
+    - the mean isn't always asymptotically normal at small N;
+      bootstrap produces the right empirical distribution shape
+      regardless.
+    - 1000 resamples × per cell × current ~50 cells = ~50ms; cheap.
+
+    Cells with N < 3 are still emitted but with ``ci_low/ci_high =
+    null`` — at that sample size the bootstrap is meaningless and the
+    site should show "n=2" rather than a fake-precise interval.
+    """
+    if df.empty:
+        return []
+    import numpy as np  # local import: rollup.py runs without numpy in
+                       # smoke-test paths; bias_collect already pulls it.
+
+    rng = np.random.default_rng(seed=2026_05_09)  # stable for snapshot tests
+
+    out: list[dict[str, Any]] = []
+    grouped = df.dropna(subset=["score"]).groupby(
+        ["eval", "scorer", "provider"], sort=True
+    )
+    for (eval_name, scorer, provider), group in grouped:
+        scores = group["score"].astype(float).to_numpy()
+        n = len(scores)
+        if n == 0:
+            continue
+        mean = float(scores.mean())
+        if n < 3:
+            ci_low = ci_high = None
+        else:
+            # 1000-iter percentile bootstrap. Vectorized across
+            # resamples so the whole loop is one numpy call.
+            resamples = rng.choice(scores, size=(1000, n), replace=True)
+            means = resamples.mean(axis=1)
+            ci_low = float(np.percentile(means, 2.5))
+            ci_high = float(np.percentile(means, 97.5))
+        out.append(
+            {
+                "eval": eval_name,
+                "scorer": scorer,
+                "provider": provider,
+                "n": int(n),
+                "mean": mean,
+                "ci_low": ci_low,
+                "ci_high": ci_high,
+            }
+        )
+    return out
+
+
 def collect_failures(df: pd.DataFrame) -> list[dict[str, Any]]:
     """Per-row entries where ``score`` is below the difficulty's threshold.
 
@@ -802,6 +865,7 @@ def main() -> int:
     # full rollup and cleanly isolated.
     usage_rows = _collect_usage(args.log_dir)
     bias_rows = collect_bias()
+    cell_stats = collect_cell_stats(df)
 
     if args.format == "csv":
         if args.output:
@@ -828,6 +892,7 @@ def main() -> int:
             "failure_summary": fail_summary,
             "usage": usage_rows,
             "bias": bias_rows,
+            "cell_stats": cell_stats,
             "rows": records,
         }
         text = _json.dumps(payload, default=str, indent=2, allow_nan=False)

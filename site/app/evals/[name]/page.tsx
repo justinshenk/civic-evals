@@ -3,6 +3,7 @@ import Link from "next/link";
 import { FailuresPanel } from "@/app/components/FailuresPanel";
 import { FermiRangeBar } from "@/app/components/FermiRangeBar";
 import { MethodsPanel } from "@/app/components/MethodsPanel";
+import { PersonaDeltaPanel } from "@/app/components/PersonaDeltaPanel";
 import {
   fmt,
   groupBy,
@@ -93,6 +94,16 @@ export default async function EvalPage({ params }: { params: Promise<{ name: str
             summary={failureSummary}
           />
         </section>
+
+        {meta.track !== "factual" && (
+          <section className="space-y-3">
+            <SectionHeader
+              title="Persona-conditioned variation"
+              hint="Same subdomain (e.g. voter_id), different persona slot. Empty when the eval has only one persona per subdomain. Large |Δ| means the model's score depends on the asker — the headline metric for interpretive-track evals."
+            />
+            <PersonaDeltaPanel rows={evalRows} />
+          </section>
+        )}
 
         <section className="space-y-3">
           <SectionHeader

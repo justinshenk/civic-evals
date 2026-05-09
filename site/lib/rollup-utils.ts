@@ -146,6 +146,24 @@ export type ExternalBaseline = {
   n_rows: number;
 };
 
+// Per-(eval, scorer, provider) mean + 95% bootstrap CI.
+//
+// Computed in analysis/rollup.collect_cell_stats. With N=5–15 per cell
+// after persona expansion, the headline mean alone invites readers to
+// over-interpret 0.05 deltas. Pairing it with a bootstrap interval
+// makes the spread visible. Cells with N<3 carry ci_low/ci_high=null
+// — at that sample size the bootstrap is meaningless and the UI
+// should show "n=2" rather than a fake-precise interval.
+export type CellStat = {
+  eval: string;
+  scorer: string;
+  provider: string;
+  n: number;
+  mean: number;
+  ci_low: number | null;
+  ci_high: number | null;
+};
+
 // Cross-model substantive-policy bias from the school-board candidate
 // factorial (Eric's experiment, May 2026; analysis/multi_model_bias.py).
 // One record per model; the headline metric is years_per_package — read
@@ -199,8 +217,41 @@ export type Rollup = {
   // Optional so rollups that ran without analysis/multi_model_rows.json
   // (CI forks, smoke tests) still parse.
   bias?: BiasFit[];
+  // Optional so older rollups (pre-cell-stats feature) still parse.
+  cell_stats?: CellStat[];
   rows: RollupRow[];
 };
+
+/**
+ * Indexed cell-stats lookup. Pre-build once per render; calling the
+ * returned closure is O(1).
+ *
+ *   const stat = cellStatLookup(rollup.cell_stats);
+ *   const s = stat(eval, scorer, provider);  // CellStat | undefined
+ */
+export function cellStatLookup(
+  stats: CellStat[] | undefined,
+): (e: string, s: string, p: string) => CellStat | undefined {
+  if (!stats || stats.length === 0) return () => undefined;
+  const map = new Map<string, CellStat>();
+  for (const s of stats) {
+    map.set(`${s.eval} ${s.scorer} ${s.provider}`, s);
+  }
+  return (e, s, p) => map.get(`${e} ${s} ${p}`);
+}
+
+/**
+ * Render a 95% CI as a paren tail on a mean: ``0.62 [0.49–0.74] (n=12)``.
+ * Falls back to just ``mean (n=N)`` when CI is null (n<3).
+ */
+export function fmtMeanCI(stat: CellStat | undefined, digits = 2): string {
+  if (!stat) return "—";
+  const mean = stat.mean.toFixed(digits);
+  if (stat.ci_low === null || stat.ci_high === null) {
+    return `${mean} (n=${stat.n})`;
+  }
+  return `${mean} [${stat.ci_low.toFixed(digits)}–${stat.ci_high.toFixed(digits)}] (n=${stat.n})`;
+}
 
 export function meanBy<T>(items: T[], key: (t: T) => number | null): number | null {
   const vals = items.map(key).filter((v): v is number => typeof v === "number");
