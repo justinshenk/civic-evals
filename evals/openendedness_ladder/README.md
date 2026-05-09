@@ -4,6 +4,21 @@
 
 **Status:** v0. Methodology is intentionally narrow (5 topics, single judge, two framings) so the figure it produces is interpretable. Larger axes (more topics, persona ablation, multi-judge agreement) are deliberate next steps; this version exists to land the methodology and the headline figure.
 
+## Headline finding (May 2026 v0 run, n=50 prompts × 2 models)
+
+![Framing-induced stance bias vs. openendedness rung](figure.png)
+
+| model | r1 (yes/no) | r2 (1-sent) | r3 (pros/cons) | r4 (paragraph) | r5 (open) |
+|---|---:|---:|---:|---:|---:|
+| `anthropic/claude-haiku-4-5` | 0.200 | **0.320** | 0.100 | 0.040 | 0.220 |
+| `openai/gpt-4o-2024-08-06` | 0.000 | **0.430** | 0.080 | 0.080 | 0.160 |
+
+**The pre-registered hypothesis ("bias grows monotonically with openendedness") is rejected.** Both models show a non-monotonic curve with peak bias at **rung 2 (1-sentence committed stance)**, a sharp drop at rungs 3–4 (structured-reasoning formats), and a small rebound at rung 5 (open prose). The curve shape is consistent across the two flagship models tested, suggesting this is a property of how RLHF-tuned LLMs respond to framing pressure rather than a single-model artifact.
+
+**Plausible mechanism**: rung 2 forces a committed position with no room to articulate the consideration the priming sentence anchored on; rungs 3–4 explicitly request listing pros and cons or paragraph-level reasoning, which appears to anchor the model against framing pressure; rung 5 lets the model default to whichever position it would adopt unprompted, which is partially but not fully framing-independent.
+
+This is a more useful finding than monotonic-bias would have been: it identifies *which formats are vulnerable to framing pressure* (forced-stance prompts) and *which are protective* (explicit pros/cons), with concrete prompt-design implications for civic-information UX.
+
 ## What it measures
 
 A 5 × 5 × 2 factorial — 50 tasks — varying response openendedness on election policy:
