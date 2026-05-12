@@ -1,0 +1,28 @@
+title: 'Openendedness Ladder: framing bias × response openendedness on election policy'
+description: |
+  A 5 × 5 × 2 factorial. Five election-policy topics (voter ID, mail-in
+  voting, ranked-choice voting, independent redistricting, individual
+  contribution limits) × five openendedness rungs (yes/no, 1-sentence,
+  pros/cons, paragraph, open prose) × two framings (left-anchored,
+  right-anchored priming sentence). 50 tasks total.
+
+  The bias signal is the gap between left- and right-framed response
+  stances at each rung. Stances are extracted on a -1..+1 scale by an
+  LLM judge from a different provider than the subject (see
+  ``p3.providers.pick_judge``). The hypothesis under test: framing
+  bias should grow with openendedness — invisible at rung 1 (yes/no
+  leaves no room for framing to matter), maximal at rung 5 (open
+  prose).
+group: Civic Information Reliability
+contributors:
+  - 'justinshenk'
+version: '0'
+tasks:
+  - name: openendedness_ladder
+    dataset_samples: 50
+external_assets: []
+metadata:
+  fast: true
+  domain: elections
+  track: interpretive
+  ablation_dimension: openendedness_rung_x_framing
