@@ -142,6 +142,10 @@ class ExperimentConfig:
     max_tokens: int = 1024
     rating_pattern: str = r"RATING\s*:\s*(\d+(?:\.\d+)?)"
     rating_range: tuple[float, float] = (1.0, 10.0)
+    # If True, store the full response text in each row dict. Off by
+    # default because it bloats the rows JSON for large runs; opt in
+    # for prose analysis.
+    save_responses: bool = False
 
     def factor_by_name(self, name: str) -> Factor | None:
         for f in self.factors:
@@ -282,6 +286,7 @@ async def run(config: ExperimentConfig) -> list[dict[str, Any]]:
             "rep": rep,
             "rating": rating,
             "response_chars": len(text),
+            **({"response_text": text} if config.save_responses else {}),
             "system_prompt_chars": len(system_prompt),
             "user_prompt_chars": len(user_prompt),
         }
