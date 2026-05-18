@@ -86,9 +86,44 @@ Even under L0 the cells still show 0.8–1.0-point gaps, all in the same directi
 - Is the residue at L0 a fixed floor across cells, or does it scale with the baseline gap?
 - Can a *user-side* statement ("treat me without regard to my background") produce the same effect, or does the instruction have to live in the system prompt?
 
+## Haiku replication
+
+Same 3 cells × 4 personas × 2 conditions × 10 reps, executed on Haiku via `analysis/persona_l0_haiku.py`. Cost ~$1. Result:
+
+| cell | Haiku baseline | Haiku L0 | Haiku reduction | Sonnet baseline | Sonnet L0 | Sonnet reduction |
+|---|---|---|---|---|---|---|
+| cand-D1 (D) / R-primed / thorough | −0.70 | −0.40 | **43%** | −3.20 | −1.00 | **69%** |
+| cand-R2 (R) / D-primed / thorough | +1.50 | +0.50 | **67%** | +2.70 | +0.80 | **70%** |
+| cand-R1 (R) / D-primed / brief    | +1.90 | +1.10 | **42%** | +2.50 | +0.90 | **64%** |
+| **average** | | | **~50%** | | | **~67%** |
+
+Two things to note from the comparison:
+
+### 1. Haiku starts from much smaller baseline gaps
+
+Across all three cells, Haiku's pre-mitigation persona gap is smaller than Sonnet's by roughly 1–2.5 points. Sonnet does substantially more audience-adjustment than Haiku to begin with. This is consistent with what the full pilot showed (Sonnet's user_persona standardized β was much larger than Haiku's).
+
+So even though Sonnet ends up with the bigger absolute persona effect, the *larger model is doing more of the bad behavior*, not less. L0 is partly catching up to where Haiku already was.
+
+### 2. The L0 residue is approximately constant across models
+
+Haiku post-L0 residues: 0.4, 0.5, 1.1. Sonnet post-L0 residues: 1.0, 0.8, 0.9. Both cluster around 0.5–1.0 points across the three cells.
+
+So:
+- **Pre-L0**: bigger model → bigger persona effect.
+- **Post-L0**: similar small residue regardless of model.
+
+A clean reading: the persona-tracking behavior is a *capability* — bigger models exercise it more eagerly. L0 turns the capability off. What's left after L0 is the model's underlying preference function on the candidate, which is similar in shape across both models (slight pro-D-typical preference, ~0.5–1.0 points on a 10-point scale).
+
+### 3. Implication for production prompt-engineering recommendations
+
+If you deploy a smaller model and don't add L0-style framing, you get ~half the persona-driven motivated reasoning that a larger model would show. If you deploy a larger model, L0 framing is much more important — without it you get 3+ point swings; with it you get the same ~1-point residue Haiku has.
+
+Either way, the L0 instruction is the lever that produces persona-stable ratings, and it works across model sizes.
+
 ## Caveats
 
-- **Sonnet only.** Haiku replication is the most natural next step.
+- **Two Anthropic models only** (Sonnet + Haiku). Cross-provider behavior under L0 is untested here. The earlier multi-model bias run found policy-substance bias generalizes across providers, but L0-mitigation of *persona effects* has only been tested on Anthropic models in this experiment.
 - **3 cells**, all on the synthetic-candidate state-senate scenario. Not yet tested on real candidates or other scenario types.
-- **N=10 per persona per condition.** Enough for the headline 67% reduction; not enough to nail the L0-residue floor precisely.
+- **N=10 per persona per condition.** Enough for the headline reduction numbers; not enough to nail the L0-residue floor precisely.
 - **The L0 prefix is one specific wording.** Wording variations might produce different attenuation magnitudes.
