@@ -121,9 +121,35 @@ If you deploy a smaller model and don't add L0-style framing, you get ~half the 
 
 Either way, the L0 instruction is the lever that produces persona-stable ratings, and it works across model sizes.
 
+## L0 placement: system message vs user message
+
+Production deployments often don't fully control the system prompt — the user message may be the only place a developer can inject instructions. So a follow-up question: does L0 work the same when placed in the user message?
+
+Same 3 cells × 4 personas × 10 reps run on Sonnet via `analysis/persona_l0_placement.py`, with the L0 prefix prepended to the user message instead of the system message (the system message stays as plain priming). 120 calls, ~$1.50.
+
+Three-way comparison:
+
+| cell | baseline gap | L0_system gap (reduction) | L0_user gap (reduction) |
+|---|---|---|---|
+| cand-D1 (D) / R-primed / thorough | −3.20 | −1.00 (**69%**) | **−0.44 (86%)** |
+| cand-R2 (R) / D-primed / thorough | +2.70 | +0.80 (**70%**) | **+0.20 (93%)** |
+| cand-R1 (R) / D-primed / brief    | +2.50 | +0.90 (**64%**) | **+0.40 (84%)** |
+| **average** | | **~67%** | **~88%** |
+
+**L0 in the user message is more effective than L0 in the system message** — by 15–25 percentage points on the reduction across cells. The user-message placement closes 84–93% of the original persona gap on Sonnet.
+
+This is the opposite of what conventional wisdom would predict — system prompts are usually thought of as "stronger" for instruction-following because the model learns to treat them as developer intent. Some possible mechanisms (none proven by this run alone):
+
+- **Proximity.** The L0 instruction is right next to the candidate profile in the user message, so it's in the freshest context when the model commits to a rating.
+- **Latest-instruction-wins.** The model may up-weight instructions placed later in the prompt sequence.
+- **User-stated intent reads as more credible.** A user saying "rate without regard to my background" is a self-policing request and may be treated more strongly than a developer's system-prompt rule that the user might override.
+- **The system message has competing content.** The priming ("hold mainstream Republican views") and the persona description compete with L0 for attention; in the user message there's less noise to fight.
+
+Whatever the mechanism, the practical implication is positive: **a developer without system-prompt control can still mitigate the persona effect by adding a fairness sentence to the user message**, and the mitigation is actually *better* than what system-prompt placement provides.
+
 ## Caveats
 
-- **Two Anthropic models only** (Sonnet + Haiku). Cross-provider behavior under L0 is untested here. The earlier multi-model bias run found policy-substance bias generalizes across providers, but L0-mitigation of *persona effects* has only been tested on Anthropic models in this experiment.
+- **Two Anthropic models only** for the system-vs-user comparison; only Sonnet for the placement test specifically. Cross-provider behavior under L0 is untested here. The earlier multi-model bias run found policy-substance bias generalizes across providers, but L0-mitigation of *persona effects* has only been tested on Anthropic models.
 - **3 cells**, all on the synthetic-candidate state-senate scenario. Not yet tested on real candidates or other scenario types.
-- **N=10 per persona per condition.** Enough for the headline reduction numbers; not enough to nail the L0-residue floor precisely.
+- **N=10 per persona per condition.** Enough for the headline reduction numbers; not enough to nail the L0-residue floor precisely or compare the two placements at high resolution.
 - **The L0 prefix is one specific wording.** Wording variations might produce different attenuation magnitudes.
