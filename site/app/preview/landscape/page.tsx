@@ -514,6 +514,146 @@ export default function LandscapePreview() {
           </article>
         </section>
 
+        {/* Operational plan for §3 — from the persona-drift workstream */}
+        <section className="space-y-4 pt-6 border-t border-zinc-200 dark:border-zinc-800">
+          <h2 className="text-xl font-semibold text-zinc-900 dark:text-zinc-100">
+            Operational plan for §3 — from the persona-drift workstream
+          </h2>
+          <p className="text-sm text-zinc-700 dark:text-zinc-300">
+            Notes from the §3 sub-team on how to deliver Proposal A in particular. The
+            headline operational move is treating the{" "}
+            <strong>conversation taxonomy as the intellectual core</strong> — not just
+            running pilots, but building a principled, literature-grounded map of
+            conversation states / drift types that future work can extend.
+          </p>
+
+          <article className="space-y-3 pt-2">
+            <h3 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
+              Four steps
+            </h3>
+            <ol className="list-decimal list-outside ml-5 space-y-3 text-sm text-zinc-700 dark:text-zinc-300">
+              <li>
+                <strong>Write the conversation taxonomy</strong>{" "}
+                <span className="text-zinc-500 dark:text-zinc-400">(qualitative core)</span>
+                <br />A short structured list of drift types, each principled or
+                grounded in a mechanism from the literature. Concrete examples on the
+                table:
+                <ul className="list-disc list-outside ml-5 mt-1.5 space-y-1">
+                  <li>&ldquo;emotionally stressed user&rdquo;</li>
+                  <li>&ldquo;politically pre-framed user&rdquo;</li>
+                  <li>
+                    &ldquo;user who has established a false prior without citing
+                    evidence&rdquo;
+                  </li>
+                </ul>
+                <p className="mt-1.5">This is the contribution&rsquo;s intellectual core.</p>
+              </li>
+              <li>
+                <strong>Build the pilot dataset</strong>{" "}
+                <span className="text-zinc-500 dark:text-zinc-400">(qualitative)</span>
+                <br />5–10 existing tasks from the repo × drift types, as hand-crafted
+                multi-turn conversations. Validates that the effect is real before
+                committing to a full dataset.
+              </li>
+              <li>
+                <strong>Extend the repo infrastructure</strong>{" "}
+                <span className="text-zinc-500 dark:text-zinc-400">(engineering)</span>
+                <ul className="list-disc list-outside ml-5 mt-1.5 space-y-1">
+                  <li>
+                    schema field for{" "}
+                    <code className="font-mono">conversation_history</code>
+                  </li>
+                  <li>solver that replays it before the target question</li>
+                  <li>delta scoring at the rollup layer</li>
+                </ul>
+              </li>
+              <li>
+                <strong>Run the pilot + check the numbers</strong>
+                <br />Accuracy degradation + answer divergence. Scale up the dataset
+                if the effect is real; revise the conversation designs (or rethink the
+                framing) if not.
+              </li>
+            </ol>
+          </article>
+
+          <article className="space-y-3 pt-2">
+            <h3 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
+              Sequencing
+            </h3>
+            <ul className="text-sm text-zinc-700 dark:text-zinc-300 list-disc list-outside ml-5 space-y-1">
+              <li>
+                <strong>(1) first</strong> — qualitative RQ; gates everything else.
+              </li>
+              <li>
+                <strong>(2) and (3) parallelize</strong> — pilot data and infrastructure
+                can proceed independently once the taxonomy is set.
+              </li>
+              <li>
+                <strong>(4) integrates</strong> the two.
+              </li>
+            </ul>
+          </article>
+
+          <article className="space-y-3 pt-2">
+            <h3 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
+              What this adds beyond Proposals A–C
+            </h3>
+            <p className="text-sm text-zinc-700 dark:text-zinc-300">
+              The <strong>&ldquo;false prior&rdquo;</strong> drift type is a new axis
+              that wasn&rsquo;t explicit in any of the three proposals. It complements them
+              rather than replacing:
+            </p>
+            <ul className="text-sm text-zinc-700 dark:text-zinc-300 list-disc list-outside ml-5 space-y-1">
+              <li>
+                <strong>Persona-attribute drift</strong> (Proposal A) — who the user is.
+              </li>
+              <li>
+                <strong>Sycophantic pressure</strong> (Proposal B) — what the user
+                demands.
+              </li>
+              <li>
+                <strong>False-prior drift</strong> (new) — what the user has asserted
+                is true.
+              </li>
+            </ul>
+            <p className="text-sm text-zinc-700 dark:text-zinc-300">
+              Together these form a 3-axis taxonomy of conversation states. Worth
+              making it 3-way orthogonal from the start so the taxonomy reads as
+              principled rather than enumerated.
+            </p>
+          </article>
+
+          <article className="space-y-3 pt-2">
+            <h3 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
+              Engineering payback beyond §3
+            </h3>
+            <p className="text-sm text-zinc-700 dark:text-zinc-300">
+              The proposed schema/solver/scoring is clean — and not §3-specific:
+            </p>
+            <ul className="text-sm text-zinc-700 dark:text-zinc-300 list-disc list-outside ml-5 space-y-1">
+              <li>
+                <code className="font-mono">conversation_history</code> as a first-class
+                schema field generalizes to any multi-turn eval — including §4
+                (sycophantic pressure) and §5 (persona × pressure).
+              </li>
+              <li>
+                A replay solver is reusable infrastructure across §§3–5.
+              </li>
+              <li>
+                Delta scoring at the rollup layer gives clean with-vs-without
+                comparisons — the natural metric for both refusal-rate shift and
+                stance drift.
+              </li>
+            </ul>
+            <p className="text-sm text-zinc-700 dark:text-zinc-300">
+              Worth scoping the engineering work as{" "}
+              <strong>&ldquo;multi-turn eval infrastructure&rdquo;</strong> rather than
+              &ldquo;persona-drift one-off,&rdquo; so §4 and §5 inherit it instead of
+              re-implementing.
+            </p>
+          </article>
+        </section>
+
         <footer className="pt-8 border-t border-zinc-200 dark:border-zinc-800 text-xs text-zinc-500 dark:text-zinc-400">
           This page is intentionally unlinked from the public site and excluded from
           robots. The matrix is editorial — generated from a hand-curated dictionary
