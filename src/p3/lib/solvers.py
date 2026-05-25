@@ -99,6 +99,68 @@ def with_source_search() -> Solver:
 
 
 @solver
+def multi_turn_drift() -> Solver:
+    """Replay an optional turn history, generate, optionally apply a pressure follow-up.
+
+    Reads from ``sample.metadata["extras"]``:
+
+    - ``conversation_history`` — list of ``{role: "user"|"assistant", content: str}``
+      turns prepended before the final user input. Used by the false-prior axis
+      (assertion in turn 1, ack in turn 2, real question in turn 3 = ``state.input``).
+    - ``pressure_followup`` — optional string. If set, the solver generates a
+      response to the input, appends the model's reply, appends ``pressure_followup``
+      as a new user message, and regenerates. Used by the sycophantic-pressure axis
+      so a single sample captures the full turn-1-then-pressure-then-turn-3 trace.
+
+    Stores in ``state.metadata``:
+
+    - ``turn1_response`` — the first generation (always set, even when no pressure).
+    - ``final_response`` — the response scored downstream (= ``state.output.completion``).
+
+    Single-turn persona tasks just leave both extras empty; the solver degrades to
+    a plain ``generate(state)`` so persona-attribute drift sits on the same
+    plumbing as the other two axes.
+    """
+    from inspect_ai.model import ChatMessageAssistant
+
+    async def solve(state: TaskState, generate: Generate) -> TaskState:
+        extras = (state.metadata or {}).get("extras") or {}
+        history = extras.get("conversation_history") or []
+        pressure = extras.get("pressure_followup")
+
+        prefix: list = []
+        for turn in history:
+            role = turn.get("role")
+            content = turn.get("content", "")
+            if role == "user":
+                prefix.append(ChatMessageUser(content=content))
+            elif role == "assistant":
+                prefix.append(ChatMessageAssistant(content=content))
+            else:
+                raise ValueError(f"multi_turn_drift: bad role {role!r} in conversation_history")
+
+        if prefix:
+            # Replace the default single-user-message thread with prefix + input.
+            state.messages = [*prefix, ChatMessageUser(content=state.input_text)]
+
+        state = await generate(state)
+
+        first_completion = state.output.completion or ""
+        state.metadata = dict(state.metadata or {})
+        state.metadata["turn1_response"] = first_completion
+
+        if pressure:
+            state.messages.append(ChatMessageAssistant(content=first_completion))
+            state.messages.append(ChatMessageUser(content=pressure))
+            state = await generate(state)
+
+        state.metadata["final_response"] = state.output.completion or ""
+        return state
+
+    return solve
+
+
+@solver
 def persona_sweep(persona_names: list[str]) -> Solver:
     """For one task, run it under each named canonical persona and
     record all outputs. The scorer decides what to do with the sweep.

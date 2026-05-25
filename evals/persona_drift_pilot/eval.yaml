@@ -1,0 +1,34 @@
+title: 'Persona-drift pilot: three-axis decomposition of conditional civic-LLM drift'
+description: |
+  Pilot for the §3 persona-drift workstream. 5 topics × 3 axes × 2 conditions
+  = 30 tasks, paired baseline/treatment.
+
+  The three axes (see TAXONOMY.md):
+    - persona_attribute   — same question, different asker identity
+    - sycophantic_pressure — same question, then user pushback in turn 2
+    - false_prior          — same question, with a false-premise turn prepended
+
+  Per-task scoring is stance_extraction on the model's final response.
+  Drift per (topic, axis) is computed at the analysis layer as the
+  baseline-vs-treatment gap (signed for sycophantic_pressure; absolute
+  otherwise). The hypothesis under test: drift magnitude rank-orders
+  differently across the three axes, supporting the claim that the
+  three are distinct failure modes rather than reflections of one
+  underlying instability.
+
+  Substrate (topics, stance scales, interpretive framing) is shared
+  with evals/openendedness_ladder so the drift numbers from this eval
+  sit alongside the refusal-cliff numbers on the same topic spine.
+group: Civic Information Reliability
+contributors:
+  - 'justinshenk'
+version: '0'
+tasks:
+  - name: persona_drift_pilot
+    dataset_samples: 30
+external_assets: []
+metadata:
+  fast: true
+  domain: elections
+  track: interpretive
+  ablation_dimension: axis_x_condition
