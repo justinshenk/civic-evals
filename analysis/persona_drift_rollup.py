@@ -36,7 +36,6 @@ from pathlib import Path
 
 from inspect_ai.log import read_eval_log
 
-
 REPO = Path(__file__).resolve().parents[1]
 OUT_JSON = REPO / "analysis" / "persona_drift_pilot_results.json"
 

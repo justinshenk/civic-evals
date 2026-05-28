@@ -26,7 +26,6 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 import numpy as np  # noqa: E402
 
-
 REPO = Path(__file__).resolve().parents[1]
 RESULTS_JSON = REPO / "analysis" / "persona_drift_pilot_results.json"
 OUT_PATH = REPO / "site" / "public" / "preview" / "persona_drift_pilot.png"
