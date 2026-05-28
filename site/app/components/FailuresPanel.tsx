@@ -5,7 +5,12 @@ import { useMemo, useState } from "react";
 // Import from the client-safe utils module rather than @/lib/rollup —
 // the latter transitively imports node:fs (loadRollup reads the JSON
 // file from disk) which Turbopack rejects from a "use client" component.
-import { fmt, type FailureRow, type FailureSummaryRow } from "@/lib/rollup-utils";
+import {
+  fmt,
+  type ConversationTurn,
+  type FailureRow,
+  type FailureSummaryRow,
+} from "@/lib/rollup-utils";
 
 /**
  * Surfaces individual completions whose score fell below the difficulty
@@ -244,6 +249,20 @@ function StalenessSummary({ summary }: { summary: FailureSummaryRow }) {
 }
 
 function FailureCard({ f }: { f: FailureRow }) {
+  const extras = (f.extras ?? {}) as Record<string, unknown>;
+  const meta = (f.score_metadata ?? {}) as Record<string, unknown>;
+  const axis = typeof extras.axis === "string" ? extras.axis : null;
+  const condition = typeof extras.condition === "string" ? extras.condition : null;
+  const topic = typeof extras.topic === "string" ? extras.topic : null;
+  const history = Array.isArray(extras.conversation_history)
+    ? (extras.conversation_history as ConversationTurn[])
+    : [];
+  const stance = typeof meta.stance === "number" ? (meta.stance as number) : null;
+  const rawJudge =
+    typeof meta.raw_judge_output === "string"
+      ? (meta.raw_judge_output as string)
+      : null;
+
   return (
     <div className="rounded-lg border border-rose-200 dark:border-rose-900/50 bg-rose-50/40 dark:bg-rose-950/20 overflow-hidden">
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-rose-200 dark:border-rose-900/50 bg-rose-100/60 dark:bg-rose-950/40 px-3 py-2 text-[11px] font-mono text-rose-700 dark:text-rose-300">
@@ -271,8 +290,32 @@ function FailureCard({ f }: { f: FailureRow }) {
             {" "}
             (threshold {fmt(f.threshold)})
           </span>
+          {stance !== null && (
+            <span className="ml-2 text-rose-500/70 dark:text-rose-400/60">
+              · stance{" "}
+              <strong className="tabular-nums">
+                {stance >= 0 ? "+" : ""}
+                {stance.toFixed(2)}
+              </strong>
+            </span>
+          )}
         </span>
       </div>
+      {(axis || condition || topic) && (
+        <div className="flex flex-wrap items-center gap-2 px-3 pt-3 text-[11px]">
+          {topic && <ContextChip k="topic" v={topic} />}
+          {axis && <ContextChip k="axis" v={axis} />}
+          {condition && <ContextChip k="condition" v={condition} />}
+        </div>
+      )}
+      {f.input && (
+        <p className="px-3 pt-3 text-xs leading-relaxed text-zinc-700 dark:text-zinc-300">
+          <span className="text-zinc-400 dark:text-zinc-500 font-mono mr-2">
+            asked:
+          </span>
+          {f.input}
+        </p>
+      )}
       {f.explanation && (
         <p className="px-3 pt-3 text-xs leading-relaxed text-zinc-600 dark:text-zinc-400">
           <span className="text-zinc-400 dark:text-zinc-500 font-mono mr-2">
@@ -286,6 +329,67 @@ function FailureCard({ f }: { f: FailureRow }) {
           {f.completion}
         </pre>
       )}
+      {(history.length > 0 || rawJudge) && (
+        <details className="px-3 pb-3 text-xs">
+          <summary className="cursor-pointer text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100">
+            More context (
+            {[
+              history.length > 0 && `${history.length}-turn prior`,
+              rawJudge && "raw judge output",
+            ]
+              .filter(Boolean)
+              .join(", ")}
+            )
+          </summary>
+          <div className="space-y-3 pt-3">
+            {history.length > 0 && (
+              <ConversationHistory turns={history} />
+            )}
+            {rawJudge && (
+              <div>
+                <div className="text-zinc-400 dark:text-zinc-500 font-mono text-[10px] uppercase tracking-wider mb-1">
+                  raw judge output
+                </div>
+                <pre className="rounded border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-2 whitespace-pre-wrap font-mono text-[11px] leading-relaxed text-zinc-700 dark:text-zinc-300 overflow-x-auto">
+                  {rawJudge}
+                </pre>
+              </div>
+            )}
+          </div>
+        </details>
+      )}
+    </div>
+  );
+}
+
+function ContextChip({ k, v }: { k: string; v: string }) {
+  return (
+    <span className="inline-flex items-center gap-1 rounded border border-zinc-200 bg-white px-1.5 py-0.5 font-mono text-[10px] text-zinc-600 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-400">
+      <span className="text-zinc-400 dark:text-zinc-500">{k}:</span>
+      <span className="text-zinc-700 dark:text-zinc-200">{v}</span>
+    </span>
+  );
+}
+
+function ConversationHistory({ turns }: { turns: ConversationTurn[] }) {
+  return (
+    <div className="space-y-2">
+      <div className="text-zinc-400 dark:text-zinc-500 font-mono text-[10px] uppercase tracking-wider">
+        prior turns (this is what the model saw before the asked question)
+      </div>
+      {turns.map((t, i) => (
+        <div
+          key={i}
+          className="rounded border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-2"
+        >
+          <div className="text-[10px] font-mono uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-1">
+            {t.role}
+          </div>
+          <div className="whitespace-pre-wrap text-[11px] leading-relaxed text-zinc-700 dark:text-zinc-300">
+            {t.content}
+          </div>
+        </div>
+      ))}
     </div>
   );
 }

@@ -50,6 +50,8 @@ def rollup(log_dir: Path) -> pd.DataFrame:
             persona_role = _persona_label(persona)
             persona_attrs = persona if isinstance(persona, dict) else None
             completion = _truncate(_completion_text(sample), 600)
+            input_text = _truncate(_input_text(sample), 400)
+            extras = meta.get("extras") if isinstance(meta.get("extras"), dict) else None
             scores = sample.scores or {}
             for scorer_name, score in scores.items():
                 score_meta = score.metadata or {}
@@ -68,6 +70,8 @@ def rollup(log_dir: Path) -> pd.DataFrame:
                         "score": _as_float(score.value),
                         "explanation": score.explanation or "",
                         "completion": completion,
+                        "input": input_text,
+                        "extras": extras,
                         "sub_scores": score_meta.get("sub_scores"),
                         "score_metadata": _scorer_diagnostics(score_meta),
                     }
@@ -77,7 +81,10 @@ def rollup(log_dir: Path) -> pd.DataFrame:
 
 # Whitelist of scorer-metadata keys the site needs (e.g. fermi range bar).
 # Pass-through would bloat the rollup; named keys keep the contract explicit.
-_DIAG_KEYS = ("truth", "estimate", "ci_low", "ci_high", "parse_success", "refused")
+_DIAG_KEYS = (
+    "truth", "estimate", "ci_low", "ci_high", "parse_success", "refused",
+    "stance", "raw_judge_output",
+)
 
 
 # Per-difficulty score thresholds for "this should worry you" surfacing.
@@ -100,6 +107,25 @@ def _completion_text(sample: Any) -> str:
         return ""
     text = getattr(output, "completion", None)
     return text if isinstance(text, str) else ""
+
+
+def _input_text(sample: Any) -> str:
+    """Best-effort recovery of the user-facing question stem.
+
+    Persona-prefixed evals wrap the question in a system-style preamble
+    ("You are answering a question from a user with…"); the failure card
+    is more useful if we surface the actual question rather than the
+    boilerplate. Strip a leading preamble that ends with a known marker
+    line; otherwise return the input as-is.
+    """
+    raw = getattr(sample, "input", "") or ""
+    if not isinstance(raw, str):
+        return ""
+    # The persona-rendered preamble ends with one of these separator lines.
+    for marker in ("\n\nQuestion: ", "\n\n---\n\n", "\nQuestion: "):
+        if marker in raw:
+            return raw.split(marker, 1)[1].strip()
+    return raw.strip()
 
 
 def _truncate(text: str, limit: int) -> str:
@@ -581,6 +607,7 @@ def collect_failures(df: pd.DataFrame) -> list[dict[str, Any]]:
         completion = row.get("completion") or ""
         eval_name = row.get("eval")
         meta = row.get("score_metadata")
+        extras = row.get("extras")
         # Surface the scorer's own ``refused`` marker as a flat field so the
         # site can render a "refusal-shaped" indicator on the failure card.
         # The fermi scorer sets this when the model declined to commit to a
@@ -599,6 +626,9 @@ def collect_failures(df: pd.DataFrame) -> list[dict[str, Any]]:
                 "threshold": _FAILURE_THRESHOLDS[difficulty],
                 "explanation": row.get("explanation") or "",
                 "completion": completion,
+                "input": row.get("input") or "",
+                "extras": extras if isinstance(extras, dict) else None,
+                "score_metadata": meta if isinstance(meta, dict) else None,
                 "sub_scores": sub if isinstance(sub, dict) else None,
                 "refused": refused,
                 # Verdict fields are populated by ``judge_failures`` after

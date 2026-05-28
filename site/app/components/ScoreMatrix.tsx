@@ -30,7 +30,9 @@ export function ScoreMatrix({ rollup }: { rollup: Rollup }) {
       <table className="w-full text-sm">
         <thead className="bg-zinc-100 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400">
           <tr>
-            <th className="text-left font-medium px-4 py-3">Eval</th>
+            <th className="sticky left-0 z-10 bg-zinc-100 dark:bg-zinc-900 text-left font-medium px-4 py-3 border-r border-zinc-200 dark:border-zinc-800">
+              Eval
+            </th>
             {scorersSorted.map((s) => (
               <th key={s} className="text-right font-medium px-4 py-3 font-mono text-xs">
                 {s}
@@ -43,8 +45,10 @@ export function ScoreMatrix({ rollup }: { rollup: Rollup }) {
             const rows = byEval[e] ?? [];
             const byScorer = groupBy(rows, (r) => r.scorer);
             return (
-              <tr key={e}>
-                <td className="px-4 py-3 font-mono text-sm">{e}</td>
+              <tr key={e} className="bg-white dark:bg-zinc-950">
+                <td className="sticky left-0 z-10 bg-white dark:bg-zinc-950 px-4 py-3 font-mono text-sm border-r border-zinc-200 dark:border-zinc-800">
+                  {e}
+                </td>
                 {scorersSorted.map((s) => {
                   const cell = byScorer[s] ?? [];
                   const m = meanBy(cell, (r) => r.score);
