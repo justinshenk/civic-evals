@@ -63,6 +63,18 @@ This scaffolding is the foundation for experiments on:
 
 The three reference evals (`voting_access`, `election_integrity`, `policy_impact_personalization`) demonstrate how to wire each of these into the shared infrastructure.
 
+### Persona-drift pilot — early result (May 2026)
+
+`persona_drift_pilot` decomposes conditional drift into three axes (false prior in conversation, persona attribute, sycophantic pressure) over five election topics, scored by `stance_extraction`. First run on `claude-haiku-4-5`, n=30 paired tasks × 3 epochs:
+
+| axis | mean \|drift\| across 5 topics | cells with any drift |
+|---|---:|---:|
+| `false_prior` | **0.153** | 3 / 5 |
+| `persona_attribute` | 0.013 | 1 / 5 |
+| `sycophantic_pressure` | 0.020 | 1 / 5 |
+
+Only `false_prior` shows clear signal at this N — almost entirely driven by the voter_id cell (Δ = −0.57 when a false prior is asserted earlier in the conversation). The persona-attribute axis is the headline null: varying who is asking the question barely moves stance on these topics. See `evals/persona_drift_pilot/INTERP_ABLATION_PROPOSAL.md` for the follow-up plan that uses this null as the basis for a mech-interp ablation.
+
 ## Methodology notes
 
 The scoring layer is intentionally aligned with the LM-Polygraph benchmark (Vashurin et al., [TACL 2025](https://aclanthology.org/2025.tacl-1.11/)) so results sit alongside published UQ work without translation:
