@@ -96,6 +96,11 @@ export type CalibrationStat = {
   explanation: string;
 };
 
+export type ConversationTurn = {
+  role: "user" | "assistant" | string;
+  content: string;
+};
+
 export type FailureRow = {
   eval: string;
   task_id: string;
@@ -107,6 +112,17 @@ export type FailureRow = {
   threshold: number;
   explanation: string;
   completion: string;
+  // The asked question, with persona preamble stripped. Empty string when
+  // the rollup couldn't recover it.
+  input: string;
+  // Per-eval extras (topic / axis / condition / conversation_history /
+  // stance_scale / rung / framing — varies by eval). null when the
+  // task carried no extras dict.
+  extras: Record<string, unknown> | null;
+  // Whitelisted scorer diagnostics — see analysis/rollup.py `_DIAG_KEYS`.
+  // For stance_extraction failures, surfaces stance ∈ [-1, +1] and the
+  // judge's raw output.
+  score_metadata: Record<string, unknown> | null;
   sub_scores: SubScores | null;
   // True when the scorer marked this row as a refusal-shaped output —
   // model declined to commit to a number rather than emitting a wrong
