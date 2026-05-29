@@ -17,7 +17,7 @@ materially different policy analysis to the same question.
 ```bash
 cd demo
 pip install -r requirements.txt
-export ANTHROPIC_API_KEY=sk-ant-...          # for live mode
+export OPENROUTER_API_KEY=sk-or-...          # for live mode
 export SYCOPHANCY_DEMO_PASSWORD=choose-one   # gates live mode
 streamlit run app.py
 ```
@@ -30,7 +30,7 @@ so run it from inside the repo (the full repo, not just `demo/`).
 
 1. Point the Space/app at this repo with `demo/app.py` as the entrypoint.
 2. Set secrets (do **not** commit them):
-   - `ANTHROPIC_API_KEY` — the live-mode model key
+   - `OPENROUTER_API_KEY` — the live-mode model key
    - `DEMO_PASSWORD` — the password you hand to grant reviewers
 3. Make sure `analysis/sycophancy_configs.py` and the
    `analysis/sycophancy_*_rows.json` data files are present in the deploy
@@ -41,7 +41,7 @@ they fall back to environment variables.
 
 ## Budget protection (important — this is self-funded)
 
-Live mode makes real Anthropic API calls on a personal budget. Three
+Live mode makes real model API calls (via OpenRouter) on a personal budget. Three
 guards are in place:
 
 1. **Password gate** — only reviewers with `DEMO_PASSWORD` can run live
@@ -52,7 +52,7 @@ guards are in place:
    to run bulk/automated queries.
 
 If you expect heavy traffic, lower the per-session cap or disable live
-mode (leave `ANTHROPIC_API_KEY` unset) and rely on the precomputed
+mode (leave `OPENROUTER_API_KEY` unset) and rely on the precomputed
 charts alone.
 
 ## Note for reviewers

@@ -53,10 +53,11 @@ ANALYSIS_DIR = REPO_ROOT / "analysis"
 
 st.set_page_config(page_title="LLM Political Sycophancy", layout="wide")
 
-# Direct Anthropic models (the demo's live mode and the headline runs use
-# the Anthropic API — OpenRouter is reserved for the cross-model chart only).
-SUBJECT_MODEL = "claude-haiku-4-5"
-JUDGE_MODEL = "claude-sonnet-4-6"
+# Live mode runs through OpenRouter (OpenAI-compatible), matching the
+# provider used for the committed result data so the live numbers line up
+# with the charts.
+SUBJECT_MODEL = "anthropic/claude-haiku-4.5"
+JUDGE_MODEL = "anthropic/claude-sonnet-4.5"
 MAX_LIVE_CALLS_PER_SESSION = 24  # protects the self-funded budget
 
 # Data files used by the "What we found" charts.
@@ -124,39 +125,41 @@ def password_ok() -> bool:
 
 def _api_key() -> str | None:
     try:
-        if "ANTHROPIC_API_KEY" in st.secrets:
-            return str(st.secrets["ANTHROPIC_API_KEY"])
+        if "OPENROUTER_API_KEY" in st.secrets:
+            return str(st.secrets["OPENROUTER_API_KEY"])
     except Exception:
         pass
-    return os.environ.get("ANTHROPIC_API_KEY")
+    return os.environ.get("OPENROUTER_API_KEY")
 
 
 def _live_client():
-    from anthropic import Anthropic
+    from openai import OpenAI
 
     key = _api_key()
     if not key:
         return None
-    return Anthropic(api_key=key)
+    return OpenAI(api_key=key, base_url="https://openrouter.ai/api/v1")
 
 
 def live_subject_call(client, system_prompt: str, user_prompt: str) -> str:
-    msg = client.messages.create(
+    msg = client.chat.completions.create(
         model=SUBJECT_MODEL,
         max_tokens=1024,
-        system=system_prompt,
-        messages=[{"role": "user", "content": user_prompt}],
+        messages=[
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt},
+        ],
     )
-    return "".join(getattr(b, "text", "") for b in msg.content if hasattr(b, "text"))
+    return (msg.choices[0].message.content or "") if msg.choices else ""
 
 
 def live_judge_call(client, judge_prompt: str) -> dict | None:
-    msg = client.messages.create(
+    msg = client.chat.completions.create(
         model=JUDGE_MODEL,
         max_tokens=320,
         messages=[{"role": "user", "content": judge_prompt}],
     )
-    text = "".join(getattr(b, "text", "") for b in msg.content if hasattr(b, "text"))
+    text = (msg.choices[0].message.content or "") if msg.choices else ""
     return parse_judge(text)
 
 
@@ -241,7 +244,7 @@ def lean_chart(series_dict: dict[str, pd.Series], color_title: str) -> alt.Layer
     )
     line = (
         alt.Chart(df)
-        .mark_line(point=True, strokeWidth=3)
+        .mark_line(point=alt.OverlayMarkDef(size=70, filled=True), strokeWidth=3)
         .encode(
             x=alt.X(
                 "User's stated identity:N",
@@ -253,11 +256,27 @@ def lean_chart(series_dict: dict[str, pd.Series], color_title: str) -> alt.Layer
                 scale=alt.Scale(domain=[-10, 10]),
                 axis=alt.Axis(title="Model's policy lean   (−10 … +10)"),
             ),
-            color=alt.Color(f"{color_title}:N", title=color_title),
+            color=alt.Color(
+                f"{color_title}:N", title=color_title,
+                scale=alt.Scale(scheme="tableau10"),
+            ),
             tooltip=[color_title, "User's stated identity", "Policy lean"],
         )
     )
-    return (zero + line).properties(height=420)
+    return (
+        (zero + line)
+        .properties(height=440)
+        .configure_view(stroke=None)
+        .configure_axis(
+            grid=True, gridColor="#1c2438", domainColor="#33405f",
+            labelColor="#aab6cc", titleColor="#cdd8ec",
+            labelFontSize=12, titleFontSize=12, titleFontWeight=600,
+        )
+        .configure_legend(
+            labelColor="#c6d2e6", titleColor="#e0e8f6",
+            labelFontSize=12, titleFontSize=12, orient="bottom",
+        )
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -416,7 +435,7 @@ def view_try_it(authed: bool) -> None:
 
     client = _live_client()
     if client is None:
-        st.error("No ANTHROPIC_API_KEY configured for live calls.")
+        st.error("No OPENROUTER_API_KEY configured for live calls.")
         return
 
     left = _budget_left()
@@ -535,16 +554,94 @@ signed axis (sign-flips ~27% of the time); Sonnet judges these runs.
 
 
 # ---------------------------------------------------------------------------
+# Visual identity (CSS + hero)
+# ---------------------------------------------------------------------------
+
+_CSS = """
+<style>
+.block-container { max-width: 1080px; padding-top: 1.4rem; padding-bottom: 3rem; }
+
+.hero {
+  background:
+    radial-gradient(1100px 280px at 12% -30%, rgba(59,130,246,.20), transparent),
+    radial-gradient(900px 280px at 98% -10%, rgba(244,114,182,.15), transparent),
+    linear-gradient(135deg, #0f1626 0%, #131b2c 60%, #1c1422 100%);
+  border: 1px solid #243049;
+  border-radius: 18px;
+  padding: 2.3rem 2.5rem;
+  margin-bottom: 1.5rem;
+  display: flex; flex-wrap: wrap; gap: 1.4rem;
+  align-items: center; justify-content: space-between;
+}
+.hero-text { flex: 1 1 360px; }
+.hero-eyebrow { letter-spacing:.16em; font-size:.72rem; font-weight:700;
+  color:#7f9bc9; text-transform:uppercase; margin-bottom:.55rem; }
+.hero-title { font-size:2.45rem; line-height:1.08; font-weight:800;
+  color:#f3f7ff; margin:0 0 .7rem; }
+.hero-sub { font-size:1.03rem; color:#c2cee2; max-width:560px; margin:0; }
+.hero-art { flex: 0 0 auto; opacity:.97; }
+
+[data-testid="stMetric"] {
+  background:#121a2a; border:1px solid #273350; border-radius:14px;
+  padding:1rem 1.15rem;
+}
+[data-testid="stMetricValue"] { color:#6fb1ff; font-weight:800; }
+
+h3 { border-left:3px solid #3b82f6; padding-left:.6rem; margin-top:.3rem; }
+[data-testid="stCaptionContainer"] { color:#9fb0cc; }
+</style>
+"""
+
+# Inline SVG: six lines diverging downward by user identity — the visual
+# signature of the finding (high lean for progressive users, low for
+# conservative). No emojis; a real graphic.
+_HERO_SVG = (
+    '<svg width="330" height="168" viewBox="0 0 400 192" fill="none" '
+    'xmlns="http://www.w3.org/2000/svg" role="img" '
+    'aria-label="Model policy lean diverging downward by user identity">'
+    '<line x1="30" y1="92" x2="380" y2="92" stroke="#46527a" stroke-width="1" stroke-dasharray="5 5"/>'
+    '<polyline points="30,52 205,70 380,150" stroke="#5b8ff9" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" opacity="0.95"/>'
+    '<polyline points="30,58 205,74 380,134" stroke="#34d39a" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" opacity="0.95"/>'
+    '<polyline points="30,55 205,72 380,120" stroke="#f06595" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" opacity="0.95"/>'
+    '<polyline points="30,62 205,78 380,108" stroke="#ff8787" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" opacity="0.95"/>'
+    '<polyline points="30,60 205,80 380,99" stroke="#9775fa" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" opacity="0.95"/>'
+    '<polyline points="30,64 205,82 380,93" stroke="#fcc419" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" opacity="0.95"/>'
+    '<circle cx="380" cy="150" r="3.2" fill="#5b8ff9"/><circle cx="380" cy="134" r="3.2" fill="#34d39a"/>'
+    '<circle cx="380" cy="120" r="3.2" fill="#f06595"/><circle cx="380" cy="108" r="3.2" fill="#ff8787"/>'
+    '<circle cx="380" cy="99" r="3.2" fill="#9775fa"/><circle cx="380" cy="93" r="3.2" fill="#fcc419"/>'
+    '<text x="30" y="184" fill="#8aa0c6" font-size="11" font-family="sans-serif">progressive user</text>'
+    '<text x="286" y="184" fill="#8aa0c6" font-size="11" font-family="sans-serif">conservative user</text>'
+    "</svg>"
+)
+
+
+def inject_style() -> None:
+    st.markdown(_CSS, unsafe_allow_html=True)
+
+
+def render_hero() -> None:
+    st.markdown(
+        '<div class="hero">'
+        '<div class="hero-text">'
+        '<div class="hero-eyebrow">Civic AI Reliability · Independent Research</div>'
+        '<h1 class="hero-title">Does an LLM tell you<br>what you want to hear?</h1>'
+        '<p class="hero-sub">Measuring persona-driven political sycophancy across six '
+        "frontier language models — how much a model tilts its policy analysis toward "
+        "the user's stated political identity, and whether it can be mitigated.</p>"
+        "</div>"
+        f'<div class="hero-art">{_HERO_SVG}</div>'
+        "</div>",
+        unsafe_allow_html=True,
+    )
+
+
+# ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
 
 def main() -> None:
-    st.title("Does an LLM tell you what you want to hear?")
-    st.markdown(
-        "An empirical measurement of persona-driven political sycophancy "
-        "across six language models. Independent, self-funded research into "
-        "the reliability of LLMs as civic-information sources."
-    )
+    inject_style()
+    render_hero()
 
     authed = password_ok()
 
