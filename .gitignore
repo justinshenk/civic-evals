@@ -16,3 +16,7 @@ logs/
 .DS_Store
 .idea/
 .vscode/
+
+# Streamlit secrets (demo)
+.streamlit/secrets.toml
+demo/.streamlit/secrets.toml
