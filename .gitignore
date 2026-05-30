@@ -18,4 +18,7 @@ analysis/.staleness_cache.json.tmp
 .DS_Store
 .idea/
 .vscode/
-.claude/
+
+# Streamlit secrets (demo)
+.streamlit/secrets.toml
+demo/.streamlit/secrets.toml
