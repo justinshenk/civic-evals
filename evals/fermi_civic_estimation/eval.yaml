@@ -1,0 +1,23 @@
+title: 'Fermi Civic Estimation: Numeric calibration on civic facts'
+description: |
+  Numeric estimation tasks where the model outputs a point estimate plus an
+  80% confidence interval. Mix of exact-fact (Senators=100, House=435) and
+  estimation (US population, 2020 vote totals, state registration rolls).
+  Scored with relative Winkler interval score plus point-estimate accuracy,
+  the canonical proper scoring rule for prediction intervals (Winkler 1972;
+  Gneiting & Raftery 2007). Methodology aligned with LM-Polygraph (Vashurin
+  et al., TACL 2025, arxiv:2406.15627).
+group: Civic Information Reliability
+contributors:
+  - 'justinshenk'
+  - 'ModeEric'
+version: '2'
+tasks:
+  - name: fermi_civic_estimation
+    dataset_samples: 35
+external_assets: []
+metadata:
+  fast: true
+  domain: civic
+  source_authority: 'FEC, EAVS, NCSL, CAWP, Census Bureau'
+  scoring_method: winkler_interval_score

@@ -1,0 +1,127 @@
+{
+  "campaign_finance/r1": {
+    "anthropic": 0.0,
+    "mean": 0.0,
+    "openai": 0.0
+  },
+  "campaign_finance/r2": {
+    "anthropic": 0.25,
+    "mean": 0.25,
+    "openai": 0.25
+  },
+  "campaign_finance/r3": {
+    "anthropic": 0.62,
+    "mean": 0.56,
+    "openai": 0.5
+  },
+  "campaign_finance/r4": {
+    "anthropic": 0.85,
+    "mean": 0.8,
+    "openai": 0.75
+  },
+  "campaign_finance/r5": {
+    "anthropic": 1.0,
+    "mean": 1.0,
+    "openai": 1.0
+  },
+  "mail_ballots/r1": {
+    "anthropic": 0.0,
+    "mean": 0.0,
+    "openai": 0.0
+  },
+  "mail_ballots/r2": {
+    "anthropic": 0.25,
+    "mean": 0.25,
+    "openai": 0.25
+  },
+  "mail_ballots/r3": {
+    "anthropic": 0.62,
+    "mean": 0.56,
+    "openai": 0.5
+  },
+  "mail_ballots/r4": {
+    "anthropic": 0.85,
+    "mean": 0.8,
+    "openai": 0.75
+  },
+  "mail_ballots/r5": {
+    "anthropic": 1.0,
+    "mean": 1.0,
+    "openai": 1.0
+  },
+  "ranked_choice/r1": {
+    "anthropic": 0.0,
+    "mean": 0.0,
+    "openai": 0.0
+  },
+  "ranked_choice/r2": {
+    "anthropic": 0.25,
+    "mean": 0.25,
+    "openai": 0.25
+  },
+  "ranked_choice/r3": {
+    "anthropic": 0.62,
+    "mean": 0.56,
+    "openai": 0.5
+  },
+  "ranked_choice/r4": {
+    "anthropic": 0.85,
+    "mean": 0.8,
+    "openai": 0.75
+  },
+  "ranked_choice/r5": {
+    "anthropic": 1.0,
+    "mean": 1.0,
+    "openai": 1.0
+  },
+  "redistricting/r1": {
+    "anthropic": 0.0,
+    "mean": 0.0,
+    "openai": 0.0
+  },
+  "redistricting/r2": {
+    "anthropic": 0.25,
+    "mean": 0.25,
+    "openai": 0.25
+  },
+  "redistricting/r3": {
+    "anthropic": 0.62,
+    "mean": 0.56,
+    "openai": 0.5
+  },
+  "redistricting/r4": {
+    "anthropic": 0.85,
+    "mean": 0.8,
+    "openai": 0.75
+  },
+  "redistricting/r5": {
+    "anthropic": 1.0,
+    "mean": 1.0,
+    "openai": 1.0
+  },
+  "voter_id/r1": {
+    "anthropic": 0.0,
+    "mean": 0.0,
+    "openai": 0.0
+  },
+  "voter_id/r2": {
+    "anthropic": 0.15,
+    "mean": 0.2,
+    "openai": 0.25
+  },
+  "voter_id/r3": {
+    "anthropic": 0.75,
+    "mean": 0.625,
+    "openai": 0.5
+  },
+  "voter_id/r4": {
+    "anthropic": 0.85,
+    "mean": 0.8,
+    "openai": 0.75
+  },
+  "voter_id/r5": {
+    "anthropic": 1.0,
+    "mean": 1.0,
+    "openai": 1.0
+  }
+}

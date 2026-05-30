@@ -11,6 +11,7 @@ rather than by default.
 
 from __future__ import annotations
 
+import asyncio
 import re
 
 import httpx
@@ -33,23 +34,28 @@ def citation_verifiability(timeout_seconds: float = 5.0) -> Scorer:
                 metadata={"n_urls": 0},
             )
 
-        resolved: dict[str, bool] = {}
+        # De-dup before HEADing — the same URL appearing twice in the response
+        # shouldn't double-count toward the score nor double the network work.
+        unique_urls = list(dict.fromkeys(urls))
         async with httpx.AsyncClient(timeout=timeout_seconds, follow_redirects=True) as client:
-            for url in urls:
+            async def _head(u: str) -> bool:
                 try:
-                    r = await client.head(url)
-                    resolved[url] = 200 <= r.status_code < 400
+                    r = await client.head(u)
+                    return 200 <= r.status_code < 400
                 except Exception:
-                    resolved[url] = False
+                    return False
+
+            statuses = await asyncio.gather(*(_head(u) for u in unique_urls))
+        resolved: dict[str, bool] = dict(zip(unique_urls, statuses, strict=True))
 
         good = sum(1 for ok in resolved.values() if ok)
-        value = good / len(urls)
+        value = good / len(unique_urls)
 
         return Score(
             value=value,
             answer=output,
-            explanation=f"{good}/{len(urls)} citations resolved",
-            metadata={"urls": resolved},
+            explanation=f"{good}/{len(unique_urls)} citations resolved",
+            metadata={"urls": resolved, "n_urls": len(unique_urls)},
         )
 
     return score

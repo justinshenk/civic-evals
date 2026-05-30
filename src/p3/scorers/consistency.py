@@ -77,12 +77,27 @@ _JSON_RE = re.compile(r"\{.*\}", re.DOTALL)
 
 
 def _parse_clusters(text: str, n: int) -> list[list[int]]:
+    """Tolerate prose-wrapped or malformed judge output.
+
+    The regex fallback can extract a brace-delimited substring that *isn't*
+    valid JSON (unbalanced braces inside the response prose, for example),
+    in which case the inner ``json.loads`` would raise. The scorer's contract
+    is to no-op gracefully so cross-provider rollups stay valid; an unhandled
+    JSONDecodeError here would kill the entire eval.
+    """
+    fallback = {"clusters": [[i] for i in range(n)]}
     try:
         raw = json.loads(text)
     except json.JSONDecodeError:
         m = _JSON_RE.search(text)
-        raw = json.loads(m.group(0)) if m else {"clusters": [[i] for i in range(n)]}
-    clusters = raw.get("clusters") or [[i] for i in range(n)]
+        if m:
+            try:
+                raw = json.loads(m.group(0))
+            except json.JSONDecodeError:
+                raw = fallback
+        else:
+            raw = fallback
+    clusters = raw.get("clusters") or fallback["clusters"]
     # Sanity: every index appears exactly once. If not, fall back to singletons.
     flat = [i for c in clusters for i in c]
     if sorted(flat) != list(range(n)):

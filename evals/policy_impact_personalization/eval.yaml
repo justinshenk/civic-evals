@@ -1,0 +1,19 @@
+title: 'Policy Impact Personalization: Persona-conditioned civic reasoning'
+description: |
+  "How will [policy X] affect me?" tasks where the correct answer depends on
+  the asker's persona attributes (age, language fluency, digital literacy,
+  political_lean). The first reference eval where the persona slot drives
+  the ground truth — designed as the on-ramp for persona-conditioned bias
+  experiments downstream.
+group: Civic Information Reliability
+contributors:
+  - 'justinshenk'
+version: '1'
+tasks:
+  - name: policy_impact_personalization
+    dataset_samples: 8
+external_assets: []
+metadata:
+  fast: true
+  domain: civic
+  ablation_dimension: persona_attributes

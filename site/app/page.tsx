@@ -2,6 +2,10 @@ import { ScoreMatrix } from "./components/ScoreMatrix";
 import { PersonaChart } from "./components/PersonaChart";
 import { SubScorePanel } from "./components/SubScorePanel";
 import { EvalCards } from "./components/EvalCards";
+import { ModelCards } from "./components/ModelCards";
+import { CalibrationPanel } from "./components/CalibrationPanel";
+import { BaselinePanel } from "./components/BaselinePanel";
+import { BiasPanel } from "./components/BiasPanel";
 import { loadRollup } from "@/lib/rollup";
 
 export default function Home() {
@@ -67,6 +71,16 @@ export default function Home() {
           <EvalCards rollup={rollup} />
         </section>
 
+        {!empty && rollup.providers.length > 0 && (
+          <section className="space-y-4">
+            <SectionHeader
+              title="Models evaluated"
+              hint="Per-model report cards. The reader's trust question — should I rely on this model for civic info? — has model as the unit, not eval."
+            />
+            <ModelCards rollup={rollup} />
+          </section>
+        )}
+
         {empty ? (
           <EmptyState />
         ) : (
@@ -93,6 +107,32 @@ export default function Home() {
                 hint="Same tasks, different personas. Gaps here are the reliability failures that matter most."
               />
               <PersonaChart rollup={rollup} />
+            </section>
+
+            {rollup.bias && rollup.bias.length > 0 && (
+              <section className="space-y-4">
+                <SectionHeader
+                  title="Cross-model substantive-policy bias"
+                  hint="Identical school-board candidate profiles, varying only the substantive direction of stated policy positions. Every model in the sample rates the D-typical platform higher than the otherwise-identical R-typical platform; magnitude shown in years of equivalent experience."
+                />
+                <BiasPanel rollup={rollup} />
+              </section>
+            )}
+
+            <section className="space-y-4">
+              <SectionHeader
+                title="Calibration"
+                hint="For Fermi tasks, AUROC of (1/CI-width) vs (point estimate within ±10% of truth). Mirrors the calibration AUROC reported by LM-Polygraph (Vashurin et al., TACL 2025), specialized to interval forecasts. 0.5 = chance; >0.75 = the model knows when it knows."
+              />
+              <CalibrationPanel rollup={rollup} />
+            </section>
+
+            <section className="space-y-4">
+              <SectionHeader
+                title="External baselines"
+                hint="Pulled from UKGovernmentBEIS/inspect_evals and run with --limit, so these numbers are a comparison axis, not a leaderboard reproduction. Use them to calibrate how civic-eval gaps compare to model capability ceilings on established benchmarks."
+              />
+              <BaselinePanel rollup={rollup} />
             </section>
           </>
         )}

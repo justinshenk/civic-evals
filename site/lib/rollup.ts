@@ -1,47 +1,26 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 
-export type SubScores = {
-  accuracy?: number;
-  calibrated_uncertainty?: number;
-  refusal_appropriateness?: number;
-};
+export type {
+  SubScores,
+  PersonaAttrs,
+  ScoreDiagnostics,
+  RollupRow,
+  TaskSummary,
+  EvalMeta,
+  CalibrationStat,
+  ExternalBaseline,
+  FailureRow,
+  FailureSummary,
+  FailureSummaryRow,
+  UsageRow,
+  BiasFit,
+  CellStat,
+  Rollup,
+} from "@/lib/rollup-utils";
+export { meanBy, groupBy, fmt, cellStatLookup, fmtMeanCI } from "@/lib/rollup-utils";
 
-export type RollupRow = {
-  eval: string;
-  task_id: string;
-  provider: string;
-  persona: string;
-  domain: string | null;
-  subdomain: string | null;
-  difficulty: string | null;
-  tags: string;
-  scorer: string;
-  score: number | null;
-  explanation: string;
-  sub_scores: SubScores | null;
-};
-
-export type EvalMeta = {
-  name: string;
-  description: string;
-  task_count: number;
-  difficulty: Record<string, number>;
-  subdomains: string[];
-  personas_used: string[];
-  scorer_kinds: string[];
-  readme_url: string;
-};
-
-export type Rollup = {
-  generated_at: string;
-  n_rows: number;
-  evals: string[];
-  providers: string[];
-  scorers: string[];
-  evals_meta: EvalMeta[];
-  rows: RollupRow[];
-};
+import type { Rollup } from "@/lib/rollup-utils";
 
 const EMPTY: Rollup = {
   generated_at: "",
@@ -50,6 +29,11 @@ const EMPTY: Rollup = {
   providers: [],
   scorers: [],
   evals_meta: [],
+  calibration_stats: [],
+  external_baselines: [],
+  failures: [],
+  failure_thresholds: {},
+  failure_summary: { by_eval: [] },
   rows: [],
 };
 
@@ -61,26 +45,4 @@ export function loadRollup(): Rollup {
   } catch {
     return EMPTY;
   }
-}
-
-export function meanBy<T>(items: T[], key: (t: T) => number | null): number | null {
-  const vals = items.map(key).filter((v): v is number => typeof v === "number");
-  if (vals.length === 0) return null;
-  return vals.reduce((a, b) => a + b, 0) / vals.length;
-}
-
-export function groupBy<T, K extends string>(
-  items: T[],
-  key: (t: T) => K,
-): Record<K, T[]> {
-  const out = {} as Record<K, T[]>;
-  for (const item of items) {
-    const k = key(item);
-    (out[k] ||= []).push(item);
-  }
-  return out;
-}
-
-export function fmt(v: number | null, digits = 2): string {
-  return v === null ? "—" : v.toFixed(digits);
 }

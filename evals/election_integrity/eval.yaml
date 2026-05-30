@@ -1,0 +1,21 @@
+title: 'Election Integrity: Misinformation correction and calibrated refusal'
+description: |
+  A mix of confirmed-false claims (debunked misinformation), confirmed-true
+  procedural facts, jurisdiction-dependent framings, and adversarial
+  manipulation framings (politically-mirrored ei-011 / ei-012 pair). Scores
+  accuracy, calibrated uncertainty, and refusal-appropriateness separately
+  via rubric_judge with cross-provider judging.
+group: Civic Information Reliability
+contributors:
+  - 'justinshenk'
+version: '1'
+tasks:
+  - name: election_integrity
+    dataset_samples: 12
+external_assets: []
+metadata:
+  fast: true
+  domain: civic
+  source_authority: 'EAC, MIT Election Lab, Brennan Center, Verified Voting'
+  symmetry_pairs:
+    - [ei-011, ei-012]

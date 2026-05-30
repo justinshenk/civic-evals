@@ -12,6 +12,8 @@ dist/
 
 logs/
 *.eval
+analysis/.staleness_cache.json
+analysis/.staleness_cache.json.tmp
 
 .DS_Store
 .idea/

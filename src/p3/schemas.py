@@ -16,6 +16,7 @@ Two deliberate choices worth calling out:
 from __future__ import annotations
 
 import json
+import re
 from collections.abc import Iterator
 from pathlib import Path
 from typing import Any, Literal
@@ -23,6 +24,9 @@ from typing import Any, Literal
 from pydantic import BaseModel, Field, ValidationError, model_validator
 
 Difficulty = Literal["easy", "medium", "hard"]
+Track = Literal["interpretive", "factual"]
+
+_ISO_DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 
 
 class TaskMetadata(BaseModel):
@@ -34,6 +38,37 @@ class TaskMetadata(BaseModel):
     )
     tags: list[str] = Field(..., min_length=1)
     notes: str | None = None
+    last_verified: str | None = Field(
+        default=None,
+        description=(
+            "ISO date (YYYY-MM-DD) when the task's ground truth was last "
+            "checked against its source. Civic facts drift — election rules "
+            "change, statutes get amended, agency URLs reorganize. The site "
+            "surfaces tasks with no last_verified date or one older than 12 "
+            "months as a maintenance signal so they get re-verified before "
+            "the eval's mean is trusted. Optional today (existing tasks "
+            "predate this field); enforce in CI for new tasks once the "
+            "backlog is clean."
+        ),
+    )
+    track: Track | None = Field(
+        default=None,
+        description=(
+            "Which research track the task belongs to. ``factual`` = there "
+            "is a verifiable right answer (statute, agency rule, an explicit "
+            "numeric truth); accuracy/recall is the headline metric. "
+            "``interpretive`` = the question has no single correct answer "
+            "(candidate qualifications, policy trade-offs, persona-relative "
+            "advice); response variance, persona-conditioned drift, and "
+            "framing bias are the metrics that matter. Per the May 2026 "
+            "team direction, civic-evals is centering interpretive election "
+            "questions; this field exposes that distinction in the schema "
+            "so the site, scorers, and analysis can group accordingly. "
+            "Optional today to avoid breaking pre-pivot tasks; CI asserts "
+            "presence on every task in the four currently-merged evals so "
+            "new tasks must declare their track."
+        ),
+    )
     extras: dict[str, Any] | None = Field(
         default=None,
         description=(
@@ -42,6 +77,16 @@ class TaskMetadata(BaseModel):
             "stash truth_value here for the calibration scorer to read)."
         ),
     )
+
+    @model_validator(mode="after")
+    def _last_verified_format(self) -> TaskMetadata:
+        if self.last_verified is None:
+            return self
+        if not _ISO_DATE_RE.match(self.last_verified):
+            raise ValueError(
+                f"last_verified must be an ISO date (YYYY-MM-DD); got {self.last_verified!r}."
+            )
+        return self
 
 
 class PersonaSlot(BaseModel):
@@ -74,24 +119,44 @@ class Task(BaseModel):
 
     @model_validator(mode="after")
     def _target_or_rubric(self) -> Task:
-        if self.target is None and self.rubric is None:
+        # Exactly one. The loader writes ``target`` into ``Sample.target`` and
+        # the rubric into ``metadata["rubric"]``; if both are set, the rubric
+        # would silently shadow itself behind the target field for any scorer
+        # reading from ``Sample.target``. Make the conflict loud at load time.
+        target_set = self.target is not None
+        rubric_set = self.rubric is not None
+        if not target_set and not rubric_set:
             raise ValueError(f"Task {self.id!r}: must set either target or rubric.")
+        if target_set and rubric_set:
+            raise ValueError(
+                f"Task {self.id!r}: set target OR rubric, not both — they're "
+                "scored by different scorers and combining them silently drops "
+                "one branch downstream."
+            )
         return self
 
     @model_validator(mode="after")
     def _persona_not_in_input(self) -> Task:
-        lowered = self.input.lower()
-        # A cheap guard: mentees sometimes smuggle persona into input
-        # with phrases like "As a first-time voter, ...". Real enforcement
-        # happens in CI review, but catch the obvious cases.
-        smells = ("as a first-time voter", "i am a journalist", "i'm an election worker")
-        for smell in smells:
-            if smell in lowered:
-                raise ValueError(
-                    f"Task {self.id!r}: persona appears to be embedded in input "
-                    f"({smell!r}). Move it to the persona slot so persona x task "
-                    "ablations remain possible."
-                )
+        # Mentees sometimes smuggle persona into input with phrases like
+        # "As a first-time voter, …" — that defeats the persona ablation.
+        # Smell list is derived from the canonical persona roles so newly
+        # added personas inherit the guard automatically. Hyphens in the
+        # input are normalized to spaces so "first-time voter" and
+        # "first time voter" both trip the same check. Local import to
+        # avoid a circular dep (personas → schemas → personas).
+        from p3.personas.canonical import names as _persona_names
+
+        normalized = self.input.lower().replace("-", " ")
+        for role in _persona_names():
+            phrasing = role.replace("_", " ")
+            for smell in (f"as a {phrasing}", f"i am a {phrasing}", f"i'm a {phrasing}",
+                          f"as an {phrasing}", f"i am an {phrasing}", f"i'm an {phrasing}"):
+                if smell in normalized:
+                    raise ValueError(
+                        f"Task {self.id!r}: persona appears to be embedded in input "
+                        f"({smell!r}). Move it to the persona slot so persona x task "
+                        "ablations remain possible."
+                    )
         return self
 
 

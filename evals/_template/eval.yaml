@@ -1,0 +1,22 @@
+# Inspect-evals-style metadata. Mirrors the format used by
+# UKGovernmentBEIS/inspect_evals so individual evals can be upstreamed
+# with minimal change once methodology is published. Required fields:
+# title, description, group, contributors, tasks, external_assets.
+title: 'Replace me: Short headline (≤80 chars)'
+description: |
+  Replace me: 2-4 sentences describing what this eval measures and why
+  the result is informative. Note any departures from "default" scoring
+  (e.g. Winkler interval score, custom rubric judge dimension) and why.
+group: Civic Information Reliability
+contributors:
+  - 'your-github-handle'
+version: '1'
+tasks:
+  - name: my_domain          # match the folder name
+    dataset_samples: 0       # update to your task count
+external_assets: []          # populate if you pull data from HF / a URL
+metadata:
+  fast: true                 # set to false if a single run takes >2 min
+  domain: civic
+  # Add any task-specific keys reviewers should know about (symmetry pairs,
+  # ablation dimensions, source authority) to keep them in source control.
