@@ -12,6 +12,7 @@ import {
   type RollupRow,
   type TaskSummary,
 } from "@/lib/rollup";
+import { EVAL_COPY } from "@/lib/evalCopy";
 
 export function generateStaticParams() {
   return loadRollup().evals_meta.map((m) => ({ name: m.name }));
@@ -33,6 +34,10 @@ export default async function EvalPage({ params }: { params: Promise<{ name: str
     (r) => r.eval === name,
   );
 
+  const plain = EVAL_COPY[meta.name];
+  const title = plain?.title ?? meta.name;
+  const summary = plain?.summary ?? meta.description ?? "No description provided.";
+
   return (
     <main className="flex-1 w-full">
       <div className="mx-auto max-w-6xl px-6 py-12 space-y-10">
@@ -47,35 +52,56 @@ export default async function EvalPage({ params }: { params: Promise<{ name: str
 
         <header className="space-y-3">
           <p className="inline-flex items-center gap-2 rounded-full border border-blue-200/70 bg-blue-50/70 px-3 py-1 text-xs font-medium uppercase tracking-widest text-blue-700 dark:border-blue-400/20 dark:bg-blue-500/10 dark:text-blue-300">
-            CORDA · P3 · eval
+            CORDA · P3 · one test
           </p>
-          <h1 className="font-mono text-3xl font-semibold tracking-tight ombre-text">{meta.name}</h1>
-          <p className="max-w-3xl text-zinc-600 dark:text-zinc-400 leading-relaxed">
-            {meta.description || "No description provided."}
+          <div className="space-y-1">
+            <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight ombre-text">{title}</h1>
+            <p className="font-mono text-xs text-zinc-400 dark:text-zinc-500">{meta.name}</p>
+          </div>
+          <p className="max-w-3xl text-lg text-zinc-600 dark:text-zinc-300 leading-relaxed">
+            {summary}
           </p>
-          <div className="flex flex-wrap gap-6 pt-2 text-sm text-zinc-500 dark:text-zinc-400">
+          {plain && meta.description && (
+            <details className="group max-w-3xl">
+              <summary className="inline-flex w-fit cursor-pointer items-center gap-1.5 rounded-full border border-blue-200/70 bg-blue-50/60 px-2.5 py-1 text-xs font-medium text-blue-700 list-none [&::-webkit-details-marker]:hidden hover:bg-blue-100/70 dark:border-blue-400/20 dark:bg-blue-500/10 dark:text-blue-300 dark:hover:bg-blue-500/20">
+                <span aria-hidden className="transition-transform group-open:rotate-90">
+                  ▸
+                </span>
+                Full description
+              </summary>
+              <p className="mt-2 rounded-lg border border-blue-200/50 bg-blue-50/30 px-3 py-2.5 text-sm leading-relaxed text-zinc-600 dark:border-blue-400/15 dark:bg-blue-500/5 dark:text-zinc-400">
+                {meta.description}
+              </p>
+            </details>
+          )}
+          <div className="flex flex-wrap gap-x-6 gap-y-2 pt-2 text-sm text-zinc-500 dark:text-zinc-400">
             <span>
-              <strong className="text-zinc-900 dark:text-zinc-100">{meta.task_count}</strong> tasks
+              <strong className="text-zinc-900 dark:text-zinc-100">{meta.task_count}</strong>{" "}
+              questions
             </span>
             <span>
+              graded{" "}
               <strong className="text-zinc-900 dark:text-zinc-100">{scorers.length}</strong>{" "}
-              scorers ({scorers.join(", ") || "—"})
+              {scorers.length === 1 ? "way" : "ways"}
             </span>
             <span>
-              overall mean{" "}
+              average score{" "}
               <strong className="text-zinc-900 dark:text-zinc-100">{fmt(overall)}</strong>
             </span>
             <a
               href={meta.readme_url}
               className="font-medium text-blue-700 underline decoration-blue-300 underline-offset-4 hover:text-blue-900 dark:text-blue-300 dark:hover:text-blue-200"
             >
-              README →
+              full README →
             </a>
           </div>
         </header>
 
         <section className="space-y-3">
-          <SectionHeader title="How this is scored" />
+          <SectionHeader
+            title="How we grade the answers"
+            hint="Each answer is graded one or more ways. Here's what each grading method checks for."
+          />
           <MethodsPanel
             scorers={scorers}
             hasFailures={failures.length > 0}
@@ -86,7 +112,8 @@ export default async function EvalPage({ params }: { params: Promise<{ name: str
         <section className="space-y-3">
           <SectionHeader
             title="Worth a closer look"
-            hint={`Individual completions whose score fell below the per-difficulty alarm bar (easy < ${fmt(thresholds.easy ?? 0.9)}, medium < ${fmt(thresholds.medium ?? 0.7)}). A high overall mean can still hide confidently-wrong answers — these are them.`}
+            hint="A high average can still hide a handful of answers that were wrong — and sometimes confidently so. These are the answers that fell short, so you can read them yourself."
+            details={`Flagged when an answer scores below a per-difficulty alarm bar (easy < ${fmt(thresholds.easy ?? 0.9)}, medium < ${fmt(thresholds.medium ?? 0.7)}); hard questions are excluded by design.`}
           />
           <FailuresPanel
             failures={failures}
@@ -98,8 +125,9 @@ export default async function EvalPage({ params }: { params: Promise<{ name: str
         {meta.track !== "factual" && (
           <section className="space-y-3">
             <SectionHeader
-              title="Persona-conditioned variation"
-              hint="Same subdomain (e.g. voter_id), different persona slot. Empty when the eval has only one persona per subdomain. Large |Δ| means the model's score depends on the asker — the headline metric for interpretive-track evals."
+              title="Does the answer change with who's asking?"
+              hint="The same question, asked by different kinds of people. A big gap means the model's answer depends on who's asking — for this kind of test, that's the headline result."
+              details="Grouped by subdomain (e.g. voter_id); shows the spread between the highest- and lowest-scoring persona. Empty when a subdomain has only one persona."
             />
             <PersonaDeltaPanel rows={evalRows} />
           </section>
@@ -107,8 +135,9 @@ export default async function EvalPage({ params }: { params: Promise<{ name: str
 
         <section className="space-y-3">
           <SectionHeader
-            title="Tasks"
-            hint="Each row is one task. Per-task scores are averaged across all rollup rows for that task (any provider, any persona). Click a task ID to expand its full rubric or target."
+            title="The questions"
+            hint="Every question in this test, with its average score. Click a row to see the exact wording, the expected answer, and a real model response."
+            details="Per-question scores are averaged across all runs for that question (any model, any persona)."
           />
           <TaskTable
             tasks={meta.tasks}
@@ -155,10 +184,10 @@ function TaskTable({
       <table className="w-full text-sm">
         <thead className="bg-blue-50/80 dark:bg-blue-500/10 text-left text-xs uppercase tracking-wide text-blue-900 dark:text-blue-200">
           <tr>
-            <th className="px-3 py-2 font-medium">Task</th>
+            <th className="px-3 py-2 font-medium">ID</th>
             <th className="px-3 py-2 font-medium">Question</th>
             <th className="px-3 py-2 font-medium">Difficulty</th>
-            <th className="px-3 py-2 font-medium">Persona</th>
+            <th className="px-3 py-2 font-medium">Asker</th>
             <th className="px-3 py-2 font-medium">Expected</th>
             {scorers.map((s) => (
               <th key={s} className="px-3 py-2 font-medium font-mono text-[10px]">
@@ -430,14 +459,35 @@ function CompletionBlock({
   );
 }
 
-function SectionHeader({ title, hint }: { title: string; hint?: string }) {
+function SectionHeader({
+  title,
+  hint,
+  details,
+}: {
+  title: string;
+  hint?: string;
+  details?: React.ReactNode;
+}) {
   return (
     <div className="flex gap-3">
       <span aria-hidden className="ombre-rule mt-1 w-1 shrink-0 rounded-full" />
-      <div className="space-y-1">
-        <h2 className="text-xl font-semibold tracking-tight">{title}</h2>
+      <div className="space-y-2 max-w-3xl">
+        <h2 className="text-xl sm:text-2xl font-semibold tracking-tight">{title}</h2>
         {hint && (
-          <p className="text-sm text-zinc-500 dark:text-zinc-400 max-w-3xl leading-relaxed">{hint}</p>
+          <p className="text-[15px] text-zinc-600 dark:text-zinc-300 leading-relaxed">{hint}</p>
+        )}
+        {details && (
+          <details className="group">
+            <summary className="inline-flex w-fit cursor-pointer items-center gap-1.5 rounded-full border border-blue-200/70 bg-blue-50/60 px-2.5 py-1 text-xs font-medium text-blue-700 list-none [&::-webkit-details-marker]:hidden hover:bg-blue-100/70 dark:border-blue-400/20 dark:bg-blue-500/10 dark:text-blue-300 dark:hover:bg-blue-500/20">
+              <span aria-hidden className="transition-transform group-open:rotate-90">
+                ▸
+              </span>
+              Technical details
+            </summary>
+            <div className="mt-2 rounded-lg border border-blue-200/50 bg-blue-50/30 px-3 py-2.5 text-xs leading-relaxed text-zinc-600 dark:border-blue-400/15 dark:bg-blue-500/5 dark:text-zinc-400">
+              {details}
+            </div>
+          </details>
         )}
       </div>
     </div>
