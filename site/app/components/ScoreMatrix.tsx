@@ -9,6 +9,7 @@ import {
   type Rollup,
 } from "@/lib/rollup-utils";
 import { ProviderSelect, useProviderFilter } from "@/app/components/ProviderSelect";
+import { evalTitle } from "@/lib/evalCopy";
 
 export function ScoreMatrix({ rollup }: { rollup: Rollup }) {
   const { provider, setProvider, providers, filtered: filteredRows } = useProviderFilter(rollup.rows);
@@ -30,7 +31,7 @@ export function ScoreMatrix({ rollup }: { rollup: Rollup }) {
       <table className="w-full text-sm">
         <thead className="bg-blue-50/80 dark:bg-blue-500/10 text-blue-900 dark:text-blue-200">
           <tr>
-            <th className="text-left font-medium px-4 py-3">Eval</th>
+            <th className="text-left font-medium px-4 py-3">Test</th>
             {scorersSorted.map((s) => (
               <th key={s} className="text-right font-medium px-4 py-3 font-mono text-xs">
                 {s}
@@ -44,7 +45,9 @@ export function ScoreMatrix({ rollup }: { rollup: Rollup }) {
             const byScorer = groupBy(rows, (r) => r.scorer);
             return (
               <tr key={e} className="transition-colors hover:bg-blue-50/50 dark:hover:bg-blue-500/5">
-                <td className="px-4 py-3 font-mono text-sm">{e}</td>
+                <td className="px-4 py-3 text-sm font-medium" title={e}>
+                  {evalTitle(e)}
+                </td>
                 {scorersSorted.map((s) => {
                   const cell = byScorer[s] ?? [];
                   const m = meanBy(cell, (r) => r.score);
