@@ -4,9 +4,9 @@ import { fmt, meanBy, type Rollup } from "@/lib/rollup-utils";
 import { ProviderSelect, useProviderFilter } from "@/app/components/ProviderSelect";
 
 const DIMENSIONS = [
-  { key: "accuracy", label: "Accuracy" },
-  { key: "calibrated_uncertainty", label: "Calibrated uncertainty" },
-  { key: "refusal_appropriateness", label: "Appropriate refusal" },
+  { key: "accuracy", label: "Gets it right" },
+  { key: "calibrated_uncertainty", label: "Honest about uncertainty" },
+  { key: "refusal_appropriateness", label: "Refuses only when it should" },
 ] as const;
 
 export function SubScorePanel({ rollup }: { rollup: Rollup }) {
@@ -19,7 +19,7 @@ export function SubScorePanel({ rollup }: { rollup: Rollup }) {
     <div className="space-y-3">
       <ProviderSelect provider={provider} providers={providers} onChange={setProvider} />
       {rubricRows.length === 0 ? (
-        <p className="text-sm text-zinc-500 dark:text-zinc-400">No rubric_judge runs for this provider.</p>
+        <p className="text-sm text-zinc-500 dark:text-zinc-400">No graded answers for this model yet.</p>
       ) : (
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {DIMENSIONS.map((dim) => {

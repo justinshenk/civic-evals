@@ -27,15 +27,16 @@ export function PersonaChart({ rollup }: Props) {
     return row;
   });
 
-  // Cool, blue-anchored palette so the chart sits inside the ombre theme
-  // while keeping up to five evals visually distinct.
-  const palette = ["#1d4ed8", "#38bdf8", "#6366f1", "#0891b2", "#7c3aed"];
+  // Distinct, colorblind-safe categorical palette (Okabe–Ito). Each test
+  // needs to be told apart at a glance, so this is the one chart that
+  // deliberately steps outside the blue theme.
+  const palette = ["#0072B2", "#E69F00", "#009E73", "#CC79A7", "#D55E00", "#56B4E9"];
 
   return (
     <div className="space-y-3">
       <ProviderSelect provider={provider} providers={providers} onChange={setProvider} />
       {rubricRows.length === 0 ? (
-        <p className="text-sm text-zinc-500 dark:text-zinc-400">No rubric_judge rows for this provider.</p>
+        <p className="text-sm text-zinc-500 dark:text-zinc-400">No graded answers for this model yet.</p>
       ) : (
         <div className="panel p-4">
           <div className="h-80">

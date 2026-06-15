@@ -20,10 +20,10 @@ export default function Home() {
     : "never";
 
   const stats = [
-    { label: "rows", value: rollup.n_rows },
-    { label: "evals", value: rollup.evals.length },
-    { label: "providers", value: rollup.providers.length },
-    { label: "scorers", value: rollup.scorers.length },
+    { label: "answers graded", value: rollup.n_rows },
+    { label: "tests", value: rollup.evals.length },
+    { label: "AI models", value: rollup.providers.length },
+    { label: "grading methods", value: rollup.scorers.length },
   ];
 
   return (
@@ -43,9 +43,9 @@ export default function Home() {
             <span className="ombre-text">civic questions?</span>
           </h1>
           <p className="max-w-3xl text-lg text-zinc-600 dark:text-zinc-300 leading-relaxed">
-            An open evaluation suite measuring LLM reliability on voting access, election
-            integrity, and persona-conditioned policy reasoning. Each eval runs against the same
-            rubrics, scored for factual accuracy, calibrated uncertainty, and appropriate refusal.
+            We test whether AI chatbots give people accurate, even-handed answers to everyday
+            questions about voting, elections, and public policy — and whether they own up to it
+            when they don&rsquo;t know. Every score below runs from 0 to 1, where higher is better.
           </p>
 
           <div className="grid grid-cols-2 gap-3 pt-2 sm:max-w-2xl sm:grid-cols-4">
@@ -83,8 +83,15 @@ export default function Home() {
 
         <section className="space-y-4">
           <SectionHeader
-            title="Evals in this suite"
-            hint="Each eval is a folder under evals/. Mentees copy _template/ to start a new one — see CONTRIBUTING.md."
+            title="The tests in this suite"
+            hint="Each card is one test we put the chatbots through. Each targets a different way an answer about voting, elections, or policy can go wrong — getting a fact wrong, sounding sure about something it can't know, or refusing a perfectly fair question."
+            details={
+              <>
+                Each eval is a folder under <code className="font-mono">evals/</code>; contributors
+                copy <code className="font-mono">_template/</code> to start a new one. See{" "}
+                <code className="font-mono">CONTRIBUTING.md</code>.
+              </>
+            }
           />
           <EvalCards rollup={rollup} />
         </section>
@@ -92,8 +99,8 @@ export default function Home() {
         {!empty && rollup.providers.length > 0 && (
           <section className="space-y-4">
             <SectionHeader
-              title="Models evaluated"
-              hint="Per-model report cards. The reader's trust question — should I rely on this model for civic info? — has model as the unit, not eval."
+              title="The AI models we tested"
+              hint="How each chatbot does across every test. The question that matters: could an ordinary person rely on this model for answers about voting and elections? Click any model for its full report card."
             />
             <ModelCards rollup={rollup} />
           </section>
@@ -105,24 +112,44 @@ export default function Home() {
           <>
             <section className="space-y-4">
               <SectionHeader
-                title="Mean score by eval × scorer"
-                hint="Cell = mean of 0–1 scores for that eval/scorer pair. Hover for sample count."
+                title="How the models score on each test"
+                hint="Higher is better, and greener is better. Each column is a different way of grading the very same answers."
+                details={
+                  <>
+                    Each cell is the mean 0–1 score for that test / grading-method pair. Filter to a
+                    single model to see a 95% bootstrap confidence interval and the sample size;
+                    hover any cell for its count.
+                  </>
+                }
               />
               <ScoreMatrix rollup={rollup} />
             </section>
 
             <section className="space-y-4">
               <SectionHeader
-                title="Rubric sub-scores"
-                hint="The rubric judge scores accuracy, calibrated uncertainty, and appropriate refusal separately. A model can be accurate and overconfident; these break it apart."
+                title="Accurate, honest, or appropriately silent?"
+                hint="We grade three things separately: Is the answer correct? Is the model appropriately confident instead of bluffing? And does it refuse only when it genuinely should? A model can be perfectly accurate yet dangerously overconfident — splitting these apart shows which."
+                details={
+                  <>
+                    Scored by an AI judge from a different company than the model under test, so no
+                    model grades its own homework. Bars show each test&rsquo;s average on that
+                    dimension.
+                  </>
+                }
               />
               <SubScorePanel rollup={rollup} />
             </section>
 
             <section className="space-y-4">
               <SectionHeader
-                title="Mean score by persona"
-                hint="Same tasks, different personas. Gaps here are the reliability failures that matter most."
+                title="Does the answer change depending on who's asking?"
+                hint="We ask the very same questions while changing who appears to be asking — their politics, profession, language, or how urgently they need help. If the bars for a test differ a lot, the model is treating people differently. Those gaps are the failures that matter most."
+                details={
+                  <>
+                    Each bar is the average score for one type of asker on one test, graded by the
+                    AI rubric judge.
+                  </>
+                }
               />
               <PersonaChart rollup={rollup} />
             </section>
@@ -130,8 +157,8 @@ export default function Home() {
             {rollup.bias && rollup.bias.length > 0 && (
               <section className="space-y-4">
                 <SectionHeader
-                  title="Cross-model substantive-policy bias"
-                  hint="Identical school-board candidate profiles, varying only the substantive direction of stated policy positions. Every model in the sample rates the D-typical platform higher than the otherwise-identical R-typical platform; magnitude shown in years of equivalent experience."
+                  title="Do the models lean one way politically?"
+                  hint="We showed every model identical school-board candidates and changed only one thing: whether their platform was a Democratic-typical or Republican-typical set of positions — same budgets, same résumés. Every model rated the Democratic-leaning platform higher. The bar shows how big that tilt is."
                 />
                 <BiasPanel rollup={rollup} />
               </section>
@@ -139,16 +166,31 @@ export default function Home() {
 
             <section className="space-y-4">
               <SectionHeader
-                title="Calibration"
-                hint="For Fermi tasks, AUROC of (1/CI-width) vs (point estimate within ±10% of truth). Mirrors the calibration AUROC reported by LM-Polygraph (Vashurin et al., TACL 2025), specialized to interval forecasts. 0.5 = chance; >0.75 = the model knows when it knows."
+                title="Does the model know when it's guessing?"
+                hint="When a model isn't sure, does it show it? A high score means its confidence is honest — it's more certain on the questions it actually gets right, and hedges on the ones it gets wrong. 0.5 is no better than a coin flip."
+                details={
+                  <>
+                    Measured on the estimation (&ldquo;Fermi&rdquo;) tasks as the AUROC of (1 ÷
+                    confidence-interval width) against whether the estimate landed within ±10% of the
+                    truth — the calibration metric from LM-Polygraph (Vashurin et al., TACL 2025),
+                    specialized to interval forecasts.
+                  </>
+                }
               />
               <CalibrationPanel rollup={rollup} />
             </section>
 
             <section className="space-y-4">
               <SectionHeader
-                title="External baselines"
-                hint="Pulled from UKGovernmentBEIS/inspect_evals and run with --limit, so these numbers are a comparison axis, not a leaderboard reproduction. Use them to calibrate how civic-eval gaps compare to model capability ceilings on established benchmarks."
+                title="How these tests compare to standard benchmarks"
+                hint="The same models, run on well-known public benchmarks, so you can see how the civic-information gaps stack up against each model's general ability."
+                details={
+                  <>
+                    Pulled from UKGovernmentBEIS/inspect_evals and run with{" "}
+                    <code className="font-mono">--limit</code>, so these are a comparison axis, not a
+                    full leaderboard reproduction.
+                  </>
+                }
               />
               <BaselinePanel rollup={rollup} />
             </section>
@@ -186,13 +228,34 @@ export default function Home() {
   );
 }
 
-function SectionHeader({ title, hint }: { title: string; hint: string }) {
+function SectionHeader({
+  title,
+  hint,
+  details,
+}: {
+  title: string;
+  hint: string;
+  details?: React.ReactNode;
+}) {
   return (
     <div className="flex gap-3">
       <span aria-hidden className="ombre-rule mt-1 w-1 shrink-0 rounded-full" />
-      <div className="space-y-1">
-        <h2 className="text-xl font-semibold tracking-tight">{title}</h2>
-        <p className="text-sm text-zinc-500 dark:text-zinc-400 max-w-3xl leading-relaxed">{hint}</p>
+      <div className="space-y-2 max-w-3xl">
+        <h2 className="text-xl sm:text-2xl font-semibold tracking-tight">{title}</h2>
+        <p className="text-[15px] text-zinc-600 dark:text-zinc-300 leading-relaxed">{hint}</p>
+        {details && (
+          <details className="group">
+            <summary className="inline-flex w-fit cursor-pointer items-center gap-1.5 rounded-full border border-blue-200/70 bg-blue-50/60 px-2.5 py-1 text-xs font-medium text-blue-700 list-none [&::-webkit-details-marker]:hidden hover:bg-blue-100/70 dark:border-blue-400/20 dark:bg-blue-500/10 dark:text-blue-300 dark:hover:bg-blue-500/20">
+              <span aria-hidden className="transition-transform group-open:rotate-90">
+                ▸
+              </span>
+              Technical details
+            </summary>
+            <div className="mt-2 rounded-lg border border-blue-200/50 bg-blue-50/30 px-3 py-2.5 text-xs leading-relaxed text-zinc-600 dark:border-blue-400/15 dark:bg-blue-500/5 dark:text-zinc-400">
+              {details}
+            </div>
+          </details>
+        )}
       </div>
     </div>
   );

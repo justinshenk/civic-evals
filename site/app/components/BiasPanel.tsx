@@ -41,10 +41,10 @@ export function BiasPanel({ rollup }: { rollup: Rollup }) {
       <div className="panel">
         <div className="px-4 py-3 border-b border-blue-200/60 dark:border-blue-400/15 bg-blue-50/70 dark:bg-blue-500/10">
           <p className="text-sm leading-relaxed text-zinc-700 dark:text-zinc-300">
-            <strong>Positive bar = D-typical platform rated higher</strong> (the
-            R-typical-platform candidate is rated like they have this many{" "}
-            <em>fewer</em> years of equivalent experience). Bar length = |years|;
-            color encodes statistical significance.
+            A <strong>longer bar means a bigger tilt</strong> toward the Democratic-leaning
+            platform. The number reads as &ldquo;years of extra experience&rdquo; the
+            Republican-leaning candidate would need to close the gap. A solid blue bar means the
+            tilt is statistically clear; a faint grey bar means it&rsquo;s within the noise.
           </p>
         </div>
         <div className="divide-y divide-blue-100 dark:divide-blue-400/10">
@@ -53,29 +53,36 @@ export function BiasPanel({ rollup }: { rollup: Rollup }) {
           ))}
         </div>
       </div>
-      <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed max-w-3xl">
-        Method: synthetic 24-cell factorial (party × policy_package ×
-        experience × rigor) for an open school-board seat. 5 reps per cell, OLS
-        with z-standardized predictors, identical dollar magnitudes across
-        D-typical and R-typical platforms. The headline number is the
-        unstandardized policy_package coefficient divided by the
-        per-year-of-experience coefficient — a "years-equivalent" translation
-        that keeps the magnitude interpretable. Source:{" "}
-        <a
-          href="https://github.com/justinshenk/civic-evals/blob/main/analysis/multi_model_bias.py"
-          className="text-blue-700 underline decoration-blue-300 underline-offset-4 hover:text-blue-900 dark:text-blue-300 dark:hover:text-blue-200"
-        >
-          analysis/multi_model_bias.py
-        </a>
-        ; full write-up:{" "}
-        <a
-          href="https://github.com/justinshenk/civic-evals/blob/main/analysis/multi_model_results.md"
-          className="text-blue-700 underline decoration-blue-300 underline-offset-4 hover:text-blue-900 dark:text-blue-300 dark:hover:text-blue-200"
-        >
-          analysis/multi_model_results.md
-        </a>
-        .
-      </p>
+      <details className="group max-w-3xl">
+        <summary className="inline-flex w-fit cursor-pointer items-center gap-1.5 rounded-full border border-blue-200/70 bg-blue-50/60 px-2.5 py-1 text-xs font-medium text-blue-700 list-none [&::-webkit-details-marker]:hidden hover:bg-blue-100/70 dark:border-blue-400/20 dark:bg-blue-500/10 dark:text-blue-300 dark:hover:bg-blue-500/20">
+          <span aria-hidden className="transition-transform group-open:rotate-90">
+            ▸
+          </span>
+          Technical details
+        </summary>
+        <p className="mt-2 rounded-lg border border-blue-200/50 bg-blue-50/30 px-3 py-2.5 text-xs leading-relaxed text-zinc-600 dark:border-blue-400/15 dark:bg-blue-500/5 dark:text-zinc-400">
+          Synthetic 24-cell factorial (party × policy_package × experience × rigor) for an open
+          school-board seat. 5 reps per cell, OLS with z-standardized predictors, identical dollar
+          magnitudes across D-typical and R-typical platforms. The headline number is the
+          unstandardized policy_package coefficient divided by the per-year-of-experience
+          coefficient — a &ldquo;years-equivalent&rdquo; translation that keeps the magnitude
+          interpretable. Source:{" "}
+          <a
+            href="https://github.com/justinshenk/civic-evals/blob/main/analysis/multi_model_bias.py"
+            className="text-blue-700 underline decoration-blue-300 underline-offset-4 hover:text-blue-900 dark:text-blue-300 dark:hover:text-blue-200"
+          >
+            analysis/multi_model_bias.py
+          </a>
+          ; full write-up:{" "}
+          <a
+            href="https://github.com/justinshenk/civic-evals/blob/main/analysis/multi_model_results.md"
+            className="text-blue-700 underline decoration-blue-300 underline-offset-4 hover:text-blue-900 dark:text-blue-300 dark:hover:text-blue-200"
+          >
+            analysis/multi_model_results.md
+          </a>
+          .
+        </p>
+      </details>
     </div>
   );
 }
@@ -86,7 +93,7 @@ function BiasRow({ fit, maxAbs }: { fit: BiasFit; maxAbs: number }) {
     yrs === null ? 0 : Math.min(100, (Math.abs(yrs) / maxAbs) * 100);
   const significant = (fit.p_package ?? 1) < 0.001;
   const color = significant
-    ? "bg-rose-500 dark:bg-rose-600"
+    ? "ombre-fill-h"
     : "bg-zinc-300 dark:bg-zinc-700";
 
   return (

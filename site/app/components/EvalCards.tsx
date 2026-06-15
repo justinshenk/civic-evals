@@ -37,53 +37,64 @@ function EvalCard({ meta, rows }: { meta: EvalMeta; rows: Rollup["rows"] }) {
           </Link>
         </h3>
         <span
-          className="rounded-full bg-blue-50 px-2 py-0.5 font-mono text-xs tabular-nums text-blue-700 dark:bg-blue-500/10 dark:text-blue-300"
-          title="mean of all scorers, all rows"
+          className="shrink-0 rounded-full bg-blue-50 px-2 py-0.5 font-mono text-xs tabular-nums text-blue-700 dark:bg-blue-500/10 dark:text-blue-300"
+          title="Average score across every grading method and run (0–1, higher is better)"
         >
-          {overall === null ? "no runs yet" : `mean ${fmt(overall)}`}
+          {overall === null ? "no runs yet" : `avg ${fmt(overall)}`}
         </span>
       </header>
 
-      <p className="text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed line-clamp-4">
+      <p className="text-sm text-zinc-600 dark:text-zinc-300 leading-relaxed">
         {meta.description || "No description provided."}
       </p>
 
-      <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs">
-        <div>
-          <dt className="text-zinc-400 dark:text-zinc-500">Tasks</dt>
-          <dd className="font-mono tabular-nums">{meta.task_count}</dd>
-        </div>
-        <div>
-          <dt className="text-zinc-400 dark:text-zinc-500">Personas</dt>
-          <dd className="font-mono tabular-nums">{meta.personas_used.length}</dd>
-        </div>
-      </dl>
-
-      <DifficultyBar difficulty={meta.difficulty} total={totalDiff} />
-
-      <div className="flex flex-wrap gap-1">
-        {meta.subdomains.slice(0, 6).map((s) => (
-          <span
-            key={s}
-            className="inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-mono text-blue-700 dark:bg-blue-500/10 dark:text-blue-300"
-          >
-            {s}
+      <details className="group text-xs">
+        <summary className="inline-flex w-fit cursor-pointer items-center gap-1.5 text-blue-700 list-none [&::-webkit-details-marker]:hidden hover:underline dark:text-blue-300">
+          <span aria-hidden className="transition-transform group-open:rotate-90">
+            ▸
           </span>
-        ))}
-        {meta.subdomains.length > 6 && (
-          <span className="text-[10px] text-zinc-400">
-            +{meta.subdomains.length - 6} more
-          </span>
-        )}
-      </div>
+          Show test details
+        </summary>
+        <div className="mt-3 space-y-3">
+          <dl className="grid grid-cols-2 gap-x-4 gap-y-2">
+            <div>
+              <dt className="text-zinc-400 dark:text-zinc-500">Questions</dt>
+              <dd className="font-mono tabular-nums">{meta.task_count}</dd>
+            </div>
+            <div>
+              <dt className="text-zinc-400 dark:text-zinc-500">Types of asker</dt>
+              <dd className="font-mono tabular-nums">{meta.personas_used.length}</dd>
+            </div>
+          </dl>
 
-      <footer className="pt-2 mt-auto flex items-center justify-between text-xs">
-        <ScorerBadges kinds={meta.scorer_kinds} />
+          <DifficultyBar difficulty={meta.difficulty} total={totalDiff} />
+
+          <div className="flex flex-wrap gap-1">
+            {meta.subdomains.slice(0, 6).map((s) => (
+              <span
+                key={s}
+                className="inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-mono text-blue-700 dark:bg-blue-500/10 dark:text-blue-300"
+              >
+                {s}
+              </span>
+            ))}
+            {meta.subdomains.length > 6 && (
+              <span className="text-[10px] text-zinc-400">
+                +{meta.subdomains.length - 6} more
+              </span>
+            )}
+          </div>
+
+          <ScorerBadges kinds={meta.scorer_kinds} />
+        </div>
+      </details>
+
+      <footer className="pt-2 mt-auto flex items-center justify-end text-xs">
         <Link
           href={`/evals/${meta.name}`}
           className="font-medium text-blue-700 hover:text-blue-900 underline decoration-blue-300 underline-offset-3 dark:text-blue-300 dark:hover:text-blue-200"
         >
-          tasks →
+          View questions &amp; results →
         </Link>
       </footer>
     </article>

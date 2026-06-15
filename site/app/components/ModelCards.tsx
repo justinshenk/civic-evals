@@ -55,23 +55,25 @@ function ModelCard({
         </h3>
         <span
           className="shrink-0 rounded-full bg-blue-50 px-2 py-0.5 font-mono text-xs tabular-nums text-blue-700 dark:bg-blue-500/10 dark:text-blue-300"
-          title="mean of all scorers across all evals"
+          title="Average score across every test and grading method (0–1, higher is better)"
         >
-          {overall === null ? "no runs" : `mean ${fmt(overall)}`}
+          {overall === null ? "no runs" : `avg ${fmt(overall)}`}
         </span>
       </header>
 
       <dl className="grid grid-cols-3 gap-x-4 gap-y-2 text-xs">
         <div>
-          <dt className="text-zinc-400 dark:text-zinc-500">Evals</dt>
+          <dt className="text-zinc-400 dark:text-zinc-500">Tests</dt>
           <dd className="font-mono tabular-nums">{evalsCovered}</dd>
         </div>
         <div>
-          <dt className="text-zinc-400 dark:text-zinc-500">Rows</dt>
+          <dt className="text-zinc-400 dark:text-zinc-500">Answers</dt>
           <dd className="font-mono tabular-nums">{rows.length}</dd>
         </div>
         <div>
-          <dt className="text-zinc-400 dark:text-zinc-500">Flagged</dt>
+          <dt className="text-zinc-400 dark:text-zinc-500" title="Answers we flagged for a closer look">
+            Flagged
+          </dt>
           <dd className="font-mono tabular-nums">{failures.length}</dd>
         </div>
       </dl>
