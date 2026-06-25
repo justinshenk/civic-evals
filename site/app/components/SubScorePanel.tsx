@@ -4,9 +4,9 @@ import { fmt, meanBy, type Rollup } from "@/lib/rollup-utils";
 import { ProviderSelect, useProviderFilter } from "@/app/components/ProviderSelect";
 
 const DIMENSIONS = [
-  { key: "accuracy", label: "Accuracy" },
-  { key: "calibrated_uncertainty", label: "Calibrated uncertainty" },
-  { key: "refusal_appropriateness", label: "Appropriate refusal" },
+  { key: "accuracy", label: "Gets it right" },
+  { key: "calibrated_uncertainty", label: "Honest about uncertainty" },
+  { key: "refusal_appropriateness", label: "Refuses only when it should" },
 ] as const;
 
 export function SubScorePanel({ rollup }: { rollup: Rollup }) {
@@ -19,7 +19,7 @@ export function SubScorePanel({ rollup }: { rollup: Rollup }) {
     <div className="space-y-3">
       <ProviderSelect provider={provider} providers={providers} onChange={setProvider} />
       {rubricRows.length === 0 ? (
-        <p className="text-sm text-zinc-500 dark:text-zinc-400">No rubric_judge runs for this provider.</p>
+        <p className="text-sm text-zinc-500 dark:text-zinc-400">No graded answers for this model yet.</p>
       ) : (
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {DIMENSIONS.map((dim) => {
@@ -36,21 +36,22 @@ export function SubScorePanel({ rollup }: { rollup: Rollup }) {
           ),
         }));
         return (
-          <div
-            key={dim.key}
-            className="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5 space-y-3"
-          >
+          <div key={dim.key} className="card p-5 space-y-3">
             <div className="flex items-baseline justify-between">
               <h3 className="font-medium">{dim.label}</h3>
-              <span className="font-mono text-lg tabular-nums">{fmt(overall)}</span>
+              <span className="ombre-text font-mono text-lg font-semibold tabular-nums">
+                {fmt(overall)}
+              </span>
             </div>
             <ul className="space-y-1.5">
               {perEval.map((pe) => (
                 <li
                   key={pe.eval}
-                  className="flex items-center justify-between text-sm text-zinc-600 dark:text-zinc-400"
+                  className="flex items-center justify-between gap-3 text-sm text-zinc-600 dark:text-zinc-400"
                 >
-                  <span className="font-mono text-xs">{pe.eval}</span>
+                  <span className="min-w-0 truncate font-mono text-xs" title={pe.eval}>
+                    {pe.eval}
+                  </span>
                   <Bar value={pe.mean} />
                 </li>
               ))}
@@ -70,10 +71,10 @@ function Bar({ value }: { value: number | null }) {
   }
   const pct = Math.max(0, Math.min(1, value)) * 100;
   return (
-    <span className="flex items-center gap-2">
-      <span className="h-1.5 w-24 rounded-full bg-zinc-200 dark:bg-zinc-800 overflow-hidden">
+    <span className="flex shrink-0 items-center gap-2">
+      <span className="h-1.5 w-24 rounded-full bg-blue-100 dark:bg-blue-500/15 overflow-hidden">
         <span
-          className="block h-full bg-emerald-500"
+          className="ombre-fill-h block h-full rounded-full"
           style={{ width: `${pct}%` }}
         />
       </span>

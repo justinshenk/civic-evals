@@ -29,7 +29,7 @@ export function ProviderSelect({
         id={id}
         value={provider}
         onChange={(e) => onChange(e.target.value)}
-        className="rounded border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-sm px-2 py-1 font-mono text-zinc-700 dark:text-zinc-300"
+        className="rounded-lg border border-blue-200 dark:border-blue-400/25 bg-white/80 dark:bg-blue-500/5 text-sm px-2.5 py-1 font-mono text-zinc-700 dark:text-zinc-200 outline-none transition-colors focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30"
       >
         <option value="All Providers">All Providers</option>
         {providers.map((p) => (

@@ -27,15 +27,18 @@ export function PersonaChart({ rollup }: Props) {
     return row;
   });
 
-  const palette = ["#2563eb", "#16a34a", "#ea580c", "#9333ea", "#dc2626"];
+  // Distinct, colorblind-safe categorical palette (Okabe–Ito). Each test
+  // needs to be told apart at a glance, so this is the one chart that
+  // deliberately steps outside the blue theme.
+  const palette = ["#0072B2", "#E69F00", "#009E73", "#CC79A7", "#D55E00", "#56B4E9"];
 
   return (
     <div className="space-y-3">
       <ProviderSelect provider={provider} providers={providers} onChange={setProvider} />
       {rubricRows.length === 0 ? (
-        <p className="text-sm text-zinc-500 dark:text-zinc-400">No rubric_judge rows for this provider.</p>
+        <p className="text-sm text-zinc-500 dark:text-zinc-400">No graded answers for this model yet.</p>
       ) : (
-        <div className="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4">
+        <div className="panel p-4">
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={data} margin={{ top: 12, right: 16, bottom: 12, left: 0 }}>

@@ -202,8 +202,8 @@ function FilterGroup({
               onClick={() => onChange(opt)}
               className={
                 active
-                  ? "rounded border border-zinc-400 bg-zinc-100 px-1.5 py-0.5 font-mono text-[10px] text-zinc-900 dark:border-zinc-500 dark:bg-zinc-800 dark:text-zinc-100"
-                  : "rounded border border-zinc-200 bg-white px-1.5 py-0.5 font-mono text-[10px] text-zinc-500 hover:border-zinc-400 hover:text-zinc-700 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-400 dark:hover:border-zinc-600 dark:hover:text-zinc-200"
+                  ? "rounded-full border border-blue-400 bg-blue-100 px-2 py-0.5 font-mono text-[10px] text-blue-900 dark:border-blue-400/50 dark:bg-blue-500/20 dark:text-blue-100"
+                  : "rounded-full border border-zinc-200 bg-white px-2 py-0.5 font-mono text-[10px] text-zinc-500 hover:border-blue-400 hover:text-blue-700 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-400 dark:hover:border-blue-400/50 dark:hover:text-blue-200"
               }
             >
               {opt}

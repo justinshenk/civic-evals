@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 
 import { FailuresPanel } from "@/app/components/FailuresPanel";
 import { fmt, groupBy, loadRollup, meanBy } from "@/lib/rollup";
+import { evalTitle } from "@/lib/evalCopy";
 
 /**
  * Per-model report card.
@@ -86,39 +87,36 @@ export default async function ModelPage({
         <nav className="text-sm">
           <Link
             href="/"
-            className="text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 underline decoration-zinc-300 dark:decoration-zinc-700 underline-offset-3"
+            className="font-medium text-blue-700 hover:text-blue-900 underline decoration-blue-300 underline-offset-3 dark:text-blue-300 dark:hover:text-blue-200"
           >
             ← all models
           </Link>
         </nav>
 
         <header className="space-y-3">
-          <p className="text-xs uppercase tracking-widest text-zinc-500 dark:text-zinc-400">
+          <p className="inline-flex items-center gap-2 rounded-full border border-blue-200/70 bg-blue-50/70 px-3 py-1 text-xs font-medium uppercase tracking-widest text-blue-700 dark:border-blue-400/20 dark:bg-blue-500/10 dark:text-blue-300">
             CORDA · P3 · model report card
           </p>
-          <h1 className="font-mono text-3xl font-semibold tracking-tight break-all">
+          <h1 className="font-mono text-3xl font-semibold tracking-tight break-all ombre-text">
             {provider}
           </h1>
-          <p className="max-w-3xl text-zinc-600 dark:text-zinc-400 leading-relaxed">
-            Aggregated performance of{" "}
-            <code className="font-mono">{provider}</code> across every
-            eval in the suite. Use the per-eval table below to see where
-            this model is strong or weak; use the failures section to
-            see where it gets things wrong, and whether it knew it was
-            wrong.
+          <p className="max-w-3xl text-lg text-zinc-600 dark:text-zinc-300 leading-relaxed">
+            How <code className="font-mono text-base">{provider}</code> did across every test in the
+            suite. The tables below show where it&rsquo;s strong or weak; the last section collects
+            the answers worth a closer look — and whether the model admitted it might be wrong.
           </p>
-          <div className="flex flex-wrap gap-6 pt-2 text-sm text-zinc-500 dark:text-zinc-400">
+          <div className="flex flex-wrap gap-x-6 gap-y-2 pt-2 text-sm text-zinc-500 dark:text-zinc-400">
             <span>
               <strong className="text-zinc-900 dark:text-zinc-100">
                 {evalRows.length}
               </strong>{" "}
-              evals
+              tests
             </span>
             <span>
               <strong className="text-zinc-900 dark:text-zinc-100">
                 {rows.length}
               </strong>{" "}
-              rows
+              answers graded
             </span>
             <span>
               <strong className="text-zinc-900 dark:text-zinc-100">
@@ -127,7 +125,7 @@ export default async function ModelPage({
               flagged
             </span>
             <span>
-              overall mean{" "}
+              average score{" "}
               <strong className="text-zinc-900 dark:text-zinc-100">
                 {fmt(overall)}
               </strong>
@@ -137,24 +135,25 @@ export default async function ModelPage({
 
         <section className="space-y-3">
           <SectionHeader
-            title="Per-eval mean"
-            hint="Mean of all scorers, all rows, this model on each eval."
+            title="Score on each test"
+            hint="This model's average score on every test, highest to lowest. Click a test to open it."
           />
-          <SummaryTable rows={evalRows} unit="eval" linkPrefix="/evals" />
+          <SummaryTable rows={evalRows} unit="test" linkPrefix="/evals" />
         </section>
 
         <section className="space-y-3">
           <SectionHeader
-            title="Per-scorer mean"
-            hint="Mean across all evals on each measurement dimension. Tells you where this model is strong or weak in the suite's scoring axes."
+            title="Strengths and weaknesses"
+            hint="The same answers, averaged by what each grading method measures — so you can see what this model is good at and where it slips."
           />
-          <SummaryTable rows={scorerRows} unit="scorer" />
+          <SummaryTable rows={scorerRows} unit="grading method" />
         </section>
 
         <section className="space-y-3">
           <SectionHeader
             title="Worth a closer look"
-            hint={`This model's flagged failures (easy < ${fmt(thresholds.easy ?? 0.9)}, medium < ${fmt(thresholds.medium ?? 0.7)}). Hedged = the model knew its training data may be stale or pointed at a source; no-hedge = confidently wrong.`}
+            hint="The answers this model got wrong enough to flag. The ones to worry about most are where it was confidently wrong — no hint that it might be out of date or that you should check an official source."
+            details={`Flagged when an answer scores below a per-difficulty alarm bar (easy < ${fmt(thresholds.easy ?? 0.9)}, medium < ${fmt(thresholds.medium ?? 0.7)}). "Hedged" = the model flagged possible staleness or pointed at an authoritative source; "no hedge" = confidently wrong.`}
           />
           <FailuresPanel
             failures={failures}
@@ -163,12 +162,12 @@ export default async function ModelPage({
           />
         </section>
 
-        <footer className="pt-8 border-t border-zinc-200 dark:border-zinc-800 text-sm text-zinc-500 dark:text-zinc-400">
+        <footer className="pt-8 border-t border-blue-200/60 dark:border-blue-400/15 text-sm text-zinc-500 dark:text-zinc-400">
           <p>
             Aggregation source: every row in{" "}
             <Link
               href="https://github.com/justinshenk/civic-evals/blob/main/site/public/data/rollup.json"
-              className="underline decoration-zinc-400 underline-offset-4"
+              className="text-blue-700 underline decoration-blue-300 underline-offset-4 dark:text-blue-300"
             >
               rollup.json
             </Link>{" "}
@@ -197,28 +196,28 @@ function SummaryTable({
     );
   }
   return (
-    <div className="overflow-x-auto rounded-lg border border-zinc-200 dark:border-zinc-800">
+    <div className="panel overflow-x-auto">
       <table className="w-full text-sm">
-        <thead className="bg-zinc-50 dark:bg-zinc-900/40 text-left text-xs uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+        <thead className="bg-blue-50/80 dark:bg-blue-500/10 text-left text-xs uppercase tracking-wider text-blue-900 dark:text-blue-200">
           <tr>
             <th className="px-3 py-2 font-medium">{unit}</th>
-            <th className="px-3 py-2 font-medium text-right">rows</th>
-            <th className="px-3 py-2 font-medium text-right">mean</th>
+            <th className="px-3 py-2 font-medium text-right">answers</th>
+            <th className="px-3 py-2 font-medium text-right">avg score</th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
+        <tbody className="divide-y divide-blue-100 dark:divide-blue-400/10">
           {rows.map((r) => (
-            <tr key={r.name} className="bg-white dark:bg-zinc-950">
-              <td className="px-3 py-2 font-mono text-xs">
+            <tr key={r.name} className="transition-colors hover:bg-blue-50/50 dark:hover:bg-blue-500/5">
+              <td className="px-3 py-2 text-xs">
                 {linkPrefix ? (
                   <Link
                     href={`${linkPrefix}/${r.name}`}
-                    className="hover:underline decoration-zinc-400 underline-offset-4"
+                    className="font-medium text-blue-700 hover:underline decoration-blue-300 underline-offset-4 dark:text-blue-300"
                   >
-                    {r.name}
+                    {evalTitle(r.name)}
                   </Link>
                 ) : (
-                  r.name
+                  <span className="font-mono">{r.name}</span>
                 )}
               </td>
               <td className="px-3 py-2 text-right tabular-nums">{r.n_rows}</td>
@@ -244,13 +243,35 @@ function ScoreCell({ score }: { score: number | null }) {
   );
 }
 
-function SectionHeader({ title, hint }: { title: string; hint: string }) {
+function SectionHeader({
+  title,
+  hint,
+  details,
+}: {
+  title: string;
+  hint: string;
+  details?: React.ReactNode;
+}) {
   return (
-    <header className="space-y-1">
-      <h2 className="text-xl font-semibold tracking-tight">{title}</h2>
-      <p className="text-sm text-zinc-500 dark:text-zinc-400 max-w-3xl">
-        {hint}
-      </p>
+    <header className="flex gap-3">
+      <span aria-hidden className="ombre-rule mt-1 w-1 shrink-0 rounded-full" />
+      <div className="space-y-2 max-w-3xl">
+        <h2 className="text-xl sm:text-2xl font-semibold tracking-tight">{title}</h2>
+        <p className="text-[15px] text-zinc-600 dark:text-zinc-300 leading-relaxed">{hint}</p>
+        {details && (
+          <details className="group">
+            <summary className="inline-flex w-fit cursor-pointer items-center gap-1.5 rounded-full border border-blue-200/70 bg-blue-50/60 px-2.5 py-1 text-xs font-medium text-blue-700 list-none [&::-webkit-details-marker]:hidden hover:bg-blue-100/70 dark:border-blue-400/20 dark:bg-blue-500/10 dark:text-blue-300 dark:hover:bg-blue-500/20">
+              <span aria-hidden className="transition-transform group-open:rotate-90">
+                ▸
+              </span>
+              Technical details
+            </summary>
+            <div className="mt-2 rounded-lg border border-blue-200/50 bg-blue-50/30 px-3 py-2.5 text-xs leading-relaxed text-zinc-600 dark:border-blue-400/15 dark:bg-blue-500/5 dark:text-zinc-400">
+              {details}
+            </div>
+          </details>
+        )}
+      </div>
     </header>
   );
 }

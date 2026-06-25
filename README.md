@@ -23,7 +23,7 @@ A [`justfile`](justfile) wraps the common commands so they don't have to be rety
 src/p3/          shared infrastructure (schema, personas, scorers, providers)
 evals/           one folder per eval; mentees copy _template/ to start
 analysis/        rollup.py unifies .eval logs into a single long-form dataframe
-site/            Next.js App Router dashboard — reads rollup.json, deploys to Vercel
+site/            Next.js App Router dashboard — reads rollup.json, static-exported to GitHub Pages
 tests/           CI: schema validation + smoke-run every eval under Haiku
 logs/            .eval outputs (gitignored)
 ```
@@ -38,7 +38,7 @@ pnpm install
 pnpm dev
 ```
 
-The `refresh-results` GitHub Action runs the eval suite on a weekly schedule (and on `workflow_dispatch`), regenerates `rollup.json`, and commits the update. Vercel picks up the commit and redeploys automatically.
+The `refresh-results` GitHub Action runs the eval suite on a weekly schedule (and on `workflow_dispatch`), regenerates `rollup.json`, and commits the update. The `deploy-pages` workflow then rebuilds the static export and republishes it to GitHub Pages automatically.
 
 Repo secrets (set under `Settings → Secrets and variables → Actions`):
 
@@ -46,7 +46,9 @@ Repo secrets (set under `Settings → Secrets and variables → Actions`):
 - `OPENAI_API_KEY` — optional. When present, every eval also runs against `openai/gpt-4o`, populating the cross-provider columns on the site.
 - `SLACK_WEBHOOK_URL` — optional. When present, the workflow posts a summary to the configured Slack channel after each successful run (per-eval × provider mean table, calibration AUROC, baseline scores, Δ vs. the previous rollup) and a short failure notification when the run dies. No-op when unset, so unconfigured forks don't try to post anywhere.
 
-Deploying to Vercel: `vercel login && vercel` from the `site/` directory, or import the repo through the Vercel dashboard with **Root Directory** set to `site`.
+Deploying to GitHub Pages: the site is a fully static Next.js export, published by the [`deploy-pages`](.github/workflows/deploy-pages.yml) workflow. One-time setup: in **Settings → Pages**, set **Source** to **GitHub Actions**. The workflow runs on pushes to `main` that touch `site/**` (including the weekly `rollup.json` refresh) and on manual dispatch; the published URL is `https://<owner>.github.io/civic-evals/`.
+
+It's served from the `/civic-evals` project subpath via `NEXT_PUBLIC_BASE_PATH` (set in the workflow). For a custom domain or a `<owner>.github.io` user repo, leave that variable unset so the site builds for the root path. Build locally with `pnpm build` (output in `site/out/`).
 
 ## Contributing a new eval
 

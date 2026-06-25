@@ -54,7 +54,7 @@ function BaselineCard({
   byEvalProvider: Record<string, RollupRow[]>;
 }) {
   return (
-    <article className="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5 space-y-3">
+    <article className="card p-5 space-y-3">
       <header className="flex items-baseline justify-between gap-3">
         <div className="space-y-0.5">
           <h3 className="font-mono text-sm font-medium tracking-tight">
@@ -67,7 +67,7 @@ function BaselineCard({
         {baseline.arxiv && (
           <a
             href={baseline.arxiv}
-            className="text-xs text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 underline decoration-zinc-300 dark:decoration-zinc-700 underline-offset-3"
+            className="text-xs font-medium text-blue-700 hover:text-blue-900 underline decoration-blue-300 underline-offset-3 dark:text-blue-300 dark:hover:text-blue-200"
           >
             paper →
           </a>
@@ -88,9 +88,9 @@ function BaselineCard({
             return (
               <div
                 key={provider}
-                className="rounded border border-zinc-200 dark:border-zinc-800 px-3 py-1.5"
+                className="rounded-lg border border-blue-200 dark:border-blue-400/25 bg-blue-50/40 dark:bg-blue-500/5 px-3 py-1.5"
               >
-                <div className="text-[10px] font-mono text-zinc-400 dark:text-zinc-500">
+                <div className="text-[10px] font-mono text-blue-600/70 dark:text-blue-300/70">
                   {provider}
                 </div>
                 <div className="font-mono tabular-nums text-zinc-900 dark:text-zinc-100">

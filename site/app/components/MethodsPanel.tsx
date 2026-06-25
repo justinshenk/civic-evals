@@ -91,13 +91,13 @@ export function MethodsPanel({
   if (scorers.length === 0 && !hasFailures) return null;
 
   return (
-    <div className="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 divide-y divide-zinc-200 dark:divide-zinc-800">
+    <div className="panel divide-y divide-blue-100 dark:divide-blue-400/10">
       {scorers.map((s) => {
         const entry = METHODS[s];
         if (entry) {
           return (
             <div key={s} className="px-4 py-3 space-y-1">
-              <h3 className="font-mono text-xs uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+              <h3 className="font-mono text-xs uppercase tracking-wider text-blue-700 dark:text-blue-300">
                 {entry.title}
               </h3>
               <p className="text-sm leading-relaxed text-zinc-700 dark:text-zinc-300">

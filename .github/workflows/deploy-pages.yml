@@ -1,0 +1,64 @@
+name: deploy-pages
+
+# Builds the Next.js dashboard as a static export and publishes it to
+# GitHub Pages. Runs on pushes to main that touch the site (including the
+# weekly rollup.json refresh committed by refresh-results.yml) and on
+# manual dispatch. Requires repo Settings → Pages → Source = "GitHub Actions".
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "site/**"
+      - ".github/workflows/deploy-pages.yml"
+  workflow_dispatch:
+
+# Least-privilege token plus the OIDC/pages scopes the deploy step needs.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Never run two publishes at once; let an in-flight one finish.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: site
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: site/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - name: Build static export
+        env:
+          # Served from a project subpath: <user>.github.io/civic-evals
+          NEXT_PUBLIC_BASE_PATH: /civic-evals
+          NEXT_TELEMETRY_DISABLED: "1"
+        run: pnpm exec next build
+      - name: Disable Jekyll so /_next/* assets are served
+        run: touch out/.nojekyll
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site/out
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

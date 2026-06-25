@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { asset } from "@/lib/basePath";
 
 export const metadata: Metadata = {
   title: "Landscape — preview",
@@ -33,7 +34,7 @@ export default function LandscapePreview() {
         <figure className="space-y-3">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="/preview/landscape.png"
+            src={asset("/preview/landscape.png")}
             alt="Matrix figure: 11 research topics by 9 research groups. Filled green cells mark strong claims; light grey circles mark adjacent or partial work. Three rows (refusal as object, persona × pressure, cross-axis failure concentration) are highlighted as CORDA P3's novel territory."
             className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white"
           />

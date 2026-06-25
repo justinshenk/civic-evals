@@ -43,35 +43,37 @@ function ModelCard({
   const noHedge = failures.filter((f) => f.acknowledged_staleness === false).length;
 
   return (
-    <article className="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5 flex flex-col gap-3 hover:border-zinc-400 dark:hover:border-zinc-600 transition-colors">
+    <article className="card p-5 flex flex-col gap-3">
       <header className="flex items-baseline justify-between gap-3">
         <h3 className="font-mono text-sm font-medium tracking-tight break-all">
           <Link
             href={`/models/${provider}`}
-            className="hover:underline decoration-zinc-400 underline-offset-4"
+            className="text-blue-700 hover:underline decoration-blue-300 underline-offset-4 dark:text-blue-300"
           >
             {provider}
           </Link>
         </h3>
         <span
-          className="font-mono text-xs tabular-nums text-zinc-500 dark:text-zinc-400"
-          title="mean of all scorers across all evals"
+          className="shrink-0 rounded-full bg-blue-50 px-2 py-0.5 font-mono text-xs tabular-nums text-blue-700 dark:bg-blue-500/10 dark:text-blue-300"
+          title="Average score across every test and grading method (0–1, higher is better)"
         >
-          {overall === null ? "no runs" : `mean ${fmt(overall)}`}
+          {overall === null ? "no runs" : `avg ${fmt(overall)}`}
         </span>
       </header>
 
       <dl className="grid grid-cols-3 gap-x-4 gap-y-2 text-xs">
         <div>
-          <dt className="text-zinc-400 dark:text-zinc-500">Evals</dt>
+          <dt className="text-zinc-400 dark:text-zinc-500">Tests</dt>
           <dd className="font-mono tabular-nums">{evalsCovered}</dd>
         </div>
         <div>
-          <dt className="text-zinc-400 dark:text-zinc-500">Rows</dt>
+          <dt className="text-zinc-400 dark:text-zinc-500">Answers</dt>
           <dd className="font-mono tabular-nums">{rows.length}</dd>
         </div>
         <div>
-          <dt className="text-zinc-400 dark:text-zinc-500">Flagged</dt>
+          <dt className="text-zinc-400 dark:text-zinc-500" title="Answers we flagged for a closer look">
+            Flagged
+          </dt>
           <dd className="font-mono tabular-nums">{failures.length}</dd>
         </div>
       </dl>
@@ -103,7 +105,7 @@ function ModelCard({
       <footer className="pt-2 mt-auto text-xs">
         <Link
           href={`/models/${provider}`}
-          className="text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 underline decoration-zinc-300 dark:decoration-zinc-700 underline-offset-3"
+          className="font-medium text-blue-700 hover:text-blue-900 underline decoration-blue-300 underline-offset-3 dark:text-blue-300 dark:hover:text-blue-200"
         >
           report card →
         </Link>

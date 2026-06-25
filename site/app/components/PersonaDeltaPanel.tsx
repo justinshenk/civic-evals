@@ -76,11 +76,8 @@ export function PersonaDeltaPanel({
   return (
     <div className="space-y-3">
       {groups.map((g) => (
-        <div
-          key={g.subdomain}
-          className="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 overflow-hidden"
-        >
-          <div className="flex items-center justify-between px-4 py-2.5 border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/40">
+        <div key={g.subdomain} className="panel">
+          <div className="flex items-center justify-between px-4 py-2.5 border-b border-blue-200/60 dark:border-blue-400/15 bg-blue-50/70 dark:bg-blue-500/10">
             <span className="font-mono text-sm">{g.subdomain}</span>
             <span className="text-xs font-mono tabular-nums text-zinc-600 dark:text-zinc-400">
               |Δ| ={" "}
@@ -105,7 +102,7 @@ export function PersonaDeltaPanel({
                 <th className="px-4 py-1.5 text-right font-medium">score</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
+            <tbody className="divide-y divide-blue-100 dark:divide-blue-400/10">
               {g.perPersona.map((p, i) => (
                 <tr key={`${p.persona}-${p.provider}-${i}`}>
                   <td className="px-4 py-1.5 font-mono text-xs">

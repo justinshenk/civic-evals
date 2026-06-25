@@ -23,9 +23,9 @@ export function CalibrationPanel({ rollup }: { rollup: Rollup }) {
   }
 
   return (
-    <div className="overflow-x-auto rounded-lg border border-zinc-200 dark:border-zinc-800">
+    <div className="panel overflow-x-auto">
       <table className="w-full text-sm">
-        <thead className="bg-zinc-50 dark:bg-zinc-900/50 text-left text-xs uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+        <thead className="bg-blue-50/80 dark:bg-blue-500/10 text-left text-xs uppercase tracking-wide text-blue-900 dark:text-blue-200">
           <tr>
             <th className="px-3 py-2 font-medium">Eval</th>
             <th className="px-3 py-2 font-medium">Provider</th>
@@ -35,7 +35,7 @@ export function CalibrationPanel({ rollup }: { rollup: Rollup }) {
             <th className="px-3 py-2 font-medium">reading</th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800 bg-white dark:bg-zinc-950">
+        <tbody className="divide-y divide-blue-100 dark:divide-blue-400/10">
           {stats.map((s, i) => (
             <CalibRow key={`${s.eval}:${s.provider}:${i}`} stat={s} />
           ))}

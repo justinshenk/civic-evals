@@ -1,8 +1,29 @@
 @import "tailwindcss";
 
+/*
+ * Blue-ombre design system.
+ *
+ * The whole surface trends from a deep indigo through royal blue into a
+ * bright sky — an "ombre" that reads as one continuous gradient whether
+ * it's painting the page background, a heading, a progress bar, or a
+ * decorative blob. Functional colors (emerald / amber / rose for
+ * difficulty, scores, refusal expectations) are deliberately left alone
+ * so the blue theme never overrides a signal that means pass/fail.
+ */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f3f7ff;
+  --foreground: #0a1b3d;
+
+  /* Ombre stops, dark → light, reused everywhere. */
+  --brand-900: #0b2a6b;
+  --brand-700: #1d4ed8;
+  --brand-600: #2563eb;
+  --brand-500: #3b82f6;
+  --brand-400: #38bdf8;
+  --brand-300: #7dd3fc;
+
+  --ombre: linear-gradient(135deg, var(--brand-900) 0%, var(--brand-600) 45%, var(--brand-400) 100%);
+  --ombre-h: linear-gradient(90deg, var(--brand-700) 0%, var(--brand-400) 100%);
 }
 
 @theme inline {
@@ -14,13 +35,133 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #050b1c;
+    --foreground: #e8f0ff;
   }
 }
 
 body {
-  background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  /* The page-wide ombre wash: a soft blue that fades to the base near the
+     fold, fixed so scrolling feels like moving across one gradient. */
+  background-color: var(--background);
+  background-image:
+    radial-gradient(60rem 40rem at 82% -8%, rgba(56, 189, 248, 0.18), transparent 60%),
+    radial-gradient(55rem 38rem at 8% 0%, rgba(37, 99, 235, 0.16), transparent 55%),
+    linear-gradient(180deg, rgba(219, 234, 254, 0.55) 0%, transparent 38%);
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+}
+
+@media (prefers-color-scheme: dark) {
+  body {
+    background-image:
+      radial-gradient(60rem 40rem at 82% -8%, rgba(56, 189, 248, 0.14), transparent 60%),
+      radial-gradient(55rem 38rem at 8% 0%, rgba(37, 99, 235, 0.18), transparent 55%),
+      linear-gradient(180deg, rgba(11, 42, 107, 0.5) 0%, transparent 42%);
+  }
+}
+
+/* ---- Ombre helpers -------------------------------------------------- */
+
+/* Gradient-clipped text for headings and brand marks. */
+.ombre-text {
+  background-image: var(--ombre);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+@media (prefers-color-scheme: dark) {
+  .ombre-text {
+    background-image: linear-gradient(135deg, #93c5fd 0%, #60a5fa 45%, #7dd3fc 100%);
+  }
+}
+
+/* Solid ombre fill — buttons, accent bars, progress fills. */
+.ombre-fill {
+  background-image: var(--ombre);
+  color: #fff;
+}
+.ombre-fill-h {
+  background-image: var(--ombre-h);
+}
+
+/* A vertical ombre tick used to flag section headings. */
+.ombre-rule {
+  background-image: linear-gradient(180deg, var(--brand-400), var(--brand-700));
+}
+
+/* Decorative blurred blob behind the hero. */
+.brand-blob {
+  background: var(--ombre);
+  filter: blur(72px);
+  opacity: 0.35;
+}
+@media (prefers-color-scheme: dark) {
+  .brand-blob {
+    opacity: 0.28;
+  }
+}
+
+/* ---- Surfaces ------------------------------------------------------- */
+
+/* Frosted card with a faint blue edge and a soft blue-tinted shadow.
+   Hover lifts the border toward sky and deepens the shadow. */
+.card {
+  border-radius: 1rem;
+  border: 1px solid rgba(37, 99, 235, 0.14);
+  background: rgba(255, 255, 255, 0.78);
+  backdrop-filter: blur(8px);
+  box-shadow:
+    0 1px 2px rgba(11, 42, 107, 0.04),
+    0 14px 34px -22px rgba(37, 99, 235, 0.45);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+.card:hover {
+  border-color: rgba(56, 189, 248, 0.6);
+  box-shadow:
+    0 1px 2px rgba(11, 42, 107, 0.06),
+    0 20px 44px -20px rgba(37, 99, 235, 0.55);
+}
+@media (prefers-color-scheme: dark) {
+  .card {
+    border-color: rgba(96, 165, 250, 0.18);
+    background: rgba(13, 24, 48, 0.62);
+    box-shadow:
+      0 1px 2px rgba(0, 0, 0, 0.3),
+      0 16px 38px -22px rgba(56, 189, 248, 0.35);
+  }
+  .card:hover {
+    border-color: rgba(125, 211, 252, 0.45);
+  }
+}
+
+/* Like .card but no hover lift — for table/chart containers. */
+.panel {
+  border-radius: 1rem;
+  border: 1px solid rgba(37, 99, 235, 0.14);
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(8px);
+  overflow: hidden;
+  box-shadow: 0 14px 34px -24px rgba(37, 99, 235, 0.4);
+}
+@media (prefers-color-scheme: dark) {
+  .panel {
+    border-color: rgba(96, 165, 250, 0.18);
+    background: rgba(13, 24, 48, 0.62);
+  }
+}
+
+/* Sticky translucent top bar. */
+.glass-nav {
+  background: rgba(243, 247, 255, 0.72);
+  backdrop-filter: blur(12px) saturate(160%);
+  border-bottom: 1px solid rgba(37, 99, 235, 0.12);
+}
+@media (prefers-color-scheme: dark) {
+  .glass-nav {
+    background: rgba(5, 11, 28, 0.72);
+    border-bottom-color: rgba(96, 165, 250, 0.16);
+  }
 }
