@@ -43,15 +43,14 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import civic_bias_experiment as cbe
+import persona_bias_pilot as pilot
+import persona_l0_mitigation as l0_mit
 from civic_bias_experiment import (
     ExperimentConfig,
     Factor,
-    Question,
     estimate_cost,
     run,
 )
-import persona_bias_pilot as pilot
-import persona_l0_mitigation as l0_mit
 from persona_l0_mitigation import L0_PREFIX, TARGET_CELLS
 
 MODEL = "claude-sonnet-4-6"
