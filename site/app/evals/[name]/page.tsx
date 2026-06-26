@@ -229,7 +229,7 @@ function TaskRow({
 
   return (
     <>
-      <tr className="bg-white dark:bg-zinc-950 align-top">
+      <tr className="bg-white dark:bg-zinc-950 align-top group/taskrow">
         <td className="px-3 py-3 font-mono text-xs whitespace-nowrap">
           <details className="group">
             <summary className="cursor-pointer hover:text-zinc-900 dark:hover:text-zinc-100">
@@ -238,7 +238,7 @@ function TaskRow({
           </details>
         </td>
         <td className="px-3 py-3 text-zinc-700 dark:text-zinc-300 max-w-md">
-          <span className="line-clamp-2">{task.input}</span>
+          <span className="line-clamp-2 group-has-[details[open]]/taskrow:line-clamp-none">{task.input}</span>
         </td>
         <td className="px-3 py-3">
           <DifficultyBadge difficulty={task.difficulty} />
