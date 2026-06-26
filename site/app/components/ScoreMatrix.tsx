@@ -27,58 +27,56 @@ export function ScoreMatrix({ rollup }: { rollup: Rollup }) {
   return (
     <div className="space-y-3">
       <ProviderSelect provider={provider} providers={providers} onChange={setProvider} />
-        <div className="panel">
-          <div className="overflow-x-auto">
-          <table className="min-w-max w-full text-sm">
-            <thead className="bg-blue-50/80 dark:bg-blue-500/10 text-blue-900 dark:text-blue-200">
-              <tr>
-                <th className="text-left font-medium px-4 py-3">Test</th>
-                {scorersSorted.map((s) => (
-                  <th key={s} className="text-right font-medium px-4 py-3 font-mono text-xs">
-                    {s}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-blue-100 dark:divide-blue-400/10">
-              {evalsSorted.map((e) => {
-                const rows = byEval[e] ?? [];
-                const byScorer = groupBy(rows, (r) => r.scorer);
-                return (
-                  <tr key={e} className="transition-colors hover:bg-blue-50/50 dark:hover:bg-blue-500/5">
-                    <td className="px-4 py-3 text-sm font-medium" title={e}>
-                      {evalTitle(e)}
-                    </td>
-                    {scorersSorted.map((s) => {
-                      const cell = byScorer[s] ?? [];
-                      const m = meanBy(cell, (r) => r.score);
-                      // Bootstrap CI only when the user has filtered to
-                      // one provider — otherwise the cell aggregates
-                      // across providers and the per-cell CI would
-                      // misrepresent.
-                      const cs =
-                        provider !== "All Providers"
-                          ? stat(e, s, provider)
-                          : undefined;
-                      const tooltip = cs
-                        ? fmtMeanCI(cs)
-                        : `${cell.length} sample${cell.length === 1 ? "" : "s"}`;
-                      return (
-                        <td
-                          key={s}
-                          className="px-4 py-3 text-right font-mono tabular-nums"
-                          title={tooltip}
-                        >
-                          <ScoreBadge value={m} stat={cs} />
-                        </td>
-                      );
-                    })}
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+      <div className="overflow-x-auto panel">
+        <table className="min-w-max w-full text-sm">
+          <thead className="bg-blue-50/80 dark:bg-blue-500/10 text-blue-900 dark:text-blue-200">
+            <tr>
+              <th className="text-left font-medium px-4 py-3">Test</th>
+              {scorersSorted.map((s) => (
+                <th key={s} className="text-right font-medium px-4 py-3 font-mono text-xs">
+                  {s}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-blue-100 dark:divide-blue-400/10">
+            {evalsSorted.map((e) => {
+              const rows = byEval[e] ?? [];
+              const byScorer = groupBy(rows, (r) => r.scorer);
+              return (
+                <tr key={e} className="transition-colors hover:bg-blue-50/50 dark:hover:bg-blue-500/5">
+                  <td className="px-4 py-3 text-sm font-medium" title={e}>
+                    {evalTitle(e)}
+                  </td>
+                  {scorersSorted.map((s) => {
+                    const cell = byScorer[s] ?? [];
+                    const m = meanBy(cell, (r) => r.score);
+                    // Bootstrap CI only when the user has filtered to
+                    // one provider — otherwise the cell aggregates
+                    // across providers and the per-cell CI would
+                    // misrepresent.
+                    const cs =
+                      provider !== "All Providers"
+                        ? stat(e, s, provider)
+                        : undefined;
+                    const tooltip = cs
+                      ? fmtMeanCI(cs)
+                      : `${cell.length} sample${cell.length === 1 ? "" : "s"}`;
+                    return (
+                      <td
+                        key={s}
+                        className="px-4 py-3 text-right font-mono tabular-nums"
+                        title={tooltip}
+                      >
+                        <ScoreBadge value={m} stat={cs} />
+                      </td>
+                    );
+                  })}
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
       </div>
     </div>
   );
