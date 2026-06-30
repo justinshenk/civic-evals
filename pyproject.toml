@@ -36,8 +36,6 @@ packages = ["src/p3"]
 [tool.ruff]
 line-length = 100
 target-version = "py311"
-# Exclude analysis folder from ruff until all changes are tested
-exclude = ["analysis"]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "UP", "B", "SIM"]
