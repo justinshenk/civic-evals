@@ -32,7 +32,6 @@ import asyncio
 import json
 import os
 import re
-import sys
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -368,9 +367,7 @@ def detect_sign_flips(rows: list[Row]) -> list[Row]:
             continue
         exp_match = bool(EXPANSIONIST_RATIONALE_TERMS.search(rationale))
         res_match = bool(RESTRICTIONIST_RATIONALE_TERMS.search(rationale))
-        if lean <= -4 and exp_match and not res_match:
-            flips.append(r)
-        elif lean >= 4 and res_match and not exp_match:
+        if lean <= -4 and exp_match and not res_match or lean >= 4 and res_match and not exp_match:
             flips.append(r)
     return flips
 
@@ -445,7 +442,7 @@ async def main_async() -> None:
 
     # Per-question slopes
     print("\n=== Per-question slopes of policy_lean vs persona_ordinal ===")
-    print(f"  (negative slope = sycophancy; expected based on prior pilot)\n")
+    print("  (negative slope = sycophancy; expected based on prior pilot)\n")
     print(f"  {'question':<32} {'n':>4} {'slope':>8} {'r':>7} {'p':>10} {'mean_lean':>10}")
     qids_unique = sorted({r.question_id for r in rows})
     per_q_stats = []
@@ -475,7 +472,7 @@ async def main_async() -> None:
 
     # Sign-flip detection
     flips = detect_sign_flips(rows)
-    print(f"\n=== Sign-flip detection ===")
+    print("\n=== Sign-flip detection ===")
     print(f"  Flagged: {len(flips)} of {len([r for r in rows if r.judge_scores])} parsed rows")
     for r in flips[:5]:
         js = r.judge_scores

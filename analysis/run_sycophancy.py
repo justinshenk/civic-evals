@@ -201,10 +201,6 @@ async def main_async(topic_key: str, condition: str, provider: str = "anthropic"
         print("!!! Results below are NOT trustworthy. Fix the API budget and re-run.\n")
 
     # Pooled slope (exclude unspecified control which has no ordinal).
-    xs = [r.persona_ordinal for r in rows if r.persona_ordinal is not None and r.judge_scores]
-    ys = [r.judge_scores["policy_lean"] for r in rows
-          if r.persona_ordinal is not None and r.judge_scores and "policy_lean" in r.judge_scores]
-    # align xs and ys
     pairs = [(r.persona_ordinal, r.judge_scores["policy_lean"]) for r in rows
              if r.persona_ordinal is not None and r.judge_scores and "policy_lean" in r.judge_scores]
     xa = np.array([p[0] for p in pairs], dtype=float)

@@ -30,21 +30,18 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-import civic_bias_experiment as cbe
+# Import the persona expansion + candidate definitions from the pilot
+# so we use the EXACT same prompts as the headline pilot. Importing the
+# module also re-applies the render() monkey-patch.
+import persona_bias_pilot as pilot  # noqa: F401, E402
 from civic_bias_experiment import (
     ExperimentConfig,
     Factor,
-    Question,
     estimate_cost,
     format_cost_estimate,
     persist,
     run,
 )
-
-# Import the persona expansion + candidate definitions from the pilot
-# so we use the EXACT same prompts as the headline pilot. Importing the
-# module also re-applies the render() monkey-patch.
-import persona_bias_pilot as pilot  # noqa: F401, E402
 
 # Filter the pilot's candidate set down to the two most-flipped ones.
 TARGET_CIDS = ("cand-D1-progressive", "cand-R1-traditional")
@@ -102,7 +99,8 @@ async def main_async() -> None:
     from collections import defaultdict
     cells: dict[tuple, list[float]] = defaultdict(list)
     for r in rows:
-        if r["rating"] is None: continue
+        if r["rating"] is None:
+            continue
         key = (r["question_id"], r["user_persona"])
         cells[key].append(r["rating"])
     for k, vs in sorted(cells.items()):
