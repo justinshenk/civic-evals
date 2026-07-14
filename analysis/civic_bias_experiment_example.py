@@ -38,7 +38,6 @@ from civic_bias_experiment import (
     run,
 )
 
-
 # A handful of placeholder civic questions. Replace with your real set.
 QUESTIONS = [
     Question(

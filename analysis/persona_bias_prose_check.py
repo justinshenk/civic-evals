@@ -28,22 +28,16 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-import civic_bias_experiment as cbe
-from civic_bias_experiment import (
-    ExperimentConfig,
-    Factor,
-    Question,
-    estimate_cost,
-    format_cost_estimate,
-    persist,
-    run,
-)
-
 # Reuse the candidate profiles, persona expansions, priming text, and
 # the render patch from the pilot.
 import persona_bias_pilot as pilot  # noqa: F401  (also installs render patch)
+from civic_bias_experiment import (
+    ExperimentConfig,
+    Factor,
+    estimate_cost,
+    run,
+)
 from persona_bias_pilot import CANDIDATE_PROFILES, _candidate_question
-
 
 # Pick the 3 highest-gap cells from the pilot (see prior summary):
 #   (candidate, claude_priming, depth)

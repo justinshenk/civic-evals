@@ -58,7 +58,7 @@ import os
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Callable, Literal
+from typing import Any, Literal
 
 import numpy as np
 import scipy.stats as stats
@@ -180,7 +180,7 @@ def _factor_assignments(factors: list[Factor]) -> list[dict[str, str]]:
     levels = [(f.name, f.levels) for f in factors]
     out = []
     for combo in itertools.product(*[lv for _, lv in levels]):
-        out.append({name: val for (name, _), val in zip(levels, combo)})
+        out.append({name: val for (name, _), val in zip(levels, combo, strict=False)})
     return out
 
 
@@ -383,7 +383,6 @@ def _build_design(
     if include_question_fixed_effects and len(config.questions) > 1:
         # One dummy per question except the first (the reference).
         qids = [q.id for q in config.questions]
-        ref = qids[0]
         for qid in qids[1:]:
             d = np.array([1.0 if r["question_id"] == qid else 0.0 for r in parsed])
             cols.append(d)
@@ -424,12 +423,12 @@ def _fit_subset(rows: list[dict[str, Any]], config: ExperimentConfig, fe: bool) 
     return FitResult(
         n_total=n_total, n_parsed=n_parsed, df=df, r2=r2,
         rating_mean=float(ratings.mean()), rating_sd=float(ratings.std(ddof=0)),
-        beta={n: float(b) for n, b in zip(names, beta)},
-        se={n: float(s) for n, s in zip(names, se)},
-        p={n: float(pp) for n, pp in zip(names, p)},
+        beta={n: float(b) for n, b in zip(names, beta, strict=False)},
+        se={n: float(s) for n, s in zip(names, se, strict=False)},
+        p={n: float(pp) for n, pp in zip(names, p, strict=False)},
         ci95={
             n: (float(b - crit * s), float(b + crit * s))
-            for n, b, s in zip(names, beta, se)
+            for n, b, s in zip(names, beta, se, strict=False)
         },
     )
 

@@ -47,16 +47,14 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import civic_bias_experiment as cbe
+import persona_bias_pilot as pilot
 from civic_bias_experiment import (
     ExperimentConfig,
     Factor,
-    Question,
     estimate_cost,
     run,
 )
-import persona_bias_pilot as pilot
 from persona_bias_pilot import CANDIDATE_PROFILES, _candidate_question
-
 
 # Highest-gap cells from the cross-primed prose-check extension.
 TARGET_CELLS = [
