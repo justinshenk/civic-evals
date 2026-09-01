@@ -229,7 +229,7 @@ function TaskRow({
 
   return (
     <>
-      <tr className="bg-white dark:bg-zinc-950 align-top">
+      <tr className="bg-white dark:bg-zinc-950 align-top group/taskrow">
         <td className="px-3 py-3 font-mono text-xs whitespace-nowrap">
           <details className="group">
             <summary className="cursor-pointer hover:text-zinc-900 dark:hover:text-zinc-100">
@@ -238,7 +238,7 @@ function TaskRow({
           </details>
         </td>
         <td className="px-3 py-3 text-zinc-700 dark:text-zinc-300 max-w-md">
-          <span className="line-clamp-2">{task.input}</span>
+          <span className="line-clamp-2 group-has-[details[open]]/taskrow:line-clamp-none">{task.input}</span>
         </td>
         <td className="px-3 py-3">
           <DifficultyBadge difficulty={task.difficulty} />
@@ -364,6 +364,12 @@ function RefusalBadge({ expected }: { expected: "refuse" | "answer" | "hedge" | 
  * (annual deadline updates, post-election rule changes, biennial
  * statute reviews) cycles in that window.
  */
+function isStale(dateStr: string) {
+  const verifiedAt = new Date(dateStr);
+  const ageDays = (Date.now() - verifiedAt.getTime()) / 86_400_000;
+  return ageDays > 365;
+}
+
 function VerifiedBadge({ date }: { date: string | null }) {
   if (!date) {
     return (
@@ -375,9 +381,7 @@ function VerifiedBadge({ date }: { date: string | null }) {
       </span>
     );
   }
-  const verifiedAt = new Date(date);
-  const ageDays = (Date.now() - verifiedAt.getTime()) / 86_400_000;
-  const stale = ageDays > 365;
+  const stale = isStale(date);
   const cls = stale
     ? "border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-900/50 dark:bg-rose-950/40 dark:text-rose-300"
     : "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/50 dark:bg-emerald-950/40 dark:text-emerald-400";
