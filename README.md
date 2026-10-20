@@ -1,19 +1,55 @@
-# p3-civic-evals
+# Civic Evals
 
-CORDA P3 research project: **Civic Information Reliability**. A shared evaluation suite for measuring how reliably large language models answer civic questions across providers, personas, and task types.
+**How reliably do AI chatbots answer civic questions?** Civic Evals tests factual accuracy, uncertainty, appropriate refusal, and how answers change with the person asking. Explore the [results dashboard](https://civicevals.org).
 
-The repo is built on [`inspect-ai`](https://inspect.aisi.org.uk/). Each eval lives in its own folder under `evals/` and contributes tasks into a single, uniformly-structured log stream. Cross-eval rollups operate on that log stream — so every eval is immediately comparable on accuracy, calibrated uncertainty, appropriate-refusal, consistency, and citation verifiability.
+Started in the CORDA Democracy Fellowship (2026).
+
+The repo is built on [`inspect-ai`](https://inspect.aisi.org.uk/). Each eval lives in its own folder under `evals/` and contributes tasks to a shared log format. Rollups collect the results while retaining each metric's meaning: quality scores and policy-position scores should be read separately.
+
+## Key results
+
+These May 2026 experiments describe the models and settings in their source reports. They are historical findings, not claims about every current model.
+
+- **Candidate ratings:** all six tested models rated Democratic-typical policy platforms higher, controlling for party label, experience, and rigor. [Six-model study](analysis/multi_model_results.md).
+- **Immigration answers shifted with the user's politics:** Claude Haiku 4.5 moved from **+5.16 → −4.38 = 9.54 points** on the −10 to +10 lean scale, with **45** answers per persona. [Scaled persona study](analysis/persona_belief_scaled_results.md).
+- **Healthcare replication and fairness instruction:** the healthcare swing was **11.42** points. For immigration, the follow-up reports **9.53 → 4.64 points (51% reduction)** with a fairness instruction. Each number preserves its source report; the two reports give the immigration baseline as 9.54 and 9.53. [Cross-topic and mitigation study](analysis/sycophancy_l0_and_crosstopic_results.md).
+- **Candidate-rating mitigation:** a separate Sonnet experiment found an average **~67%** reduction in the user-persona gap across three selected high-gap cells. [Candidate-rating fairness study](analysis/persona_l0_mitigation_results.md).
+
+The October 19, 2026 dashboard refresh completes all seven civic tests on **Claude Sonnet 5.5** (direct Anthropic) and **GPT-6.1 Sol** (OpenRouter), each judged by the other model. Both use high reasoning effort and an 8,192-token output limit. The **862 scored task attempts** retain each test's default repetitions: three epochs for persona drift, ten for open-endedness, and one for the other tests. The 100 external-benchmark scores retain their earlier GPT-4o run and are labeled historical. This suite refresh does not rerun the May research experiments above.
 
 ## Quickstart
 
 ```bash
-uv sync
-cp .env.example .env   # fill in ANTHROPIC_API_KEY / OPENAI_API_KEY / TOGETHER_API_KEY
-uv run pytest                                                                      # schema + smoke
-uv run inspect eval evals/voting_access/eval.py --model anthropic/claude-haiku-4-5
-uv run inspect view                                                                # browse logs
-uv run python analysis/rollup.py logs/ > rollup.parquet
+uv sync --all-extras
+cp -n .env.example .env   # preserve an existing .env; fill in your provider keys
+uv run pytest -q         # offline schema, scorer, and module-load checks; no API spend
 ```
+
+For local cross-vendor judging, configure `ANTHROPIC_API_KEY` and either `OPENAI_API_KEY` or `OPENROUTER_API_KEY`. With only Anthropic and OpenRouter keys, Claude answers are judged by GPT through OpenRouter; OpenAI answers through OpenRouter are judged by Claude directly. Both routes keep the model IDs in the logs. An API error never silently changes the model or billing account.
+
+The following example **makes paid API calls**. Choose a model and budget before running it:
+
+```bash
+export P3_ANTHROPIC_JUDGE=anthropic/claude-sonnet-5-5
+export P3_OPENAI_JUDGE=openrouter/openai/gpt-6.1-sol
+uv run inspect eval evals/voting_access/eval.py \
+  --model anthropic/claude-sonnet-5-5 --limit 2 --epochs 1 --log-dir logs/example/
+uv run python analysis/usage.py logs/example/
+uv run inspect view
+```
+
+This example uses Sonnet 5.5 through Anthropic directly and GPT-6.1 Sol through OpenRouter as its judge. Swap `--model` to `openrouter/openai/gpt-6.1-sol` to test GPT with Sonnet judging. The explicit judge overrides select the comparison without changing task prompts or scoring formulas; each must retain the named vendor and have its own route's API key configured. `--limit` bounds sample count, not dollars, and charges include both answers and judges.
+
+The pinned defaults remain available for historical comparisons. GPT-4o is scheduled for API shutdown on January 14, 2027 ([OpenAI notice](https://developers.openai.com/api/docs/deprecations)).
+
+Build a dashboard file from a chosen logs directory without making additional API calls:
+
+```bash
+uv run python analysis/rollup.py logs/example/ --skip-staleness-judge \
+  --format json -o /tmp/civic-example-rollup.json
+```
+
+Without `--skip-staleness-judge`, the rollup can make additional paid Haiku calls to annotate failed answers. The flag leaves those annotations unjudged; it does not change the eval scores. Keep diagnostic logs separate from full runs, and publish only the intended full-run rollup to `site/public/data/rollup.json`.
 
 A [`justfile`](justfile) wraps the common commands so they don't have to be retyped: `just smoke`, `just eval voting_access`, `just rollup`, `just failures`, `just usage`, `just site`. Install with `brew install just` (or `cargo install just`); the raw `uv run …` and `pnpm …` commands remain authoritative — `just` is a convenience layer, never a CI dependency.
 
@@ -24,7 +60,7 @@ src/p3/          shared infrastructure (schema, personas, scorers, providers)
 evals/           one folder per eval; mentees copy _template/ to start
 analysis/        rollup.py unifies .eval logs into a single long-form dataframe
 site/            Next.js App Router dashboard — reads rollup.json, static-exported to GitHub Pages
-tests/           CI: schema validation + smoke-run every eval under Haiku
+tests/           offline schema, scorer, reporting, and module-load checks
 logs/            .eval outputs (gitignored)
 ```
 
@@ -43,7 +79,7 @@ The `refresh-results` GitHub Action runs the eval suite on a weekly schedule (an
 Repo secrets (set under `Settings → Secrets and variables → Actions`):
 
 - `ANTHROPIC_API_KEY` — required.
-- `OPENAI_API_KEY` — optional. When present, every eval also runs against `openai/gpt-4o`, populating the cross-provider columns on the site.
+- `OPENAI_API_KEY` — optional. When present, every eval also runs against `openai/gpt-4o-2024-08-06`, populating the cross-provider columns on the site. The current workflow uses direct provider keys; local OpenRouter routing does not configure repository secrets.
 - `SLACK_WEBHOOK_URL` — optional. When present, the workflow posts a summary to the configured Slack channel after each successful run (per-eval × provider mean table, calibration AUROC, baseline scores, Δ vs. the previous rollup) and a short failure notification when the run dies. No-op when unset, so unconfigured forks don't try to post anywhere.
 
 Deploying to GitHub Pages: the site is a fully static Next.js export, published by the [`deploy-pages`](.github/workflows/deploy-pages.yml) workflow. One-time setup: in **Settings → Pages**, set **Source** to **GitHub Actions**. The workflow runs on pushes to `main` that touch `site/**` (including the weekly `rollup.json` refresh) and on manual dispatch; the published URL is `https://<owner>.github.io/civic-evals/`.
@@ -52,7 +88,7 @@ It's served from the `/civic-evals` project subpath via `NEXT_PUBLIC_BASE_PATH` 
 
 ## Contributing a new eval
 
-See [`CONTRIBUTING.md`](CONTRIBUTING.md). Short version: copy `evals/_template/`, fill in `tasks.jsonl`, `eval.py`, and `README.md`, open a PR. CI validates schema and smoke-runs your eval against Haiku.
+See [`CONTRIBUTING.md`](CONTRIBUTING.md). Short version: copy `evals/_template/`, fill in `tasks.jsonl`, `eval.py`, and `README.md`, open a PR. CI validates schemas and loads eval modules offline. A separate smoke job runs a limited Haiku subset when provider keys are available.
 
 ## Research agenda
 

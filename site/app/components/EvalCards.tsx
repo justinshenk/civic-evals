@@ -45,7 +45,7 @@ function EvalCard({ meta, rows }: { meta: EvalMeta; rows: Rollup["rows"] }) {
         </div>
         <span
           className="shrink-0 rounded-full bg-blue-50 px-2 py-0.5 font-mono text-xs tabular-nums text-blue-700 dark:bg-blue-500/10 dark:text-blue-300"
-          title="Average score across every grading method and run (0–1, higher is better)"
+          title="Average recorded score (0–1). Stance scores describe a position, not answer quality."
         >
           {overall === null ? "no runs yet" : `avg ${fmt(overall)}`}
         </span>

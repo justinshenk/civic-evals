@@ -29,7 +29,7 @@ import os
 from dataclasses import dataclass
 from typing import Literal
 
-ProviderName = Literal["anthropic", "openai", "together"]
+ProviderName = Literal["anthropic", "openai", "together", "openrouter"]
 
 
 @dataclass(frozen=True)
@@ -40,6 +40,11 @@ class Model:
     @property
     def id(self) -> str:
         return f"{self.provider}/{self.name}"
+
+    @property
+    def vendor(self) -> str:
+        """Model developer, independent of the API gateway used to reach it."""
+        return self.name.split("/", 1)[0] if self.provider == "openrouter" else self.provider
 
 
 # Canonical model set. Bump version strings here (see "Version pinning"
@@ -65,6 +70,7 @@ _ENV_KEY: dict[ProviderName, str] = {
     "anthropic": "ANTHROPIC_API_KEY",
     "openai": "OPENAI_API_KEY",
     "together": "TOGETHER_API_KEY",
+    "openrouter": "OPENROUTER_API_KEY",
 }
 
 
@@ -86,7 +92,22 @@ def resolve(spec: str | Model) -> Model:
         raise ValueError(f"Model spec {spec!r} must be 'provider/name'.")
     if provider not in _ENV_KEY:
         raise ValueError(f"Unknown provider {provider!r}. Valid: {sorted(_ENV_KEY)}")
+    if provider == "openrouter" and ("/" not in name or not all(name.split("/"))):
+        raise ValueError("OpenRouter model specs must be 'openrouter/vendor/model'.")
     return Model(provider=provider, name=name)  # type: ignore[arg-type]
+
+
+def _judge_route(model: Model) -> Model | None:
+    """Use a configured direct key, or OpenRouter for the same pinned model.
+
+    This is credential selection only: API failures never trigger a silent
+    change of model or billing account.
+    """
+    if os.environ.get(_ENV_KEY[model.provider]):
+        return model
+    if model.provider == "openai" and os.environ.get("OPENROUTER_API_KEY"):
+        return Model("openrouter", model.id)
+    return None
 
 
 def pick_judge(subject: Model) -> Model:
@@ -106,13 +127,21 @@ def pick_judge(subject: Model) -> Model:
     judge has an API key set — failing at setup is far better than
     crashing mid-eval inside the scorer.
     """
-    preferred = GPT_FLAGSHIP if subject.provider == "anthropic" else CLAUDE_SONNET
-    if os.environ.get(_ENV_KEY[preferred.provider]):
-        return preferred
+    preferred = GPT_FLAGSHIP if subject.vendor == "anthropic" else CLAUDE_SONNET
+    override = os.environ.get(f"P3_{preferred.provider.upper()}_JUDGE")
+    if override:
+        configured = resolve(override)
+        if configured.vendor != preferred.vendor:
+            raise ValueError(f"Judge override must use the {preferred.vendor} model vendor.")
+        require_env(configured)
+        return configured
+    routed = _judge_route(preferred)
+    if routed is not None:
+        return routed
 
     # Same-provider fallback. For Anthropic subject we use Haiku (cheaper,
     # still a different model than Sonnet) rather than the subject itself.
-    fallback = CLAUDE_HAIKU if subject.provider == "anthropic" else CLAUDE_SONNET
+    fallback = CLAUDE_HAIKU if subject.vendor == "anthropic" else CLAUDE_SONNET
     if not os.environ.get(_ENV_KEY[fallback.provider]):
         raise RuntimeError(
             f"pick_judge: neither {_ENV_KEY[preferred.provider]} (preferred "

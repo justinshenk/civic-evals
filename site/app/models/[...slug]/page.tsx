@@ -40,6 +40,7 @@ export default async function ModelPage({
   if (!rollup.providers.includes(provider)) notFound();
 
   const rows = rollup.rows.filter((r) => r.provider === provider);
+  const baselineOnly = rows.every((r) => r.eval.startsWith("inspect_evals/"));
   const overall = meanBy(rows, (r) => r.score);
   const failures = rollup.failures.filter((f) => f.provider === provider);
   const thresholds = rollup.failure_thresholds ?? {};
@@ -95,15 +96,20 @@ export default async function ModelPage({
 
         <header className="space-y-3">
           <p className="inline-flex items-center gap-2 rounded-full border border-blue-200/70 bg-blue-50/70 px-3 py-1 text-xs font-medium uppercase tracking-widest text-blue-700 dark:border-blue-400/20 dark:bg-blue-500/10 dark:text-blue-300">
-            CORDA · P3 · model report card
+            Civic Evals · Model report card
           </p>
           <h1 className="font-mono text-3xl font-semibold tracking-tight break-all ombre-text">
             {provider}
           </h1>
           <p className="max-w-3xl text-lg text-zinc-600 dark:text-zinc-300 leading-relaxed">
-            How <code className="font-mono text-base">{provider}</code> did across every test in the
-            suite. The tables below show where it&rsquo;s strong or weak; the last section collects
-            the answers worth a closer look — and whether the model admitted it might be wrong.
+            {baselineOnly ? (
+              <>Historical external benchmark results for <code className="font-mono text-base">{provider}</code>.
+                The current full civic suite uses the newer models listed on the home page.</>
+            ) : (
+              <>Results for <code className="font-mono text-base">{provider}</code> across the civic suite.
+                Read each metric separately: the averages combine quality and policy-position measures,
+                and are not an overall accuracy rating.</>
+            )}
           </p>
           <div className="flex flex-wrap gap-x-6 gap-y-2 pt-2 text-sm text-zinc-500 dark:text-zinc-400">
             <span>
@@ -116,7 +122,7 @@ export default async function ModelPage({
               <strong className="text-zinc-900 dark:text-zinc-100">
                 {rows.length}
               </strong>{" "}
-              answers graded
+              scores recorded
             </span>
             <span>
               <strong className="text-zinc-900 dark:text-zinc-100">
@@ -136,15 +142,15 @@ export default async function ModelPage({
         <section className="space-y-3">
           <SectionHeader
             title="Score on each test"
-            hint="This model's average score on every test, highest to lowest. Click a test to open it."
+            hint="This model's average recorded score on each test. Stance scores describe a position; higher does not mean better. Click a civic test to open it."
           />
           <SummaryTable rows={evalRows} unit="test" linkPrefix="/evals" />
         </section>
 
         <section className="space-y-3">
           <SectionHeader
-            title="Strengths and weaknesses"
-            hint="The same answers, averaged by what each grading method measures — so you can see what this model is good at and where it slips."
+            title="Results by grading method"
+            hint="The same answers, averaged by what each grading method measures. Read quality and policy-position metrics separately."
           />
           <SummaryTable rows={scorerRows} unit="grading method" />
         </section>
@@ -152,8 +158,8 @@ export default async function ModelPage({
         <section className="space-y-3">
           <SectionHeader
             title="Worth a closer look"
-            hint="The answers this model got wrong enough to flag. The ones to worry about most are where it was confidently wrong — no hint that it might be out of date or that you should check an official source."
-            details={`Flagged when an answer scores below a per-difficulty alarm bar (easy < ${fmt(thresholds.easy ?? 0.9)}, medium < ${fmt(thresholds.medium ?? 0.7)}). "Hedged" = the model flagged possible staleness or pointed at an authoritative source; "no hedge" = confidently wrong.`}
+            hint="Answers whose scores meet the suite's review thresholds. Read the grading method and response together: a low stance score describes opposition, while a low accuracy score signals a possible error."
+            details={`Flagged when an answer scores below a per-difficulty alarm bar (easy < ${fmt(thresholds.easy ?? 0.9)}, medium < ${fmt(thresholds.medium ?? 0.7)}). For stance metrics, a lower score means opposition, not incorrectness. Hedge annotations, where available, record whether the model noted possible staleness or pointed to an authoritative source.`}
           />
           <FailuresPanel
             failures={failures}
@@ -201,7 +207,7 @@ function SummaryTable({
         <thead className="bg-blue-50/80 dark:bg-blue-500/10 text-left text-xs uppercase tracking-wider text-blue-900 dark:text-blue-200">
           <tr>
             <th className="px-3 py-2 font-medium">{unit}</th>
-            <th className="px-3 py-2 font-medium text-right">answers</th>
+            <th className="px-3 py-2 font-medium text-right">scores</th>
             <th className="px-3 py-2 font-medium text-right">avg score</th>
           </tr>
         </thead>
@@ -209,7 +215,7 @@ function SummaryTable({
           {rows.map((r) => (
             <tr key={r.name} className="transition-colors hover:bg-blue-50/50 dark:hover:bg-blue-500/5">
               <td className="px-3 py-2 text-xs">
-                {linkPrefix ? (
+                {linkPrefix && !r.name.startsWith("inspect_evals/") ? (
                   <Link
                     href={`${linkPrefix}/${r.name}`}
                     className="font-medium text-blue-700 hover:underline decoration-blue-300 underline-offset-4 dark:text-blue-300"
@@ -222,7 +228,7 @@ function SummaryTable({
               </td>
               <td className="px-3 py-2 text-right tabular-nums">{r.n_rows}</td>
               <td className="px-3 py-2 text-right">
-                <ScoreCell score={r.mean} />
+                <ScoreCell score={r.mean} directional={["stance_extraction", "multi_signal_extraction", "openendedness_ladder", "persona_drift_pilot"].includes(r.name)} />
               </td>
             </tr>
           ))}
@@ -232,10 +238,11 @@ function SummaryTable({
   );
 }
 
-function ScoreCell({ score }: { score: number | null }) {
+function ScoreCell({ score, directional = false }: { score: number | null; directional?: boolean }) {
   if (score === null) return <span className="text-zinc-400">—</span>;
   let color = "text-zinc-600 dark:text-zinc-400";
-  if (score >= 0.85) color = "text-emerald-600 dark:text-emerald-400";
+  if (directional) color = "text-blue-700 dark:text-blue-300";
+  else if (score >= 0.85) color = "text-emerald-600 dark:text-emerald-400";
   else if (score >= 0.6) color = "text-amber-600 dark:text-amber-400";
   else color = "text-rose-600 dark:text-rose-400";
   return (
@@ -275,4 +282,3 @@ function SectionHeader({
     </header>
   );
 }
-

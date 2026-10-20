@@ -64,8 +64,8 @@ failures rollup_path="site/public/data/rollup.json":
     uv run python analysis/failures.py {{rollup_path}}
 
 # Print the per-(eval, model) token usage and cost report.
-usage rollup_path="site/public/data/rollup.json":
-    uv run python analysis/usage.py {{rollup_path}}
+usage log_dir="logs/":
+    uv run python analysis/usage.py {{log_dir}}
 
 # Diff two rollup.json files — markdown summary of mean shifts.
 # Useful in PRs that regenerate the rollup so the diff isn't a wall of

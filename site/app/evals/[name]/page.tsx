@@ -28,6 +28,7 @@ export default async function EvalPage({ params }: { params: Promise<{ name: str
   const overall = meanBy(evalRows, (r) => r.score);
   const byTask = groupBy(evalRows, (r) => r.task_id);
   const scorers = Array.from(new Set(evalRows.map((r) => r.scorer))).sort();
+  const measuresPosition = scorers.some((s) => s === "stance_extraction" || s === "multi_signal_extraction");
   const failures = (rollup.failures ?? []).filter((f) => f.eval === name);
   const thresholds = rollup.failure_thresholds ?? {};
   const failureSummary = rollup.failure_summary?.by_eval?.find(
@@ -52,7 +53,7 @@ export default async function EvalPage({ params }: { params: Promise<{ name: str
 
         <header className="space-y-3">
           <p className="inline-flex items-center gap-2 rounded-full border border-blue-200/70 bg-blue-50/70 px-3 py-1 text-xs font-medium uppercase tracking-widest text-blue-700 dark:border-blue-400/20 dark:bg-blue-500/10 dark:text-blue-300">
-            CORDA · P3 · one test
+            Civic Evals · One test
           </p>
           <div className="space-y-1">
             <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight ombre-text">{title}</h1>
@@ -112,7 +113,9 @@ export default async function EvalPage({ params }: { params: Promise<{ name: str
         <section className="space-y-3">
           <SectionHeader
             title="Worth a closer look"
-            hint="A high average can still hide a handful of answers that were wrong — and sometimes confidently so. These are the answers that fell short, so you can read them yourself."
+            hint={measuresPosition
+              ? "This test measures policy position. Lower stance scores mean opposition, not incorrectness. The rows below meet the suite's generic score thresholds and need to be read in that context."
+              : "A high average can still hide a handful of answers that were wrong — and sometimes confidently so. These are the answers that fell short, so you can read them yourself."}
             details={`Flagged when an answer scores below a per-difficulty alarm bar (easy < ${fmt(thresholds.easy ?? 0.9)}, medium < ${fmt(thresholds.medium ?? 0.7)}); hard questions are excluded by design.`}
           />
           <FailuresPanel
@@ -258,7 +261,7 @@ function TaskRow({
               className="px-3 py-3 font-mono text-xs tabular-nums"
               title={ss[0]?.explanation || ""}
             >
-              <ScoreCell score={m} />
+              <ScoreCell score={m} directional={s === "stance_extraction" || s === "multi_signal_extraction"} />
             </td>
           );
         })}
@@ -396,10 +399,11 @@ function VerifiedBadge({ date }: { date: string | null }) {
   );
 }
 
-function ScoreCell({ score }: { score: number | null }) {
+function ScoreCell({ score, directional = false }: { score: number | null; directional?: boolean }) {
   if (score === null) return <span className="text-zinc-400">—</span>;
   let color = "text-zinc-600 dark:text-zinc-400";
-  if (score >= 0.85) color = "text-emerald-600 dark:text-emerald-400";
+  if (directional) color = "text-blue-700 dark:text-blue-300";
+  else if (score >= 0.85) color = "text-emerald-600 dark:text-emerald-400";
   else if (score >= 0.6) color = "text-amber-600 dark:text-amber-400";
   else color = "text-rose-600 dark:text-rose-400";
   return <span className={color}>{fmt(score)}</span>;

@@ -68,7 +68,7 @@ export function ScoreMatrix({ rollup }: { rollup: Rollup }) {
                       className="px-4 py-3 text-right font-mono tabular-nums"
                       title={tooltip}
                     >
-                      <ScoreBadge value={m} stat={cs} />
+                      <ScoreBadge value={m} stat={cs} directional={s === "stance_extraction" || s === "multi_signal_extraction"} />
                     </td>
                   );
                 })}
@@ -84,10 +84,10 @@ export function ScoreMatrix({ rollup }: { rollup: Rollup }) {
 
 type CSLite = { ci_low: number | null; ci_high: number | null; n: number } | undefined;
 
-function ScoreBadge({ value, stat }: { value: number | null; stat?: CSLite }) {
+function ScoreBadge({ value, stat, directional = false }: { value: number | null; stat?: CSLite; directional?: boolean }) {
   if (value === null) return <span className="text-zinc-400">—</span>;
   const pct = Math.round(value * 100);
-  const hue = Math.round(value * 120); // red-to-green
+  const hue = directional ? 210 : Math.round(value * 120);
   // Width of the 95% CI as a faint label below the badge. With N=5–15
   // per cell after persona expansion, the spread is the more honest
   // signal than the point estimate alone — a half-point CI on a 0.05
@@ -105,7 +105,7 @@ function ScoreBadge({ value, stat }: { value: number | null; stat?: CSLite }) {
           color: `hsl(${hue} 60% 25%)`,
         }}
       >
-        {fmt(value)} <span className="opacity-60">({pct}%)</span>
+        {fmt(value)} <span className="opacity-60">{directional ? "position" : `(${pct}%)`}</span>
       </span>
       {stat && (
         <span className="text-[10px] font-mono text-zinc-500 dark:text-zinc-400 tabular-nums">

@@ -12,12 +12,13 @@ a new model, add a row here too — ``cost_for_usage`` returns ``None``
 for unknown models and the CLI will warn.
 
 Prices are approximate and need periodic review; ``LAST_REVIEWED``
-records when the table was last touched. Vendor pricing pages are the
-source of truth.
+dates the legacy table, and later additions carry their own review dates.
+Vendor pricing pages are the source of truth.
 """
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 
 LAST_REVIEWED = "2026-05-08"
@@ -61,15 +62,10 @@ class Price:
                 if self.cache_write_per_mtok is not None
                 else self.input_per_mtok,
             )
-        if reasoning_tokens:
-            # Anthropic extended-thinking and OpenAI reasoning tokens are
-            # billed at output rate unless the provider lists otherwise.
-            cost += per(
-                reasoning_tokens,
-                self.reasoning_per_mtok
-                if self.reasoning_per_mtok is not None
-                else self.output_per_mtok,
-            )
+        if reasoning_tokens and self.reasoning_per_mtok is not None:
+            # Inspect's output_tokens already includes reasoning. Only adjust
+            # its rate when the model explicitly charges a different price.
+            cost += per(reasoning_tokens, self.reasoning_per_mtok - self.output_per_mtok)
         return cost
 
 
@@ -80,6 +76,8 @@ _PRICES: dict[str, Price] = {
     # --- Anthropic ---
     "anthropic/claude-sonnet-4-6": Price(3.00, 15.00, cache_read_per_mtok=0.30, cache_write_per_mtok=3.75),
     "anthropic/claude-haiku-4-5": Price(1.00, 5.00, cache_read_per_mtok=0.10, cache_write_per_mtok=1.25),
+    # Reviewer refresh: verified against Anthropic's catalog 2026-10-19.
+    "anthropic/claude-sonnet-5-5": Price(2.00, 10.00, cache_read_per_mtok=0.10, cache_write_per_mtok=2.50),
     # --- OpenAI ---
     "openai/gpt-4o": Price(2.50, 10.00, cache_read_per_mtok=1.25),
     "openai/gpt-4o-mini": Price(0.15, 0.60, cache_read_per_mtok=0.075),
@@ -89,6 +87,9 @@ _PRICES: dict[str, Price] = {
     # Rates here are OpenRouter's pass-through pricing for each model. ---
     "openrouter/anthropic/claude-haiku-4.5": Price(1.00, 5.00),
     "openrouter/openai/gpt-4o-mini": Price(0.15, 0.60),
+    # Reviewer refresh rates verified 2026-10-19 against provider catalogs.
+    "openrouter/openai/gpt-4o": Price(2.50, 10.00, cache_read_per_mtok=1.25),
+    "openrouter/openai/gpt-6.1-sol": Price(2.00, 10.00, cache_read_per_mtok=0.10, cache_write_per_mtok=2.50),
     "openrouter/google/gemini-2.5-flash": Price(0.30, 2.50),
     "openrouter/meta-llama/llama-3.3-70b-instruct": Price(0.88, 0.88),
     "openrouter/deepseek/deepseek-chat": Price(0.27, 1.10),
@@ -102,11 +103,10 @@ def price_for(model: str) -> Price | None:
     """
     if model in _PRICES:
         return _PRICES[model]
-    # Strip a trailing date stamp, e.g. ``-20251001``.
-    base = model.rsplit("-", 1)[0]
-    if base in _PRICES:
-        return _PRICES[base]
-    return None
+    # Both Anthropic's -20251001 and OpenAI's -2024-08-06 snapshots.
+    # Do not strip arbitrary suffixes: an unknown variant needs its own price.
+    base = re.sub(r"-(?:\d{8}|\d{4}-\d{2}-\d{2})$", "", model)
+    return _PRICES.get(base)
 
 
 def cost_for_usage(

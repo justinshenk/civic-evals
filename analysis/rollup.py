@@ -846,6 +846,8 @@ def main() -> int:
                    help="Output file path; stdout if omitted.")
     p.add_argument("--evals-dir", type=Path, default=REPO_ROOT / "evals",
                    help="Path to evals/ folder for source metadata.")
+    p.add_argument("--skip-staleness-judge", action="store_true",
+                   help="Build reports without additional paid staleness-judge calls.")
     args = p.parse_args()
 
     df = rollup(args.log_dir)
@@ -857,8 +859,9 @@ def main() -> int:
     calib_stats = calibration_stats(df)
     external_baselines = collect_external_baselines(df)
     failures = collect_failures(df)
-    _, judge_failures = _staleness_helpers()
-    judge_failures(failures)
+    if not args.skip_staleness_judge:
+        _, judge_failures = _staleness_helpers()
+        judge_failures(failures)
     fail_summary = failure_summary(failures)
     # Token usage + cost. Re-traverses the logs (separate ModelUsage path
     # from the per-sample row extraction above) — cheap relative to the

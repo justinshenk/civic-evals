@@ -110,6 +110,29 @@ async def test_parses_clean_three_line_output(patch_judge) -> None:
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize("number", ["+0.30", "0.30"])
+async def test_positive_stance_is_not_misclassified_as_refusal(patch_judge, number) -> None:
+    from scorers import multi_signal_extraction
+
+    patch_judge(f"STANCE: {number}\nFRAME: turnout\nREFUSED: no")
+    score = await multi_signal_extraction()(_state(), _StubTarget())
+    assert score.metadata["stance"] == pytest.approx(0.3)
+    assert score.metadata["refused"] is False
+    assert score.value == pytest.approx(0.65)
+
+
+@pytest.mark.asyncio
+async def test_explicit_refusal_still_overrides_signed_positive_stance(patch_judge) -> None:
+    from scorers import multi_signal_extraction
+
+    patch_judge("STANCE: +0.30\nFRAME: refused\nREFUSED: yes")
+    score = await multi_signal_extraction()(_state(), _StubTarget())
+    assert score.metadata["stance"] == 0.0
+    assert score.metadata["refused"] is True
+    assert score.value == 0.5
+
+
+@pytest.mark.asyncio
 async def test_prose_prefix_does_not_break_parsing(patch_judge) -> None:
     """Judge sometimes prefixes 'Here are my answers:' before the three lines."""
     from scorers import multi_signal_extraction

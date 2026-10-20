@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import sys
 from collections import defaultdict
 from dataclasses import dataclass, field
@@ -81,6 +82,46 @@ def _eval_log_files(log_dir: Path, since: datetime | None) -> list[str]:
     return out
 
 
+def _reported_call_costs(log: Any) -> dict[str, float]:
+    """Use complete provider billing records when Inspect omits their cost.
+
+    OpenRouter's raw response includes billed cache writes that some Inspect
+    versions omit from ModelUsage. Require coverage of every recorded token
+    before replacing the aggregate estimate with per-call reported charges.
+    """
+    costs: dict[str, float] = defaultdict(float)
+    tokens: dict[str, int] = defaultdict(int)
+    incomplete: set[str] = set()
+    for sample in log.samples or []:
+        for event in sample.events or []:
+            if event.event != "model" or event.cache == "read":
+                continue
+            model = event.model
+            usage = event.output.usage
+            if usage is None:
+                incomplete.add(model)
+                continue
+            tokens[model] += usage.total_tokens
+            response = event.call.response if event.call else None
+            raw_usage = response.get("usage") if isinstance(response, dict) else None
+            cost = raw_usage.get("cost") if isinstance(raw_usage, dict) else None
+            if (
+                isinstance(cost, bool)
+                or not isinstance(cost, (int, float))
+                or not math.isfinite(cost)
+                or cost < 0
+            ):
+                incomplete.add(model)
+            else:
+                costs[model] += cost
+    usage_map = getattr(getattr(log, "stats", None), "model_usage", None) or {}
+    return {
+        model: cost for model, cost in costs.items()
+        if model not in incomplete and model in usage_map
+        and tokens[model] == usage_map[model].total_tokens
+    }
+
+
 def collect_usage(log_dir: Path, *, since: datetime | None = None) -> list[dict[str, Any]]:
     """Aggregate token usage and cost per (eval, model). One row per pair.
 
@@ -100,6 +141,7 @@ def collect_usage(log_dir: Path, *, since: datetime | None = None) -> list[dict[
         eval_name = log.eval.task or ""
         stats = getattr(log, "stats", None)
         usage_map = getattr(stats, "model_usage", None) or {}
+        reported_costs = _reported_call_costs(log)
         for model, usage in usage_map.items():
             key = (eval_name, model)
             row = bucket[key]
@@ -119,7 +161,7 @@ def collect_usage(log_dir: Path, *, since: datetime | None = None) -> list[dict[
                 input_tokens_cache_read=usage.input_tokens_cache_read,
                 input_tokens_cache_write=usage.input_tokens_cache_write,
                 reasoning_tokens=usage.reasoning_tokens,
-                reported_cost=getattr(usage, "total_cost", None),
+                reported_cost=reported_costs.get(model, getattr(usage, "total_cost", None)),
             )
             sources[key].add(src)
             if src == "unknown":
