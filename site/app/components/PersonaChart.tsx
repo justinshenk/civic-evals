@@ -39,8 +39,8 @@ export function PersonaChart({ rollup }: Props) {
         <p className="text-sm text-zinc-500 dark:text-zinc-400">No graded answers for this model yet.</p>
       ) : (
         <div className="panel p-4">
-          <div className="h-80">
-            <ResponsiveContainer width="100%" height="100%">
+          <div className="min-w-0">
+            <ResponsiveContainer width="100%" height={320}>
               <BarChart data={data} margin={{ top: 12, right: 16, bottom: 12, left: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e4e4e7" vertical={false} />
                 <XAxis dataKey="persona" tick={{ fontSize: 11 }} interval={0} angle={-15} textAnchor="end" height={60} />
