@@ -28,6 +28,7 @@ judge's rationale text contradicts the numeric score).
 
 from __future__ import annotations
 
+import argparse
 import asyncio
 import json
 import os
@@ -264,11 +265,11 @@ def _client() -> AsyncOpenAI:
 
 
 async def subject_call(
-    client: AsyncOpenAI, system_prompt: str, user_prompt: str
+    client: AsyncOpenAI, model: str, system_prompt: str, user_prompt: str
 ) -> tuple[str, dict | None]:
     try:
         msg = await client.chat.completions.create(
-            model=SUBJECT_MODEL,
+            model=model,
             max_tokens=SUBJECT_MAX_TOKENS,
             messages=[
                 {"role": "system", "content": system_prompt},
@@ -289,6 +290,7 @@ async def subject_call(
 
 async def judge_call(
     client: AsyncOpenAI,
+    model: str,
     persona_description: str,
     user_question: str,
     response: str,
@@ -300,7 +302,7 @@ async def judge_call(
     )
     try:
         msg = await client.chat.completions.create(
-            model=JUDGE_MODEL,
+            model=model,
             max_tokens=JUDGE_MAX_TOKENS,
             messages=[{"role": "user", "content": prompt}],
         )
@@ -372,8 +374,17 @@ def detect_sign_flips(rows: list[Row]) -> list[Row]:
     return flips
 
 
-async def main_async() -> None:
-    n = len(PERSONAS) * len(QUESTIONS) * N_REPS
+def _slug(model: str) -> str:
+    return model.split("/")[-1].replace(":", "-")
+
+
+async def main_async(subject_model: str, judge_model: str, smoke: bool) -> None:
+    # --smoke: 1 question x 1 rep x all personas (6 cells), to check a new
+    # model returns usable text before paying for the full 270.
+    questions = QUESTIONS[:1] if smoke else QUESTIONS
+    n_reps = 1 if smoke else N_REPS
+    n = len(PERSONAS) * len(questions) * n_reps
+    print(f"Subject: {subject_model}   Judge: {judge_model}")
     print(f"Subject calls: {n}")
     print(f"Judge calls:   {n}")
     if not os.environ.get("OPENROUTER_API_KEY"):
@@ -388,10 +399,17 @@ async def main_async() -> None:
     ) -> Row:
         async with sem:
             sys_prompt = SYSTEM_TEMPLATE.format(persona_description=persona_desc)
-            response, subj_usage = await subject_call(client, sys_prompt, q_text)
-            judge_parsed, judge_text, judge_usage = await judge_call(
-                client, persona_desc, q_text, response
+            response, subj_usage = await subject_call(
+                client, subject_model, sys_prompt, q_text
             )
+            # Don't let the judge score an error string or empty reply as
+            # a real answer: it lands near lean 0 and biases toward a null.
+            if response.startswith("<error") or not response.strip():
+                judge_parsed, judge_text, judge_usage = None, "<skipped: no subject response>", None
+            else:
+                judge_parsed, judge_text, judge_usage = await judge_call(
+                    client, judge_model, persona_desc, q_text, response
+                )
             return Row(
                 persona_key=persona_key,
                 persona_ordinal=PERSONAS[persona_key][0],
@@ -408,24 +426,30 @@ async def main_async() -> None:
 
     coros = []
     for persona_key, (_, persona_desc) in PERSONAS.items():
-        for q_id, q_text in QUESTIONS:
-            for rep in range(N_REPS):
+        for q_id, q_text in questions:
+            for rep in range(n_reps):
                 coros.append(one_cell(persona_key, persona_desc, q_id, q_text, rep))
 
     print(f"Dispatching {len(coros)} cells (subject + judge) ...")
     rows = await asyncio.gather(*coros)
     parsed = sum(1 for r in rows if r.judge_scores)
-    print(f"Got {len(rows)} rows; judge-parsed: {parsed}")
+    failed = sum(1 for r in rows if r.judge_text.startswith("<skipped"))
+    print(f"Got {len(rows)} rows; judge-parsed: {parsed}; subject failures: {failed}")
 
     # Persist BEFORE the print/analysis section so a print bug doesn't
-    # cost us the API spend.
-    out_path = REPO_ROOT / "analysis" / "persona_belief_scaled_rows.json"
+    # cost us the API spend. Per-subject filename so runs never overwrite
+    # the Haiku baseline (persona_belief_scaled_rows.json, read by demo/app.py).
+    suffix = "__smoke" if smoke else ""
+    out_path = (
+        REPO_ROOT / "analysis"
+        / f"persona_belief_scaled_rows__{_slug(subject_model)}{suffix}.json"
+    )
     serializable = [r.__dict__ for r in rows]
     out_path.write_text(json.dumps(serializable, indent=2, default=str))
     print(f"Saved {len(serializable)} rows -> {out_path}\n")
 
     # Pooled regression: policy_lean ~ persona_ordinal + question_FE
-    print("\n=== Pooled regression (Haiku subject, Sonnet judge) ===")
+    print(f"\n=== Pooled regression ({subject_model} subject, {judge_model} judge) ===")
     xs, ys, q_ids = [], [], []
     for r in rows:
         if r.persona_ordinal is None or r.judge_scores is None:
@@ -483,4 +507,9 @@ async def main_async() -> None:
 
 
 if __name__ == "__main__":
-    asyncio.run(main_async())
+    ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    ap.add_argument("--subject", default=SUBJECT_MODEL, help="OpenRouter slug of the model under test")
+    ap.add_argument("--judge", default=JUDGE_MODEL, help="OpenRouter slug of the scoring model")
+    ap.add_argument("--smoke", action="store_true", help="6-cell check run (1 question, 1 rep)")
+    args = ap.parse_args()
+    asyncio.run(main_async(args.subject, args.judge, args.smoke))
