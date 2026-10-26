@@ -420,7 +420,7 @@ def _slug(model: str) -> str:
 
 async def main_async(
     subject_model: str, judge_model: str, smoke: bool, provider: str = "openrouter",
-    n_questions: int | None = None, n_reps: int = N_REPS,
+    n_questions: int | None = None, n_reps: int = N_REPS, rejudge: Path | None = None,
 ) -> None:
     # --smoke: 1 question x 1 rep x all personas (6 cells), to check a new
     # model returns usable text before paying for the full 270.
@@ -434,7 +434,14 @@ async def main_async(
     print(f"Questions: {' '.join(q for q, _ in questions)}   reps: {n_reps}")
     n = len(PERSONAS) * len(questions) * n_reps
     print(f"Subject: {subject_model}   Judge: {judge_model}   via {provider}")
-    print(f"Subject calls: {n}")
+    # --rejudge ROWS.json: re-score saved subject answers with --judge and
+    # make no subject calls, so a judge change is measured on identical text.
+    saved = {}
+    if rejudge:
+        for r in json.loads(Path(rejudge).read_text()):
+            saved[(r["persona_key"], r["question_id"], r["rep"])] = r
+        print(f"Re-judging answers from {rejudge}")
+    print(f"Subject calls: {0 if rejudge else n}")
     print(f"Judge calls:   {n}")
     key_var = "ANTHROPIC_API_KEY" if provider == "anthropic" else "OPENROUTER_API_KEY"
     if not os.environ.get(key_var):
@@ -449,9 +456,13 @@ async def main_async(
     ) -> Row:
         async with sem:
             sys_prompt = SYSTEM_TEMPLATE.format(persona_description=persona_desc)
-            response, subj_usage = await subject_call(
-                client, subject_model, sys_prompt, q_text
-            )
+            if rejudge:
+                old = saved[(persona_key, q_id, rep)]
+                response, subj_usage = old["response_text"], old["subject_usage"]
+            else:
+                response, subj_usage = await subject_call(
+                    client, subject_model, sys_prompt, q_text
+                )
             # Don't let the judge score an error string or empty reply as
             # a real answer: it lands near lean 0 and biases toward a null.
             if response.startswith(("<error", "<refusal")) or not response.strip():
@@ -492,6 +503,8 @@ async def main_async(
     suffix = "__smoke" if smoke else ""
     if not smoke and (questions is not QUESTIONS or n_reps != N_REPS):
         suffix = f"__q{len(questions)}r{n_reps}"
+    if rejudge:
+        suffix += f"__rejudged-{_slug(judge_model)}"
     out_path = (
         REPO_ROOT / "analysis"
         / f"persona_belief_scaled_rows__{_slug(subject_model)}{suffix}.json"
@@ -566,8 +579,11 @@ if __name__ == "__main__":
                     help="anthropic = call Claude models directly with ANTHROPIC_API_KEY")
     ap.add_argument("--questions", type=int, help="run an evenly spaced subset of K questions")
     ap.add_argument("--reps", type=int, default=N_REPS, help=f"reps per cell (default {N_REPS})")
+    ap.add_argument("--rejudge", type=Path, metavar="ROWS_JSON",
+                    help="re-score saved answers with --judge; no subject calls")
     ap.add_argument("--smoke", action="store_true", help="6-cell check run (1 question, 1 rep)")
     args = ap.parse_args()
     asyncio.run(main_async(
-        args.subject, args.judge, args.smoke, args.provider, args.questions, args.reps
+        args.subject, args.judge, args.smoke, args.provider, args.questions, args.reps,
+        args.rejudge,
     ))
