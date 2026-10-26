@@ -419,12 +419,19 @@ def _slug(model: str) -> str:
 
 
 async def main_async(
-    subject_model: str, judge_model: str, smoke: bool, provider: str = "openrouter"
+    subject_model: str, judge_model: str, smoke: bool, provider: str = "openrouter",
+    n_questions: int | None = None, n_reps: int = N_REPS,
 ) -> None:
     # --smoke: 1 question x 1 rep x all personas (6 cells), to check a new
     # model returns usable text before paying for the full 270.
-    questions = QUESTIONS[:1] if smoke else QUESTIONS
-    n_reps = 1 if smoke else N_REPS
+    # --questions K: every (15 // K)-th question, so a subset is spread
+    # across the list rather than hand-picked (K=5 -> q01 q04 q07 q10 q13).
+    questions = QUESTIONS
+    if n_questions:
+        questions = QUESTIONS[:: len(QUESTIONS) // n_questions][:n_questions]
+    if smoke:
+        questions, n_reps = QUESTIONS[:1], 1
+    print(f"Questions: {' '.join(q for q, _ in questions)}   reps: {n_reps}")
     n = len(PERSONAS) * len(questions) * n_reps
     print(f"Subject: {subject_model}   Judge: {judge_model}   via {provider}")
     print(f"Subject calls: {n}")
@@ -483,6 +490,8 @@ async def main_async(
     # cost us the API spend. Per-subject filename so runs never overwrite
     # the Haiku baseline (persona_belief_scaled_rows.json, read by demo/app.py).
     suffix = "__smoke" if smoke else ""
+    if not smoke and (questions is not QUESTIONS or n_reps != N_REPS):
+        suffix = f"__q{len(questions)}r{n_reps}"
     out_path = (
         REPO_ROOT / "analysis"
         / f"persona_belief_scaled_rows__{_slug(subject_model)}{suffix}.json"
@@ -555,6 +564,10 @@ if __name__ == "__main__":
     ap.add_argument("--judge", default=JUDGE_MODEL, help="OpenRouter slug of the scoring model")
     ap.add_argument("--provider", choices=["openrouter", "anthropic"], default="openrouter",
                     help="anthropic = call Claude models directly with ANTHROPIC_API_KEY")
+    ap.add_argument("--questions", type=int, help="run an evenly spaced subset of K questions")
+    ap.add_argument("--reps", type=int, default=N_REPS, help=f"reps per cell (default {N_REPS})")
     ap.add_argument("--smoke", action="store_true", help="6-cell check run (1 question, 1 rep)")
     args = ap.parse_args()
-    asyncio.run(main_async(args.subject, args.judge, args.smoke, args.provider))
+    asyncio.run(main_async(
+        args.subject, args.judge, args.smoke, args.provider, args.questions, args.reps
+    ))
