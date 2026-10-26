@@ -38,6 +38,7 @@ from pathlib import Path
 
 import numpy as np
 import scipy.stats as stats
+from anthropic import AsyncAnthropic
 from dotenv import load_dotenv
 from openai import AsyncOpenAI
 
@@ -194,6 +195,7 @@ JUDGE_MODEL = "anthropic/claude-sonnet-4.5"    # OpenRouter slug
 N_REPS = 3
 CONCURRENCY = 8
 SUBJECT_MAX_TOKENS = 1024
+ANTHROPIC_SUBJECT_MAX_TOKENS = 16000
 JUDGE_MAX_TOKENS = 320
 
 SYSTEM_TEMPLATE = (
@@ -257,17 +259,52 @@ def parse_judge(text: str) -> dict | None:
     return None
 
 
-def _client() -> AsyncOpenAI:
+def _client(provider: str = "openrouter") -> AsyncOpenAI | AsyncAnthropic:
+    if provider == "anthropic":
+        return AsyncAnthropic(max_retries=5)  # reads ANTHROPIC_API_KEY
     key = os.environ.get("OPENROUTER_API_KEY")
     if not key:
         raise RuntimeError("OPENROUTER_API_KEY missing from environment / .env")
     return AsyncOpenAI(api_key=key, base_url="https://openrouter.ai/api/v1")
 
 
+def _anthropic_id(model: str) -> str:
+    # "anthropic/claude-opus-5.5" (OpenRouter slug) -> "claude-opus-5-5"
+    return model.removeprefix("anthropic/").replace(".", "-")
+
+
+async def _anthropic_call(
+    client: AsyncAnthropic, model: str, system_prompt: str | None,
+    user_prompt: str, max_tokens: int,
+) -> tuple[str, dict]:
+    # No `fallbacks`: a refusal must stay a refusal from the model under
+    # test, not be silently answered by a different model.
+    kwargs = {"system": system_prompt} if system_prompt else {}
+    msg = await client.messages.create(
+        model=_anthropic_id(model),
+        max_tokens=max_tokens,
+        messages=[{"role": "user", "content": user_prompt}],
+        **kwargs,
+    )
+    usage = {"in": msg.usage.input_tokens, "out": msg.usage.output_tokens,
+             "stop": msg.stop_reason}
+    if msg.stop_reason == "refusal":
+        cat = getattr(msg.stop_details, "category", None) if msg.stop_details else None
+        return f"<refusal: {cat}>", usage
+    text = "".join(b.text for b in msg.content if b.type == "text")
+    return text, usage
+
+
 async def subject_call(
-    client: AsyncOpenAI, model: str, system_prompt: str, user_prompt: str
+    client: AsyncOpenAI | AsyncAnthropic, model: str, system_prompt: str, user_prompt: str
 ) -> tuple[str, dict | None]:
     try:
+        if isinstance(client, AsyncAnthropic):
+            # Current Claude models think by default and thinking counts
+            # against max_tokens, so 1024 would truncate the answer.
+            return await _anthropic_call(
+                client, model, system_prompt, user_prompt, ANTHROPIC_SUBJECT_MAX_TOKENS
+            )
         msg = await client.chat.completions.create(
             model=model,
             max_tokens=SUBJECT_MAX_TOKENS,
@@ -289,7 +326,7 @@ async def subject_call(
 
 
 async def judge_call(
-    client: AsyncOpenAI,
+    client: AsyncOpenAI | AsyncAnthropic,
     model: str,
     persona_description: str,
     user_question: str,
@@ -301,6 +338,9 @@ async def judge_call(
         response=response,
     )
     try:
+        if isinstance(client, AsyncAnthropic):
+            text, usage = await _anthropic_call(client, model, None, prompt, JUDGE_MAX_TOKENS)
+            return parse_judge(text), text, usage
         msg = await client.chat.completions.create(
             model=model,
             max_tokens=JUDGE_MAX_TOKENS,
@@ -378,20 +418,23 @@ def _slug(model: str) -> str:
     return model.split("/")[-1].replace(":", "-")
 
 
-async def main_async(subject_model: str, judge_model: str, smoke: bool) -> None:
+async def main_async(
+    subject_model: str, judge_model: str, smoke: bool, provider: str = "openrouter"
+) -> None:
     # --smoke: 1 question x 1 rep x all personas (6 cells), to check a new
     # model returns usable text before paying for the full 270.
     questions = QUESTIONS[:1] if smoke else QUESTIONS
     n_reps = 1 if smoke else N_REPS
     n = len(PERSONAS) * len(questions) * n_reps
-    print(f"Subject: {subject_model}   Judge: {judge_model}")
+    print(f"Subject: {subject_model}   Judge: {judge_model}   via {provider}")
     print(f"Subject calls: {n}")
     print(f"Judge calls:   {n}")
-    if not os.environ.get("OPENROUTER_API_KEY"):
-        print("OPENROUTER_API_KEY not set; aborting.")
+    key_var = "ANTHROPIC_API_KEY" if provider == "anthropic" else "OPENROUTER_API_KEY"
+    if not os.environ.get(key_var):
+        print(f"{key_var} not set; aborting.")
         return
 
-    client = _client()
+    client = _client(provider)
     sem = asyncio.Semaphore(CONCURRENCY)
 
     async def one_cell(
@@ -404,7 +447,7 @@ async def main_async(subject_model: str, judge_model: str, smoke: bool) -> None:
             )
             # Don't let the judge score an error string or empty reply as
             # a real answer: it lands near lean 0 and biases toward a null.
-            if response.startswith("<error") or not response.strip():
+            if response.startswith(("<error", "<refusal")) or not response.strip():
                 judge_parsed, judge_text, judge_usage = None, "<skipped: no subject response>", None
             else:
                 judge_parsed, judge_text, judge_usage = await judge_call(
@@ -510,6 +553,8 @@ if __name__ == "__main__":
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--subject", default=SUBJECT_MODEL, help="OpenRouter slug of the model under test")
     ap.add_argument("--judge", default=JUDGE_MODEL, help="OpenRouter slug of the scoring model")
+    ap.add_argument("--provider", choices=["openrouter", "anthropic"], default="openrouter",
+                    help="anthropic = call Claude models directly with ANTHROPIC_API_KEY")
     ap.add_argument("--smoke", action="store_true", help="6-cell check run (1 question, 1 rep)")
     args = ap.parse_args()
-    asyncio.run(main_async(args.subject, args.judge, args.smoke))
+    asyncio.run(main_async(args.subject, args.judge, args.smoke, args.provider))
