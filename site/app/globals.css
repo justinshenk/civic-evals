@@ -106,62 +106,64 @@ body {
 
 /* ---- Surfaces ------------------------------------------------------- */
 
-/* Frosted card with a faint blue edge and a soft blue-tinted shadow.
-   Hover lifts the border toward sky and deepens the shadow. */
-.card {
-  border-radius: 1rem;
-  border: 1px solid rgba(37, 99, 235, 0.14);
-  background: rgba(255, 255, 255, 0.78);
-  backdrop-filter: blur(8px);
-  box-shadow:
-    0 1px 2px rgba(11, 42, 107, 0.04),
-    0 14px 34px -22px rgba(37, 99, 235, 0.45);
-  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
-}
-.card:hover {
-  border-color: rgba(56, 189, 248, 0.6);
-  box-shadow:
-    0 1px 2px rgba(11, 42, 107, 0.06),
-    0 20px 44px -20px rgba(37, 99, 235, 0.55);
-}
-@media (prefers-color-scheme: dark) {
+@layer components {
+  /* Frosted card with a faint blue edge and a soft blue-tinted shadow.
+     Hover lifts the border toward sky and deepens the shadow. */
   .card {
-    border-color: rgba(96, 165, 250, 0.18);
-    background: rgba(13, 24, 48, 0.62);
+    border-radius: 1rem;
+    border: 1px solid rgba(37, 99, 235, 0.14);
+    background: rgba(255, 255, 255, 0.78);
+    backdrop-filter: blur(8px);
     box-shadow:
-      0 1px 2px rgba(0, 0, 0, 0.3),
-      0 16px 38px -22px rgba(56, 189, 248, 0.35);
+      0 1px 2px rgba(11, 42, 107, 0.04),
+      0 14px 34px -22px rgba(37, 99, 235, 0.45);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
   }
   .card:hover {
-    border-color: rgba(125, 211, 252, 0.45);
+    border-color: rgba(56, 189, 248, 0.6);
+    box-shadow:
+      0 1px 2px rgba(11, 42, 107, 0.06),
+      0 20px 44px -20px rgba(37, 99, 235, 0.55);
   }
-}
+  @media (prefers-color-scheme: dark) {
+    .card {
+      border-color: rgba(96, 165, 250, 0.18);
+      background: rgba(13, 24, 48, 0.62);
+      box-shadow:
+        0 1px 2px rgba(0, 0, 0, 0.3),
+        0 16px 38px -22px rgba(56, 189, 248, 0.35);
+    }
+    .card:hover {
+      border-color: rgba(125, 211, 252, 0.45);
+    }
+  }
 
-/* Like .card but no hover lift — for table/chart containers. */
-.panel {
-  border-radius: 1rem;
-  border: 1px solid rgba(37, 99, 235, 0.14);
-  background: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(8px);
-  overflow: hidden;
-  box-shadow: 0 14px 34px -24px rgba(37, 99, 235, 0.4);
-}
-@media (prefers-color-scheme: dark) {
+  /* Like .card but no hover lift — for table/chart containers. */
   .panel {
-    border-color: rgba(96, 165, 250, 0.18);
-    background: rgba(13, 24, 48, 0.62);
+    border-radius: 1rem;
+    border: 1px solid rgba(37, 99, 235, 0.14);
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(8px);
+    overflow: hidden;
+    box-shadow: 0 14px 34px -24px rgba(37, 99, 235, 0.4);
   }
-}
+  @media (prefers-color-scheme: dark) {
+    .panel {
+      border-color: rgba(96, 165, 250, 0.18);
+      background: rgba(13, 24, 48, 0.62);
+    }
+  }
 
-/* Sticky translucent top bar. */
-.glass-nav {
-  background: rgba(243, 247, 255, 0.72);
-  backdrop-filter: blur(12px) saturate(160%);
-  border-bottom: 1px solid rgba(37, 99, 235, 0.12);
-}
-@media (prefers-color-scheme: dark) {
+  /* Sticky translucent top bar. */
   .glass-nav {
-    background: rgba(5, 11, 28, 0.72);
-    border-bottom-color: rgba(96, 165, 250, 0.16);
+    background: rgba(243, 247, 255, 0.72);
+    backdrop-filter: blur(12px) saturate(160%);
+    border-bottom: 1px solid rgba(37, 99, 235, 0.12);
+  }
+  @media (prefers-color-scheme: dark) {
+    .glass-nav {
+      background: rgba(5, 11, 28, 0.72);
+      border-bottom-color: rgba(96, 165, 250, 0.16);
+    }
   }
 }
