@@ -28,7 +28,7 @@ export function ScoreMatrix({ rollup }: { rollup: Rollup }) {
     <div className="space-y-3">
       <ProviderSelect provider={provider} providers={providers} onChange={setProvider} />
       <div className="overflow-x-auto panel">
-        <table className="min-w-max w-full text-sm">
+        <table className="w-full text-sm">
           <thead className="bg-blue-50/80 dark:bg-blue-500/10 text-blue-900 dark:text-blue-200">
             <tr>
               <th className="text-left font-medium px-4 py-3">Test</th>

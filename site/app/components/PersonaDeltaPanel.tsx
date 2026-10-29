@@ -94,6 +94,7 @@ export function PersonaDeltaPanel({
               </strong>
             </span>
           </div>
+          <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="text-xs uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
               <tr>
@@ -118,6 +119,7 @@ export function PersonaDeltaPanel({
               ))}
             </tbody>
           </table>
+          </div>
         </div>
       ))}
     </div>
