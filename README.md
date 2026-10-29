@@ -59,7 +59,7 @@ A [`justfile`](justfile) wraps the common commands so they don't have to be rety
 src/p3/          shared infrastructure (schema, personas, scorers, providers)
 evals/           one folder per eval; mentees copy _template/ to start
 analysis/        rollup.py unifies .eval logs into a single long-form dataframe
-site/            Next.js App Router dashboard — reads rollup.json, static-exported to GitHub Pages
+site/            Next.js App Router dashboard — reads rollup.json, static-exported and deployed on Vercel
 tests/           offline schema, scorer, reporting, and module-load checks
 logs/            .eval outputs (gitignored)
 ```
@@ -84,9 +84,7 @@ Repo secrets for evaluation runs (set under `Settings → Secrets and variables 
 - `OPENAI_API_KEY` — optional. When present, every eval also runs against `openai/gpt-4o-2024-08-06`, populating the cross-provider columns on the site. The current workflow uses direct provider keys; local OpenRouter routing does not configure repository secrets.
 - `SLACK_WEBHOOK_URL` — optional. When present, the workflow posts a summary to the configured Slack channel after each successful run (per-eval × provider mean table, calibration AUROC, baseline scores, Δ vs. the previous rollup) and a short failure notification when the run dies. No-op when unset, so unconfigured forks don't try to post anywhere.
 
-Deploying to GitHub Pages: the site is a fully static Next.js export, published by the [`deploy-pages`](.github/workflows/deploy-pages.yml) workflow. One-time setup: in **Settings → Pages**, set **Source** to **GitHub Actions**. The workflow runs on pushes to `main` that touch `site/**` and on manual dispatch; the published URL is `https://<owner>.github.io/civic-evals/`.
-
-It's served from the `/civic-evals` project subpath via `NEXT_PUBLIC_BASE_PATH` (set in the workflow). For a custom domain or a `<owner>.github.io` user repo, leave that variable unset so the site builds for the root path. Build locally with `pnpm build` (output in `site/out/`).
+Deploying: the site is a fully static Next.js export served from [civicevals.org](https://civicevals.org) by Vercel (project root `site/`). Pushes to `main` deploy to production; pull requests from branches in this repo get preview deployments, and fork PRs need a maintainer to authorize the preview. Build locally with `pnpm build` (output in `site/out/`). To serve from a subpath instead of the domain root, set `NEXT_PUBLIC_BASE_PATH` at build time.
 
 ## Contributing a new eval
 
