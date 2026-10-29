@@ -550,7 +550,8 @@ async def main_async(
                 judge_text=judge_text,
                 judge_usage=judge_usage,
                 subject_model=(old or {}).get("subject_model") or subject_model or "unknown",
-                subject_provider=(old or {}).get("subject_provider") or provider,
+                # A legacy row without the field is "unknown", never the judge's provider.
+                subject_provider=(old.get("subject_provider") or "unknown") if old is not None else provider,
                 judge_model=judge_model,
                 judge_provider=provider,
             )

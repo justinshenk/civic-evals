@@ -226,3 +226,24 @@ def test_subject_error_or_refusal_is_not_judged(fake_run, monkeypatch):
     rows = _rows(path)
     assert calls["judge"] == 0 and len(rows) == 6
     assert {r["judge_text"] for r in rows} == {"<skipped: no subject response>"}
+
+
+async def test_rejudge_legacy_row_without_subject_provider_records_unknown(fake_run):
+    out_dir, calls = fake_run
+    await pbs.main_async("a/subject", "a/judge-1", True, "openrouter")
+    (saved,) = out_dir.glob("*.json")
+    rows = _rows(saved)
+    for r in rows:  # a file from before the provenance fields existed
+        del r["subject_provider"]
+    saved.write_text(json.dumps(rows))
+    calls.clear()
+    calls.update(subject=0, judge=0)
+
+    await pbs.main_async(None, "a/judge-2", False, "anthropic", rejudge=saved)
+
+    (rejudged,) = (p for p in out_dir.glob("*.json") if p != saved)
+    new = _rows(rejudged)
+    assert {r["subject_provider"] for r in new} == {"unknown"}
+    assert {r["judge_provider"] for r in new} == {"anthropic"}
+    assert [r["response_text"] for r in new] == [r["response_text"] for r in rows]
+    assert calls["subject"] == 0
