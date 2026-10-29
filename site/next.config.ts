@@ -1,18 +1,16 @@
 import type { NextConfig } from "next";
 
 /**
- * Static-export config for GitHub Pages.
+ * Static-export config (deployed on Vercel at civicevals.org).
  *
  * The dashboard is fully prerendered (every route is Static/SSG — see the
  * build output), so `output: "export"` emits a plain `out/` directory of
- * HTML/JS/CSS that any static host can serve. No Node server, no Vercel.
+ * HTML/JS/CSS that any static host can serve. No Node server needed.
  *
- * GitHub project pages are served from a subpath
- * (`https://<user>.github.io/<repo>/`), so assets and routes must be
- * prefixed with that repo name. `basePath`/`assetPrefix` are driven by
- * `NEXT_PUBLIC_BASE_PATH` (set to `/civic-evals` in the deploy workflow)
- * and default to "" so `next dev` and a custom-domain build both serve
- * from root. `next/link` prepends `basePath` automatically; for raw
+ * To serve from a subpath (e.g. `https://<user>.github.io/<repo>/`), set
+ * `NEXT_PUBLIC_BASE_PATH` at build time; `basePath`/`assetPrefix` follow
+ * it and default to "" so `next dev` and the custom-domain build both
+ * serve from root. `next/link` prepends `basePath` automatically; for raw
  * `<img>`/asset URLs use the `asset()` helper in `lib/basePath.ts`.
  */
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
