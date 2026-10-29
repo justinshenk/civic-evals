@@ -198,16 +198,14 @@ function TaskTable({
             ))}
           </tr>
         </thead>
-        <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
-          {tasks.map((t) => (
-            <TaskRow
-              key={t.id}
-              task={t}
-              rows={byTask[t.id] ?? []}
-              scorers={scorers}
-            />
-          ))}
-        </tbody>
+        {tasks.map((t) => (
+          <TaskRow
+            key={t.id}
+            task={t}
+            rows={byTask[t.id] ?? []}
+            scorers={scorers}
+          />
+        ))}
       </table>
     </div>
   );
@@ -230,17 +228,15 @@ function TaskRow({
   );
 
   return (
-    <>
-      <tr className="bg-white dark:bg-zinc-950 align-top group/taskrow">
+    // One <tbody> per task scopes `group/task`, so opening the details
+    // row below unclamps this task's question.
+    <tbody className="group/task divide-y divide-zinc-200 dark:divide-zinc-800 border-t border-zinc-200 dark:border-zinc-800 first-of-type:border-t-0">
+      <tr className="bg-white dark:bg-zinc-950 align-top">
         <td className="px-3 py-3 font-mono text-xs whitespace-nowrap">
-          <details className="group">
-            <summary className="cursor-pointer hover:text-zinc-900 dark:hover:text-zinc-100">
-              {task.id}
-            </summary>
-          </details>
+          {task.id}
         </td>
         <td className="px-3 py-3 text-zinc-700 dark:text-zinc-300 max-w-md">
-          <span className="line-clamp-2 group-has-[details[open]]/taskrow:line-clamp-none">{task.input}</span>
+          <span className="line-clamp-2 group-has-[details[open]]/task:line-clamp-none">{task.input}</span>
         </td>
         <td className="px-3 py-3">
           <DifficultyBadge difficulty={task.difficulty} />
@@ -310,7 +306,7 @@ function TaskRow({
           </details>
         </td>
       </tr>
-    </>
+    </tbody>
   );
 }
 
@@ -348,6 +344,12 @@ function RefusalBadge({ expected }: { expected: "refuse" | "answer" | "hedge" | 
   );
 }
 
+function isStale(dateStr: string) {
+  const verifiedAt = new Date(dateStr);
+  const ageDays = (buildTime - verifiedAt.getTime()) / 86_400_000;
+  return ageDays > 365;
+}
+
 /**
  * Per-task ground-truth freshness indicator.
  *
@@ -366,12 +368,6 @@ function RefusalBadge({ expected }: { expected: "refuse" | "answer" | "hedge" | 
  * (annual deadline updates, post-election rule changes, biennial
  * statute reviews) cycles in that window.
  */
-function isStale(dateStr: string) {
-  const verifiedAt = new Date(dateStr);
-  const ageDays = (buildTime - verifiedAt.getTime()) / 86_400_000;
-  return ageDays > 365;
-}
-
 function VerifiedBadge({ date }: { date: string | null }) {
   if (!date) {
     return (
