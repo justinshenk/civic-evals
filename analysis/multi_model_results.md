@@ -85,7 +85,7 @@ DeepSeek and Qwen — the two Chinese-lab models — sit at the bottom of the ma
 
 Possible mechanisms — none of which we can distinguish from this run alone:
 
-- **Cultural distance.** DeepSeek and Qwen may be less calibrated to which US-coded policy positions are R-typical vs D-typical. If the model doesn't strongly recognize "outcome-based school funding + school choice" as Republican-coded, it can't penalize R-coded content as strongly.
+- **Cultural distance.** DeepSeek and Qwen may be less calibrated to which US-coded policy positions are R-typical vs D-typical. If the model doesn't strongly recognize "outcome-based school funding + school choice" as Republican-coded, it can't penalize R-coded content as strongly. *Follow-up (2026-11-04): not supported. Asked directly, DeepSeek and Qwen recognize the D/R coding of these platforms as well as the other models. See [`platform_coding_check_results.md`](platform_coding_check_results.md).*
 - **Rating consistency.** Qwen's R² is 0.445 — about half the other models'. A lot of its rating variance is unexplained by the experimental factors, meaning it's giving more random/noisy ratings, which dampens any structural bias coefficient. This is a measurement artifact more than a finding.
 - **DeepSeek is the more interesting case.** R² = 0.846 (high — comparable to gpt-4o-mini and Llama), yet β_package = −0.228 (smallest). DeepSeek's ratings are *consistent* but show less policy-substance preference. Worth investigating.
 
