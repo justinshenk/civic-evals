@@ -1,0 +1,33 @@
+Wrote manifest → /workspaces/pytorch-devcontainers/civic-evals/analysis/qwen3_14b_base_audited_rows.manifest.json
+
+=== Qwen/Qwen3-14B ===
+  Qwen/Qwen3-14B: 0 cached, 120 remaining (of 120 planned)
+Loading weights:   0%|          | 0/443 [00:00<?, ?it/s]Loading weights:   0%|          | 1/443 [00:00<01:19,  5.54it/s]Loading weights:   0%|          | 2/443 [00:00<01:30,  4.90it/s]Loading weights:   3%|▎         | 15/443 [00:00<00:10, 39.62it/s]Loading weights:   6%|▌         | 27/443 [00:00<00:06, 59.75it/s]Loading weights:   9%|▉         | 39/443 [00:00<00:05, 71.85it/s]Loading weights:  12%|█▏        | 54/443 [00:00<00:04, 91.84it/s]Loading weights:  15%|█▍        | 65/443 [00:00<00:03, 95.68it/s]Loading weights:  17%|█▋        | 76/443 [00:01<00:03, 95.16it/s]Loading weights:  20%|█▉        | 87/443 [00:01<00:03, 94.68it/s]Loading weights:  22%|██▏       | 97/443 [00:01<00:03, 89.35it/s]Loading weights:  25%|██▍       | 109/443 [00:01<00:03, 96.38it/s]Loading weights:  27%|██▋       | 119/443 [00:01<00:03, 94.25it/s]Loading weights:  29%|██▉       | 129/443 [00:01<00:03, 91.38it/s]Loading weights:  31%|███▏      | 139/443 [00:01<00:03, 88.93it/s]Loading weights:  34%|███▎      | 149/443 [00:01<00:03, 87.35it/s]Loading weights:  36%|███▌      | 160/443 [00:02<00:03, 89.07it/s]Loading weights:  38%|███▊      | 169/443 [00:02<00:03, 88.04it/s]Loading weights:  41%|████      | 182/443 [00:02<00:02, 99.45it/s]Loading weights:  44%|████▍     | 197/443 [00:02<00:02, 112.97it/s]Loading weights:  48%|████▊     | 211/443 [00:02<00:01, 120.12it/s]Loading weights:  51%|█████     | 224/443 [00:02<00:01, 117.56it/s]Loading weights:  53%|█████▎    | 236/443 [00:02<00:01, 112.64it/s]Loading weights:  56%|█████▌    | 248/443 [00:02<00:01, 108.50it/s]Loading weights:  58%|█████▊    | 259/443 [00:02<00:01, 107.52it/s]Loading weights:  61%|██████    | 270/443 [00:03<00:01, 103.01it/s]Loading weights:  63%|██████▎   | 281/443 [00:03<00:01, 99.94it/s] Loading weights:  66%|██████▌   | 292/443 [00:03<00:01, 98.15it/s]Loading weights:  68%|██████▊   | 303/443 [00:03<00:01, 99.11it/s]Loading weights:  71%|███████   | 314/443 [00:03<00:01, 101.16it/s]Loading weights:  74%|███████▍  | 329/443 [00:03<00:01, 113.85it/s]Loading weights:  77%|███████▋  | 342/443 [00:03<00:00, 118.38it/s]Loading weights:  80%|████████  | 356/443 [00:03<00:00, 118.16it/s]Loading weights:  83%|████████▎ | 368/443 [00:03<00:00, 108.99it/s]Loading weights:  86%|████████▌ | 380/443 [00:04<00:00, 104.96it/s]Loading weights:  89%|████████▉ | 395/443 [00:04<00:00, 116.44it/s]Loading weights:  92%|█████████▏| 407/443 [00:04<00:00, 116.56it/s]Loading weights:  95%|█████████▌| 422/443 [00:04<00:00, 111.85it/s]Loading weights:  98%|█████████▊| 435/443 [00:04<00:00, 111.31it/s]Loading weights: 100%|██████████| 443/443 [00:04<00:00, 98.06it/s] 
+  … 10/120 new  (parsed 10/10 cumulative)
+  … 20/120 new  (parsed 20/20 cumulative)
+  … 30/120 new  (parsed 30/30 cumulative)
+  … 40/120 new  (parsed 40/40 cumulative)
+  … 50/120 new  (parsed 50/50 cumulative)
+  … 60/120 new  (parsed 60/60 cumulative)
+  … 70/120 new  (parsed 70/70 cumulative)
+  … 80/120 new  (parsed 80/80 cumulative)
+  … 90/120 new  (parsed 90/90 cumulative)
+  … 100/120 new  (parsed 100/100 cumulative)
+  … 110/120 new  (parsed 110/110 cumulative)
+  … 120/120 new  (parsed 120/120 cumulative)
+  parsed 120/120, rating_mean=7.43, sd=1.41, R2=0.788
+  beta_std[party         ] = -0.071  p=1.02e-01  
+  beta_std[policy_package] = -0.225  p=8.11e-07  ***
+  beta_std[party_x_pkg   ] = -0.036  p=4.11e-01  
+  years-equivalent: party (D->R) = +0.63 yr,  package (D-typ -> R-typ) = +3.36 yr
+  GATE: KEEP Figure 6 — base model leans (β_pkg=-0.225, paired-p=2.22e-04, yrs/pkg=+3.36). Proceed to PCT comparison (Step 2).
+
+==============================================================================================================
+SUMMARY: standardized policy_package beta + years-equivalent translation
+==============================================================================================================
+model                                       n rate_sd  beta_pkg      p_pkg beta_party    p_party   yrs/pkg  yrs/party
+Qwen/Qwen3-14B                            120    1.41    -0.225   8.11e-07     -0.071   1.02e-01     +3.36      +0.63
+
+Raw rows saved to /workspaces/pytorch-devcontainers/civic-evals/analysis/qwen3_14b_base_audited_rows.json
+Fits saved to /workspaces/pytorch-devcontainers/civic-evals/analysis/qwen3_14b_base_audited_fit.json
+Results markdown saved to /workspaces/pytorch-devcontainers/civic-evals/analysis/qwen3_14b_base_audited_results.md
