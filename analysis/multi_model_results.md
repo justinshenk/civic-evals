@@ -46,7 +46,7 @@ For context: experience tiers in the prompt template are 2 / 8 / 16 years, so an
 - **Raw rows:** `analysis/multi_model_rows.json`
 - **Cells:** 24 per model
 - **Replicates:** 5 per cell → 120 obs per model
-- **Total subject calls:** 720 (115–120 parsed per model; 4 parse failures total, all on Llama)
+- **Total subject calls:** 720 (115–120 parsed per model; 5 parse failures total: 4 on Llama, 1 on Gemini)
 
 ## Results
 
