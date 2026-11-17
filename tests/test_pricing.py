@@ -45,6 +45,19 @@ def test_cost_per_million_math() -> None:
     assert p.cost(input_tokens=1_000_000, output_tokens=1_000_000) == pytest.approx(6.0)
 
 
+@pytest.mark.parametrize("provider", ["openai", "openrouter/openai"])
+def test_gpt_snapshot_cost_is_known(provider: str) -> None:
+    cost, source = cost_for_usage(
+        f"{provider}/gpt-4o-2024-08-06", input_tokens=1000, output_tokens=500
+    )
+    assert source == "computed"
+    assert cost == pytest.approx(0.0075)
+
+
+def test_unknown_variant_does_not_inherit_price() -> None:
+    assert price_for("openai/gpt-4o-unpriced") is None
+
+
 def test_cost_for_usage_prefers_reported() -> None:
     cost, src = cost_for_usage(
         "anthropic/claude-haiku-4-5",
@@ -88,11 +101,15 @@ def test_cache_read_falls_back_to_input_rate_when_not_set() -> None:
     assert p.cost(input_tokens=0, output_tokens=0, cache_read_tokens=1_000_000) == pytest.approx(10.0)
 
 
-def test_reasoning_tokens_billed_at_output_rate_by_default() -> None:
-    """Anthropic extended-thinking and OpenAI reasoning tokens bill at
-    the output rate unless the price table specifies otherwise."""
+def test_reasoning_tokens_are_not_counted_twice() -> None:
+    """Inspect output tokens include the reasoning-token subset."""
     p = Price(input_per_mtok=1.0, output_per_mtok=5.0)
-    assert p.cost(input_tokens=0, output_tokens=0, reasoning_tokens=1_000_000) == pytest.approx(5.0)
+    assert p.cost(input_tokens=0, output_tokens=1_000_000, reasoning_tokens=600_000) == pytest.approx(5.0)
+
+
+def test_separate_reasoning_rate_only_adjusts_the_reasoning_subset() -> None:
+    p = Price(input_per_mtok=1.0, output_per_mtok=5.0, reasoning_per_mtok=8.0)
+    assert p.cost(input_tokens=0, output_tokens=1_000_000, reasoning_tokens=600_000) == pytest.approx(6.8)
 
 
 def test_known_models_list_is_nonempty_and_sorted() -> None:

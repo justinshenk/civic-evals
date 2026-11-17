@@ -7,6 +7,19 @@ not a public API).
 
 ## [Unreleased]
 
+### Reviewer presentation and local runs
+
+- Refresh all seven civic tests on Sonnet 5.5 and GPT-6.1 Sol with reciprocal cross-vendor judges: 862 scored task attempts and 1,062 civic score rows. Preserve 100 earlier external-benchmark rows with historical labels and record run settings and recovery provenance in the dashboard data.
+- Add plain-language Civic Evals labels and a description for the refusal-boundary test.
+- Surface the historical candidate-rating and persona-pressure findings on the home page and in the README, with source reports and model/date context.
+- Support OpenRouter model IDs and GPT judges through OpenRouter while preserving the underlying vendor for judge selection. Allow explicit per-vendor judge configuration.
+- Add current Sonnet 5.5 and GPT-6.1 Sol prices, recognize dated GPT-4o model IDs in cost reporting, avoid counting reasoning tokens twice, and correct `just usage` to accept a logs directory.
+- Use complete provider-reported per-call costs when available, including OpenRouter cache-write charges missing from Inspect's aggregate token fields.
+- Add an optional rollup flag that skips additional paid staleness annotations, and clarify offline checks and paid examples in the quickstart.
+- Label unjudged hedge annotations explicitly instead of displaying them as a zero-percent hedge rate.
+- Clarify that stance scores measure policy position, and label retained external benchmarks as historical results.
+- Fix the open-endedness stance parser to accept an explicit positive sign, so valid judge outputs such as `+0.30` are not replaced with a neutral parse-failure score. Preserve the scoring formula and refusal handling.
+
 ### Fixed
 - **Schema**: tasks setting both `target` and `rubric` are now rejected at load
   time. The loader writes `target` into `Sample.target` and `rubric` into

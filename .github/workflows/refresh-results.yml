@@ -3,8 +3,11 @@ name: refresh-results
 # Runs the eval suite, regenerates site/public/data/rollup.json, and
 # commits the update. Vercel picks up the commit and redeploys the site.
 #
-# Triggered either manually (Actions tab → Run workflow) or weekly at
-# Sunday 08:00 UTC. Requires the repo secret ANTHROPIC_API_KEY (and
+# Manual only (Actions tab → Run workflow). Scheduled reruns are disabled
+# so the reviewed results stay published without recurring API spend.
+# A manual run still incurs API charges and commits its output automatically;
+# approve the models, run size, and estimated cost before starting it.
+# Requires the repo secret ANTHROPIC_API_KEY (and
 # optionally OPENAI_API_KEY for cross-provider runs, SLACK_WEBHOOK_URL
 # for notifications — all secrets are gracefully no-op when unset).
 
@@ -19,8 +22,6 @@ on:
         description: "Per-eval sample cap; leave blank to run the full suite"
         default: ""
         required: false
-  schedule:
-    - cron: "0 8 * * 0"
 
 permissions:
   contents: write
@@ -60,7 +61,7 @@ jobs:
           if [ -n "$LIMIT" ]; then LIMIT_FLAG="--limit $LIMIT"; fi
 
           # Build the model list. Manual override beats auto-selection.
-          # Default models are pinned to dated suffixes so weekly refreshes
+          # Default models are pinned to dated suffixes so manual refreshes
           # don't silently shift to a new incremental version (see
           # src/p3/providers.py for the bump policy). When Anthropic /
           # OpenAI ship a successor and a maintainer is ready to adopt,
@@ -125,7 +126,7 @@ jobs:
         # Reads the usage block written by analysis/usage.py (via rollup.py)
         # and fails the run if total cost exceeds the budget. Catches a
         # misconfigured --limit or a runaway loop before the bill arrives.
-        # Tune REFRESH_COST_BUDGET to match expected weekly spend; the
+        # Tune REFRESH_COST_BUDGET to match expected run spend; the
         # default $5 is ~10x the current ~$0.33/run baseline so genuine
         # growth (more evals, more providers) won't trip it but a
         # 100x runaway will.

@@ -19,9 +19,13 @@ export function ModelCards({ rollup }: { rollup: Rollup }) {
       </p>
     );
   }
+  const fullSuiteModels = new Set(rollup.run_info?.full_suite_models ?? []);
+  const providers = [...rollup.providers].sort(
+    (a, b) => Number(fullSuiteModels.has(b)) - Number(fullSuiteModels.has(a)),
+  );
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-      {rollup.providers.map((provider) => (
+      {providers.map((provider) => (
         <ModelCard key={provider} provider={provider} rollup={rollup} />
       ))}
     </div>
@@ -41,6 +45,8 @@ function ModelCard({
   const failures = rollup.failures.filter((f) => f.provider === provider);
   const hedged = failures.filter((f) => f.acknowledged_staleness === true).length;
   const noHedge = failures.filter((f) => f.acknowledged_staleness === false).length;
+  const unjudged = failures.length - hedged - noHedge;
+  const baselineOnly = rows.every((r) => r.eval.startsWith("inspect_evals/"));
 
   return (
     <article className="card p-5 flex flex-col gap-3">
@@ -55,7 +61,7 @@ function ModelCard({
         </h3>
         <span
           className="shrink-0 rounded-full bg-blue-50 px-2 py-0.5 font-mono text-xs tabular-nums text-blue-700 dark:bg-blue-500/10 dark:text-blue-300"
-          title="Average score across every test and grading method (0–1, higher is better)"
+          title="Average across recorded metrics (0–1). This combines quality and stance measures; it is not an overall accuracy rating."
         >
           {overall === null ? "no runs" : `avg ${fmt(overall)}`}
         </span>
@@ -67,21 +73,31 @@ function ModelCard({
           <dd className="font-mono tabular-nums">{evalsCovered}</dd>
         </div>
         <div>
-          <dt className="text-zinc-400 dark:text-zinc-500">Answers</dt>
+          <dt className="text-zinc-400 dark:text-zinc-500">Scores</dt>
           <dd className="font-mono tabular-nums">{rows.length}</dd>
         </div>
         <div>
-          <dt className="text-zinc-400 dark:text-zinc-500" title="Answers we flagged for a closer look">
+          <dt className="text-zinc-400 dark:text-zinc-500" title="Scores flagged for a closer look">
             Flagged
           </dt>
           <dd className="font-mono tabular-nums">{failures.length}</dd>
         </div>
       </dl>
 
-      {failures.length > 0 && (
+      {baselineOnly && (
+        <p className="text-xs text-zinc-500 dark:text-zinc-400">Historical external benchmarks only.</p>
+      )}
+
+      {failures.length > 0 && unjudged === failures.length && (
+        <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
+          Hedge checks have not been run for these {failures.length} flagged scores.
+        </p>
+      )}
+
+      {failures.length > 0 && unjudged < failures.length && (
         <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
           Of {failures.length} flagged{" "}
-          {failures.length === 1 ? "failure" : "failures"},{" "}
+          {failures.length === 1 ? "score" : "scores"},{" "}
           <strong className="text-emerald-600 dark:text-emerald-400">
             {hedged}
           </strong>{" "}
@@ -92,13 +108,14 @@ function ModelCard({
               <strong className="text-rose-600 dark:text-rose-400">
                 {noHedge}
               </strong>{" "}
-              were confidently wrong
+              had no such hedge
             </>
           )}
           {noHedge === 0 && hedged === failures.length && (
-            <span className="text-zinc-500"> — none confidently wrong</span>
+            <span className="text-zinc-500"> — all included a hedge</span>
           )}
           .
+          {unjudged > 0 && <> {unjudged} have not been checked for hedges.</>}
         </p>
       )}
 

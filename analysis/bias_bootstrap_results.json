@@ -1,0 +1,346 @@
+{
+  "n_boot": 5000,
+  "seed": 0,
+  "per_model": {
+    "anthropic/claude-haiku-4.5": {
+      "beta_package": {
+        "estimate": -0.3822233620576201,
+        "ci95": [
+          -0.4686315747948642,
+          -0.29734290873249586
+        ]
+      },
+      "years_per_package": {
+        "estimate": 8.660397074190197,
+        "ci95": [
+          4.33032322117146,
+          14.060115238683707
+        ]
+      },
+      "years_per_party": {
+        "estimate": -3.7115987460814837,
+        "ci95": [
+          -8.075479494798277,
+          -0.04236541456466577
+        ]
+      }
+    },
+    "openai/gpt-4o-mini": {
+      "beta_package": {
+        "estimate": -0.34614978661060636,
+        "ci95": [
+          -0.41870948090148885,
+          -0.27812187605046207
+        ]
+      },
+      "years_per_package": {
+        "estimate": 7.243604004449375,
+        "ci95": [
+          5.083163324647152,
+          9.547972842125956
+        ]
+      },
+      "years_per_party": {
+        "estimate": 1.7560252131998437,
+        "ci95": [
+          -0.24049954556876232,
+          3.9337009463188726
+        ]
+      }
+    },
+    "google/gemini-2.5-flash": {
+      "beta_package": {
+        "estimate": -0.3063362937283053,
+        "ci95": [
+          -0.38421934150791953,
+          -0.22770907178755895
+        ]
+      },
+      "years_per_package": {
+        "estimate": 5.562679055361993,
+        "ci95": [
+          3.15103336595702,
+          8.167073892639833
+        ]
+      },
+      "years_per_party": {
+        "estimate": -0.2598219125047885,
+        "ci95": [
+          -2.8472259031059517,
+          2.3327038521874157
+        ]
+      }
+    },
+    "meta-llama/llama-3.3-70b-instruct": {
+      "beta_package": {
+        "estimate": -0.3907591782066008,
+        "ci95": [
+          -0.46496668662622714,
+          -0.3209548595709387
+        ]
+      },
+      "years_per_package": {
+        "estimate": 9.108507868712895,
+        "ci95": [
+          6.572612515866699,
+          11.899507872710782
+        ]
+      },
+      "years_per_party": {
+        "estimate": 0.4658365358719548,
+        "ci95": [
+          -2.007923816555681,
+          2.7085280160129384
+        ]
+      }
+    },
+    "deepseek/deepseek-chat": {
+      "beta_package": {
+        "estimate": -0.22756290455260308,
+        "ci95": [
+          -0.3022570749641611,
+          -0.15440499667689497
+        ]
+      },
+      "years_per_package": {
+        "estimate": 2.8721461187214565,
+        "ci95": [
+          1.2636812496042893,
+          4.624991785947096
+        ]
+      },
+      "years_per_party": {
+        "estimate": 0.1689497716894915,
+        "ci95": [
+          -1.566555526807656,
+          1.9816613503750562
+        ]
+      }
+    },
+    "qwen/qwen-2.5-72b-instruct": {
+      "beta_package": {
+        "estimate": -0.21326056217190653,
+        "ci95": [
+          -0.3049022490487979,
+          -0.11593145737069857
+        ]
+      },
+      "years_per_package": {
+        "estimate": 4.0118593816179375,
+        "ci95": [
+          0.7160177291624459,
+          8.500941790513002
+        ]
+      },
+      "years_per_party": {
+        "estimate": -2.296623995031455e-14,
+        "ci95": [
+          -2.0570306543581194,
+          2.0969063236043977
+        ]
+      }
+    }
+  },
+  "pairwise": [
+    {
+      "focus": "deepseek/deepseek-chat",
+      "other": "anthropic/claude-haiku-4.5",
+      "beta_package": {
+        "estimate": 0.154660457505017,
+        "ci95": [
+          0.043657756235653385,
+          0.26963209161130597
+        ],
+        "excludes_zero": true
+      },
+      "years_per_package": {
+        "estimate": -5.78825095546874,
+        "ci95": [
+          -11.433735033524929,
+          -1.2245070916659253
+        ],
+        "excludes_zero": true
+      }
+    },
+    {
+      "focus": "deepseek/deepseek-chat",
+      "other": "openai/gpt-4o-mini",
+      "beta_package": {
+        "estimate": 0.11858688205800327,
+        "ci95": [
+          0.019355273980448753,
+          0.2216643006705582
+        ],
+        "excludes_zero": true
+      },
+      "years_per_package": {
+        "estimate": -4.371457885727918,
+        "ci95": [
+          -7.231737451447491,
+          -1.6336823149045978
+        ],
+        "excludes_zero": true
+      }
+    },
+    {
+      "focus": "deepseek/deepseek-chat",
+      "other": "google/gemini-2.5-flash",
+      "beta_package": {
+        "estimate": 0.0787733891757022,
+        "ci95": [
+          -0.03311559268315954,
+          0.18990778603787967
+        ],
+        "excludes_zero": false
+      },
+      "years_per_package": {
+        "estimate": -2.690532936640537,
+        "ci95": [
+          -5.712570380925946,
+          0.2753168547790629
+        ],
+        "excludes_zero": false
+      }
+    },
+    {
+      "focus": "deepseek/deepseek-chat",
+      "other": "meta-llama/llama-3.3-70b-instruct",
+      "beta_package": {
+        "estimate": 0.1631962736539977,
+        "ci95": [
+          0.06027960715802985,
+          0.26886699713708434
+        ],
+        "excludes_zero": true
+      },
+      "years_per_package": {
+        "estimate": -6.236361749991438,
+        "ci95": [
+          -9.398939325419322,
+          -3.0966768169241923
+        ],
+        "excludes_zero": true
+      }
+    },
+    {
+      "focus": "deepseek/deepseek-chat",
+      "other": "qwen/qwen-2.5-72b-instruct",
+      "beta_package": {
+        "estimate": -0.014302342380696553,
+        "ci95": [
+          -0.13780080373918008,
+          0.10433839464764431
+        ],
+        "excludes_zero": false
+      },
+      "years_per_package": {
+        "estimate": -1.139713262896481,
+        "ci95": [
+          -5.895653701445481,
+          2.641609073086428
+        ],
+        "excludes_zero": false
+      }
+    },
+    {
+      "focus": "qwen/qwen-2.5-72b-instruct",
+      "other": "anthropic/claude-haiku-4.5",
+      "beta_package": {
+        "estimate": 0.16896279988571355,
+        "ci95": [
+          0.047682490183379674,
+          0.2992096903175597
+        ],
+        "excludes_zero": true
+      },
+      "years_per_package": {
+        "estimate": -4.648537692572259,
+        "ci95": [
+          -11.16846978213896,
+          1.3674327880426933
+        ],
+        "excludes_zero": false
+      }
+    },
+    {
+      "focus": "qwen/qwen-2.5-72b-instruct",
+      "other": "openai/gpt-4o-mini",
+      "beta_package": {
+        "estimate": 0.13288922443869983,
+        "ci95": [
+          0.020003213145218423,
+          0.25738679943545584
+        ],
+        "excludes_zero": true
+      },
+      "years_per_package": {
+        "estimate": -3.231744622831437,
+        "ci95": [
+          -7.38037537949117,
+          1.6927933547179614
+        ],
+        "excludes_zero": false
+      }
+    },
+    {
+      "focus": "qwen/qwen-2.5-72b-instruct",
+      "other": "google/gemini-2.5-flash",
+      "beta_package": {
+        "estimate": 0.09307573155639876,
+        "ci95": [
+          -0.025740181253590063,
+          0.21852466141853202
+        ],
+        "excludes_zero": false
+      },
+      "years_per_package": {
+        "estimate": -1.5508196737440558,
+        "ci95": [
+          -5.741709861151782,
+          3.508599107762235
+        ],
+        "excludes_zero": false
+      }
+    },
+    {
+      "focus": "qwen/qwen-2.5-72b-instruct",
+      "other": "meta-llama/llama-3.3-70b-instruct",
+      "beta_package": {
+        "estimate": 0.17749861603469425,
+        "ci95": [
+          0.06359034830877568,
+          0.30088647542847724
+        ],
+        "excludes_zero": true
+      },
+      "years_per_package": {
+        "estimate": -5.096648487094957,
+        "ci95": [
+          -9.525132511636436,
+          -0.0005382663133151281
+        ],
+        "excludes_zero": true
+      }
+    },
+    {
+      "focus": "qwen/qwen-2.5-72b-instruct",
+      "other": "deepseek/deepseek-chat",
+      "beta_package": {
+        "estimate": 0.014302342380696553,
+        "ci95": [
+          -0.10433839464764434,
+          0.13780080373918008
+        ],
+        "excludes_zero": false
+      },
+      "years_per_package": {
+        "estimate": 1.139713262896481,
+        "ci95": [
+          -2.641609073086429,
+          5.895653701445479
+        ],
+        "excludes_zero": false
+      }
+    }
+  ]
+}
