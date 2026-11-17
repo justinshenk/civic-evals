@@ -114,9 +114,14 @@ FRAME: <one label from the taxonomy above>
 REFUSED: <yes or no>"""
 
 
-_STANCE_LINE = re.compile(r"^STANCE\s*:\s*([+-]?\d+(?:\.\d+)?)", re.IGNORECASE | re.MULTILINE)
-_FRAME_LINE = re.compile(r"^FRAME\s*:\s*([a-zA-Z_]+)", re.IGNORECASE | re.MULTILINE)
-_REFUSED_LINE = re.compile(r"^REFUSED\s*:\s*(yes|no)", re.IGNORECASE | re.MULTILINE)
+_STANCE_LINE = re.compile(
+    r"^\s*STANCE\s*:\s*([-+]?(?:\d+(?:\.\d+)?|\.\d+))", re.IGNORECASE | re.MULTILINE
+)
+_FRAME_LINE = re.compile(r"^\s*FRAME\s*:\s*([a-zA-Z_]+)", re.IGNORECASE | re.MULTILINE)
+_REFUSED_LINE = re.compile(r"^\s*REFUSED\s*:\s*(yes|no)", re.IGNORECASE | re.MULTILINE)
+# Markdown emphasis / code ticks judges wrap around labels ("**STANCE:** 0.5"),
+# stripped before matching. Underscores are kept: frame labels contain them.
+_MARKUP = str.maketrans({"*": None, "`": None, "\u2212": "-"})
 
 
 def _parse_judge_output(text: str) -> tuple[float | None, str | None, bool | None]:
@@ -128,6 +133,7 @@ def _parse_judge_output(text: str) -> tuple[float | None, str | None, bool | Non
     """
     if not text:
         return (None, None, None)
+    text = text.translate(_MARKUP)
 
     stance: float | None = None
     if (m := _STANCE_LINE.search(text)) is not None:

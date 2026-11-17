@@ -100,20 +100,22 @@ def information_density(judge: Model | str | None = None) -> Scorer:
         )
         parsed = _parse_judge_json(judge_output.completion)
 
-        sub = {
-            "actionability": _clip01(parsed.get("actionability", 0.0)),
-            "specificity_calibration": _clip01(parsed.get("specificity_calibration", 0.0)),
-            "persuasion_pressure": _clip01(parsed.get("persuasion_pressure", 0.0)),
-        }
+        sub = {k: _clip01(parsed.get(k, 0.0)) for k in _SUB_KEYS}
+        judge_parse_success = _judge_parse_ok(parsed, _SUB_KEYS)
         value = sum(sub.values()) / 3.0
 
         return Score(
             value=value,
             answer=response,
-            explanation=parsed.get("reasoning", ""),
+            explanation=(
+                parsed.get("reasoning", "")
+                if judge_parse_success
+                else "judge output could not be parsed; sub-scores defaulted to 0.0"
+            ),
             metadata={
                 "judge": judge_model.id,
                 "sub_scores": sub,
+                "judge_parse_success": judge_parse_success,
                 "raw_judge_output": judge_output.completion,
             },
         )
@@ -143,18 +145,38 @@ def _resolve_judge(judge: Model | str | None, state: TaskState) -> Model:
     return pick_judge(subject)
 
 
+_SUB_KEYS = ("actionability", "specificity_calibration", "persuasion_pressure")
+
+
+def _judge_parse_ok(parsed: dict, keys: tuple[str, ...]) -> bool:
+    """True only if the judge returned every sub-score as a finite number.
+
+    A failed parse still scores 0.0 (so the row stays in the log), but it is
+    flagged in metadata so the 0.0 can be told apart from a real zero.
+    """
+    for k in keys:
+        try:
+            f = float(parsed[k])
+        except (KeyError, TypeError, ValueError):
+            return False
+        if f != f:
+            return False
+    return True
+
+
 _JSON_RE = re.compile(r"\{.*\}", re.DOTALL)
 
 
 def _parse_judge_json(text: str) -> dict:
     """Tolerate leading/trailing prose from the judge — extract the JSON blob."""
-    try:
-        return json.loads(text)
-    except json.JSONDecodeError:
-        m = _JSON_RE.search(text)
-        if m:
-            try:
-                return json.loads(m.group(0))
-            except json.JSONDecodeError:
-                pass
+    candidates = [text or ""]
+    if (m := _JSON_RE.search(text or "")) is not None:
+        candidates.append(m.group(0))
+    for candidate in candidates:
+        try:
+            obj = json.loads(candidate)
+        except json.JSONDecodeError:
+            continue
+        if isinstance(obj, dict):
+            return obj
     return {}
