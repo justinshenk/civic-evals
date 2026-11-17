@@ -1,0 +1,370 @@
+{
+  "per_model": {
+    "anthropic/claude-haiku-4.5": {
+      "n_total": 200,
+      "n_parsed": 200,
+      "separation": 2.91,
+      "separation_ci95": [
+        2.69,
+        3.120249999999997
+      ],
+      "separation_full": 3.3500000000000005,
+      "separation_full_ci95": [
+        3.0000000000000004,
+        3.7
+      ],
+      "direction_accuracy": 0.8,
+      "direction_accuracy_full": 0.925,
+      "mean_D": 2.33,
+      "mean_R": 5.24,
+      "separation_by_anchor": {
+        "D_low": 2.94,
+        "R_low": 2.8800000000000003
+      },
+      "separation_by_level": {
+        "full": 3.3500000000000005,
+        "deep_area": 2.575,
+        "thin_area": 3.025
+      },
+      "cost_usd": 0.08268
+    },
+    "openai/gpt-4o-mini": {
+      "n_total": 200,
+      "n_parsed": 200,
+      "separation": 3.1900000000000004,
+      "separation_ci95": [
+        2.92,
+        3.4399999999999995
+      ],
+      "separation_full": 3.5,
+      "separation_full_ci95": [
+        3.1499999999999995,
+        3.85
+      ],
+      "direction_accuracy": 0.865,
+      "direction_accuracy_full": 0.9,
+      "mean_D": 2.0,
+      "mean_R": 5.19,
+      "separation_by_anchor": {
+        "D_low": 3.56,
+        "R_low": 2.82
+      },
+      "separation_by_level": {
+        "full": 3.5,
+        "deep_area": 2.9499999999999997,
+        "thin_area": 3.2750000000000004
+      },
+      "cost_usd": 0.0093354
+    },
+    "google/gemini-2.5-flash": {
+      "n_total": 200,
+      "n_parsed": 200,
+      "separation": 3.54,
+      "separation_ci95": [
+        3.3000000000000003,
+        3.7799999999999994
+      ],
+      "separation_full": 4.75,
+      "separation_full_ci95": [
+        4.5,
+        5.0
+      ],
+      "direction_accuracy": 0.855,
+      "direction_accuracy_full": 1.0,
+      "mean_D": 2.0,
+      "mean_R": 5.54,
+      "separation_by_anchor": {
+        "D_low": 3.6,
+        "R_low": 3.48
+      },
+      "separation_by_level": {
+        "full": 4.75,
+        "deep_area": 2.9749999999999996,
+        "thin_area": 3.4999999999999996
+      },
+      "cost_usd": 0.025577
+    },
+    "meta-llama/llama-3.3-70b-instruct": {
+      "n_total": 200,
+      "n_parsed": 200,
+      "separation": 3.2600000000000007,
+      "separation_ci95": [
+        2.9800000000000004,
+        3.5200000000000005
+      ],
+      "separation_full": 4.0,
+      "separation_full_ci95": [
+        3.59875,
+        4.35
+      ],
+      "direction_accuracy": 0.875,
+      "direction_accuracy_full": 0.975,
+      "mean_D": 1.89,
+      "mean_R": 5.15,
+      "separation_by_anchor": {
+        "D_low": 3.54,
+        "R_low": 2.98
+      },
+      "separation_by_level": {
+        "full": 4.0,
+        "deep_area": 2.9499999999999997,
+        "thin_area": 3.2
+      },
+      "cost_usd": 0.01974936
+    },
+    "deepseek/deepseek-chat": {
+      "n_total": 200,
+      "n_parsed": 200,
+      "separation": 3.33,
+      "separation_ci95": [
+        3.1000000000000005,
+        3.55
+      ],
+      "separation_full": 3.8999999999999995,
+      "separation_full_ci95": [
+        3.3500000000000005,
+        4.35
+      ],
+      "direction_accuracy": 0.855,
+      "direction_accuracy_full": 0.9,
+      "mean_D": 2.01,
+      "mean_R": 5.34,
+      "separation_by_anchor": {
+        "D_low": 3.42,
+        "R_low": 3.2399999999999998
+      },
+      "separation_by_level": {
+        "full": 3.8999999999999995,
+        "deep_area": 3.2749999999999995,
+        "thin_area": 3.1
+      },
+      "cost_usd": 0.0154190754
+    },
+    "qwen/qwen-2.5-72b-instruct": {
+      "n_total": 200,
+      "n_parsed": 200,
+      "separation": 3.3200000000000003,
+      "separation_ci95": [
+        3.13,
+        3.5
+      ],
+      "separation_full": 3.4999999999999996,
+      "separation_full_ci95": [
+        3.25,
+        3.7500000000000004
+      ],
+      "direction_accuracy": 0.935,
+      "direction_accuracy_full": 1.0,
+      "mean_D": 1.97,
+      "mean_R": 5.29,
+      "separation_by_anchor": {
+        "D_low": 3.5400000000000005,
+        "R_low": 3.0999999999999996
+      },
+      "separation_by_level": {
+        "full": 3.4999999999999996,
+        "deep_area": 3.25,
+        "thin_area": 3.3
+      },
+      "cost_usd": 0.0133908
+    }
+  },
+  "per_area": {
+    "anthropic/claude-haiku-4.5": {
+      "thin_infrastructure": 2.0,
+      "thin_public_safety": 2.6999999999999997,
+      "thin_education": 4.0,
+      "thin_spending": 3.4000000000000004,
+      "deep_infrastructure": 2.4000000000000004,
+      "deep_public_safety": 2.1,
+      "deep_education": 2.2,
+      "deep_spending": 3.6
+    },
+    "openai/gpt-4o-mini": {
+      "thin_infrastructure": 1.2000000000000002,
+      "thin_public_safety": 3.8,
+      "thin_education": 4.1,
+      "thin_spending": 4.0,
+      "deep_infrastructure": 1.2000000000000002,
+      "deep_public_safety": 4.0,
+      "deep_education": 2.6,
+      "deep_spending": 4.0
+    },
+    "google/gemini-2.5-flash": {
+      "thin_infrastructure": 2.1,
+      "thin_public_safety": 4.0,
+      "thin_education": 4.1,
+      "thin_spending": 3.8,
+      "deep_infrastructure": 3.3,
+      "deep_public_safety": 3.4000000000000004,
+      "deep_education": 2.2,
+      "deep_spending": 3.0
+    },
+    "meta-llama/llama-3.3-70b-instruct": {
+      "thin_infrastructure": 0.7999999999999998,
+      "thin_public_safety": 4.0,
+      "thin_education": 4.0,
+      "thin_spending": 4.0,
+      "deep_infrastructure": 0.7000000000000002,
+      "deep_public_safety": 4.0,
+      "deep_education": 3.1,
+      "deep_spending": 4.0
+    },
+    "deepseek/deepseek-chat": {
+      "thin_infrastructure": 2.0,
+      "thin_public_safety": 3.8,
+      "thin_education": 4.0,
+      "thin_spending": 2.5999999999999996,
+      "deep_infrastructure": 2.9,
+      "deep_public_safety": 3.8,
+      "deep_education": 2.6,
+      "deep_spending": 3.8000000000000003
+    },
+    "qwen/qwen-2.5-72b-instruct": {
+      "thin_infrastructure": 1.7000000000000002,
+      "thin_public_safety": 3.8,
+      "thin_education": 3.9000000000000004,
+      "thin_spending": 3.8,
+      "deep_infrastructure": 2.3,
+      "deep_public_safety": 4.1,
+      "deep_education": 2.8000000000000003,
+      "deep_spending": 3.8
+    }
+  },
+  "pairwise": [
+    {
+      "focus": "deepseek/deepseek-chat",
+      "other": "anthropic/claude-haiku-4.5",
+      "diff": 0.41999999999999993,
+      "ci95": [
+        0.09999999999999964,
+        0.73
+      ],
+      "excludes_zero": true
+    },
+    {
+      "focus": "deepseek/deepseek-chat",
+      "other": "openai/gpt-4o-mini",
+      "diff": 0.13999999999999968,
+      "ci95": [
+        -0.1900000000000004,
+        0.4899999999999993
+      ],
+      "excludes_zero": false
+    },
+    {
+      "focus": "deepseek/deepseek-chat",
+      "other": "google/gemini-2.5-flash",
+      "diff": -0.20999999999999996,
+      "ci95": [
+        -0.5399999999999991,
+        0.10999999999999945
+      ],
+      "excludes_zero": false
+    },
+    {
+      "focus": "deepseek/deepseek-chat",
+      "other": "meta-llama/llama-3.3-70b-instruct",
+      "diff": 0.0699999999999994,
+      "ci95": [
+        -0.27,
+        0.4299999999999997
+      ],
+      "excludes_zero": false
+    },
+    {
+      "focus": "deepseek/deepseek-chat",
+      "other": "qwen/qwen-2.5-72b-instruct",
+      "diff": 0.009999999999999787,
+      "ci95": [
+        -0.28000000000000025,
+        0.30000000000000027
+      ],
+      "excludes_zero": false
+    },
+    {
+      "focus": "qwen/qwen-2.5-72b-instruct",
+      "other": "anthropic/claude-haiku-4.5",
+      "diff": 0.41000000000000014,
+      "ci95": [
+        0.11999999999999966,
+        0.6999999999999997
+      ],
+      "excludes_zero": true
+    },
+    {
+      "focus": "qwen/qwen-2.5-72b-instruct",
+      "other": "openai/gpt-4o-mini",
+      "diff": 0.1299999999999999,
+      "ci95": [
+        -0.18999999999999995,
+        0.4500000000000002
+      ],
+      "excludes_zero": false
+    },
+    {
+      "focus": "qwen/qwen-2.5-72b-instruct",
+      "other": "google/gemini-2.5-flash",
+      "diff": -0.21999999999999975,
+      "ci95": [
+        -0.52,
+        0.07000000000000028
+      ],
+      "excludes_zero": false
+    },
+    {
+      "focus": "qwen/qwen-2.5-72b-instruct",
+      "other": "meta-llama/llama-3.3-70b-instruct",
+      "diff": 0.05999999999999961,
+      "ci95": [
+        -0.2599999999999998,
+        0.3900000000000001
+      ],
+      "excludes_zero": false
+    },
+    {
+      "focus": "qwen/qwen-2.5-72b-instruct",
+      "other": "deepseek/deepseek-chat",
+      "diff": -0.009999999999999787,
+      "ci95": [
+        -0.30000000000000027,
+        0.28000000000000025
+      ],
+      "excludes_zero": false
+    }
+  ],
+  "vs_bias": {
+    "models": [
+      "anthropic/claude-haiku-4.5",
+      "openai/gpt-4o-mini",
+      "google/gemini-2.5-flash",
+      "meta-llama/llama-3.3-70b-instruct",
+      "deepseek/deepseek-chat",
+      "qwen/qwen-2.5-72b-instruct"
+    ],
+    "spearman_sep_vs_years_per_package": {
+      "rho": -0.6571428571428573,
+      "p": 0.1561749271137024
+    },
+    "spearman_sep_vs_abs_beta_package": {
+      "rho": -0.6,
+      "p": 0.208
+    },
+    "years_per_package": {
+      "anthropic/claude-haiku-4.5": 8.660397074190197,
+      "openai/gpt-4o-mini": 7.243604004449375,
+      "google/gemini-2.5-flash": 5.562679055361993,
+      "meta-llama/llama-3.3-70b-instruct": 9.108507868712895,
+      "deepseek/deepseek-chat": 2.8721461187214565,
+      "qwen/qwen-2.5-72b-instruct": 4.0118593816179375
+    },
+    "beta_package": {
+      "anthropic/claude-haiku-4.5": -0.3822233620576201,
+      "openai/gpt-4o-mini": -0.34614978661060636,
+      "google/gemini-2.5-flash": -0.3063362937283053,
+      "meta-llama/llama-3.3-70b-instruct": -0.3907591782066008,
+      "deepseek/deepseek-chat": -0.22756290455260308,
+      "qwen/qwen-2.5-72b-instruct": -0.21326056217190653
+    }
+  }
+}

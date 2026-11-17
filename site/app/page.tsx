@@ -6,6 +6,7 @@ import { ModelCards } from "./components/ModelCards";
 import { CalibrationPanel } from "./components/CalibrationPanel";
 import { BaselinePanel } from "./components/BaselinePanel";
 import { BiasPanel } from "./components/BiasPanel";
+import { PersonaFindingsPanel } from "./components/PersonaFindingsPanel";
 import { loadRollup } from "@/lib/rollup";
 
 export default function Home() {
@@ -20,8 +21,8 @@ export default function Home() {
     : "never";
 
   const stats = [
-    { label: "answers graded", value: rollup.n_rows },
-    { label: "tests", value: rollup.evals.length },
+    { label: "scores recorded", value: rollup.n_rows },
+    { label: "tests in suite", value: rollup.evals_meta.length },
     { label: "AI models", value: rollup.providers.length },
     { label: "grading methods", value: rollup.scorers.length },
   ];
@@ -36,7 +37,7 @@ export default function Home() {
             className="brand-blob pointer-events-none absolute -top-24 right-0 -z-10 h-72 w-72 rounded-full sm:h-96 sm:w-96"
           />
           <p className="inline-flex items-center gap-2 rounded-full border border-blue-200/70 bg-blue-50/70 px-3 py-1 text-xs font-medium uppercase tracking-widest text-blue-700 dark:border-blue-400/20 dark:bg-blue-500/10 dark:text-blue-300">
-            CORDA · P3 · Civic Information Reliability
+            Civic Evals · Civic information reliability
           </p>
           <h1 className="max-w-4xl text-4xl sm:text-5xl font-semibold tracking-tight leading-[1.08]">
             How reliably do LLMs answer{" "}
@@ -45,7 +46,7 @@ export default function Home() {
           <p className="max-w-3xl text-lg text-zinc-600 dark:text-zinc-300 leading-relaxed">
             We test whether AI chatbots give people accurate, even-handed answers to everyday
             questions about voting, elections, and public policy — and whether they own up to it
-            when they don&rsquo;t know. Every score below runs from 0 to 1, where higher is better.
+            when they don&rsquo;t know. We also measure how their answers shift with the person asking.
           </p>
 
           <div className="grid grid-cols-2 gap-3 pt-2 sm:max-w-2xl sm:grid-cols-4">
@@ -79,7 +80,36 @@ export default function Home() {
               source on GitHub →
             </a>
           </div>
+          {rollup.run_info && (
+            <p className="max-w-3xl text-sm text-zinc-500 dark:text-zinc-400">
+              All seven civic tests completed on {rollup.run_info.full_suite_models.length} models:
+              {" "}{rollup.run_info.scored_samples} scored task attempts, including repeated runs.
+              External benchmarks below retain their earlier model results.
+            </p>
+          )}
+          <nav aria-label="Key findings" className="flex flex-wrap gap-x-5 gap-y-2 text-sm">
+            <a href="#political-lean" className="text-blue-700 underline underline-offset-4 dark:text-blue-300">Candidate-rating findings ↓</a>
+            <a href="#persona-pressure" className="text-blue-700 underline underline-offset-4 dark:text-blue-300">Persona-pressure findings ↓</a>
+          </nav>
         </header>
+
+        {rollup.bias && rollup.bias.length > 0 && (
+          <section id="political-lean" className="scroll-mt-20 space-y-4">
+            <SectionHeader
+              title="Do the models lean one way politically?"
+              hint="In a May 2026 study, all six tested models rated Democratic-typical school-board platforms higher than Republican-typical platforms, controlling for party label, experience, and rigor. These are historical findings on the models named below."
+            />
+            <BiasPanel rollup={rollup} />
+          </section>
+        )}
+
+        <section id="persona-pressure" className="scroll-mt-20 space-y-4">
+          <SectionHeader
+            title="Does the answer shift toward the user's own politics?"
+            hint="We asked the same policy questions while changing the user's stated political views. These experiments measured how far the model's answer moved toward those views, and whether a fairness instruction reduced the shift."
+          />
+          <PersonaFindingsPanel />
+        </section>
 
         <section className="space-y-4">
           <SectionHeader
@@ -113,7 +143,7 @@ export default function Home() {
             <section className="space-y-4">
               <SectionHeader
                 title="How the models score on each test"
-                hint="Higher is better, and greener is better. Each column is a different way of grading the very same answers."
+                hint="Each column measures a different property of the answers. Accuracy and refusal scores measure quality; stance scores describe a policy position, where higher does not mean better."
                 details={
                   <>
                     Each cell is the mean 0–1 score for that test / grading-method pair. Filter to a
@@ -154,16 +184,6 @@ export default function Home() {
               <PersonaChart rollup={rollup} />
             </section>
 
-            {rollup.bias && rollup.bias.length > 0 && (
-              <section className="space-y-4">
-                <SectionHeader
-                  title="Do the models lean one way politically?"
-                  hint="We showed every model identical school-board candidates and changed only one thing: whether their platform was a Democratic-typical or Republican-typical set of positions — same budgets, same résumés. Every model rated the Democratic-leaning platform higher. The bar shows how big that tilt is."
-                />
-                <BiasPanel rollup={rollup} />
-              </section>
-            )}
-
             <section className="space-y-4">
               <SectionHeader
                 title="Does the model know when it's guessing?"
@@ -183,7 +203,7 @@ export default function Home() {
             <section className="space-y-4">
               <SectionHeader
                 title="How these tests compare to standard benchmarks"
-                hint="The same models, run on well-known public benchmarks, so you can see how the civic-information gaps stack up against each model's general ability."
+                hint="Earlier runs on public benchmarks provide context. Check the model names below: these historical results may use different models from the current civic suite."
                 details={
                   <>
                     Pulled from UKGovernmentBEIS/inspect_evals and run with{" "}
@@ -192,12 +212,19 @@ export default function Home() {
                   </>
                 }
               />
+              {rollup.run_info && (
+                <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                  Historical baseline snapshot: {new Date(rollup.run_info.historical_baselines_generated_at).toLocaleDateString("en-US", { dateStyle: "medium", timeZone: "UTC" })}.
+                  These benchmarks were not rerun in the current refresh.
+                </p>
+              )}
               <BaselinePanel rollup={rollup} />
             </section>
           </>
         )}
 
         <footer className="pt-8 border-t border-blue-200/60 dark:border-blue-400/15 text-sm text-zinc-500 dark:text-zinc-400">
+          <p className="mb-2">Started in the CORDA Democracy Fellowship (2026).</p>
           <p>
             Built on{" "}
             <a

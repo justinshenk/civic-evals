@@ -21,7 +21,7 @@ export function SubScorePanel({ rollup }: { rollup: Rollup }) {
       {rubricRows.length === 0 ? (
         <p className="text-sm text-zinc-500 dark:text-zinc-400">No graded answers for this model yet.</p>
       ) : (
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {DIMENSIONS.map((dim) => {
         const rows = rubricRows.map((r) => ({
           eval: r.eval,
@@ -36,7 +36,7 @@ export function SubScorePanel({ rollup }: { rollup: Rollup }) {
           ),
         }));
         return (
-          <div key={dim.key} className="card p-5 space-y-3">
+          <div key={dim.key} className="card min-w-0 p-5 space-y-3">
             <div className="flex items-baseline justify-between">
               <h3 className="font-medium">{dim.label}</h3>
               <span className="ombre-text font-mono text-lg font-semibold tabular-nums">

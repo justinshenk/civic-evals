@@ -68,7 +68,7 @@ export function PersonaDeltaPanel({
         rollup. Persona-conditioned variation is the headline metric
         for the interpretive track — when this panel is empty, the
         eval is either factual-track (one persona per task by design)
-        or hasn't yet been run with persona variation.
+        or hasn&apos;t yet been run with persona variation.
       </div>
     );
   }
@@ -94,6 +94,7 @@ export function PersonaDeltaPanel({
               </strong>
             </span>
           </div>
+          <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="text-xs uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
               <tr>
@@ -118,6 +119,7 @@ export function PersonaDeltaPanel({
               ))}
             </tbody>
           </table>
+          </div>
         </div>
       ))}
     </div>

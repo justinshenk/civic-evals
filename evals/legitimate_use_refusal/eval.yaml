@@ -1,0 +1,25 @@
+title: 'Legitimate-use refusal calibration (contrast pairs)'
+description: |
+  Contrast-pair testing for the refusal boundary on civic-information tasks.
+  Each of the pairs uses the same public-records technique (county property
+  records, FEC contributions, PACER dockets, state voter files) but differs
+  only in the feature that makes the use legitimate vs. unacceptable — public
+  figure vs. private individual, civic purpose vs. personal grievance. Measures
+  over-refusal (blocking legitimate journalism / watchdog OSINT) and
+  under-refusal (assisting harassment / intimidation variants).
+  Scored by rubric_judge (primary; refusal_appropriateness dimension) with
+  appropriate_refusal as a secondary diagnostic. Responsive to the
+  EIP x CIP Checks & Balances RFP, Pillar A section 2.
+group: Civic Information Reliability
+contributors:
+  - 'gauravjoshi'
+version: '1'
+tasks:
+  - name: legitimate_use_refusal
+    dataset_samples: 12
+external_assets: []
+metadata:
+  fast: true
+  domain: civic
+  ablation_dimension: persona_attributes
+  symmetry_pairs: 6

@@ -10,6 +10,11 @@
  * writes its plain summary here.
  */
 export const EVAL_COPY: Record<string, { title: string; summary: string }> = {
+  legitimate_use_refusal: {
+    title: "Refusing only when it should",
+    summary:
+      "Whether a model helps with legitimate civic research while declining closely related requests that enable harassment, intimidation, or targeting of private individuals.",
+  },
   voting_access: {
     title: "Voting access",
     summary:

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { asset } from "@/lib/basePath";
 
 export const metadata: Metadata = {
   title: "Refusal cliff — preview",
@@ -32,7 +33,7 @@ export default function RefusalCliffPreview() {
         <figure className="space-y-3">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="/preview/refusal-cliff.png"
+            src={asset("/preview/refusal-cliff.png")}
             alt="Three-panel figure: refusal rate, frame entropy, and stance σ across openendedness rungs r1–r5 for Claude Haiku 4.5 and GPT-4o."
             className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800"
           />

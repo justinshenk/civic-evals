@@ -25,6 +25,20 @@ dev = [
   "pytest-asyncio>=0.23",
   "ruff>=0.6",
 ]
+# Local-GPU path for Figure 6 (Qwen3-14B + PCT LoRA). Install with:
+#   uv sync --extra gpu --extra dev
+# then the CUDA torch wheel (PyTorch cu128 index; see requirements-gpu.txt).
+# transformers>=5.22 needs huggingface_hub>=1.31 (ResolvedRevision); that
+# lower bound also satisfies inspect-evals' hub>=1.2 requirement.
+gpu = [
+  "transformers>=5.22",
+  "huggingface_hub>=1.31",
+  "accelerate>=1.0",
+  "peft>=0.14",
+  "sentencepiece",
+  "protobuf",
+  "hf_transfer",
+]
 
 [build-system]
 requires = ["hatchling"]

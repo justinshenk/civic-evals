@@ -1,0 +1,20 @@
+# Optional local-GPU stack for Figure 6 (Qwen3-14B base + PCT LoRA).
+# Prefer the pyproject `[project.optional-dependencies].gpu` extra:
+#
+#   source scripts/activate_civic_env.sh
+#   uv sync --extra dev --extra gpu
+#
+# peft/transformers pull a CUDA torch build; confirm with:
+#   python -c "import torch; print(torch.__version__, torch.cuda.is_available())"
+#
+# Verified on H200 MIG 3g.71gb (~70 GB): Qwen3-14B bf16 loads at ~27.5 GB.
+# transformers 5.22+ requires huggingface_hub>=1.31 (ResolvedRevision).
+
+transformers>=5.22
+huggingface_hub>=1.31
+accelerate>=1.0
+peft>=0.14
+sentencepiece
+protobuf
+hf_transfer
+torch  # CUDA build resolved by uv / the active PyTorch index

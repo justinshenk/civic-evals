@@ -14,6 +14,9 @@ import {
 } from "@/lib/rollup";
 import { EVAL_COPY } from "@/lib/evalCopy";
 
+// These pages are statically exported; evaluate verification age at build time.
+const buildTime = Date.now();
+
 export function generateStaticParams() {
   return loadRollup().evals_meta.map((m) => ({ name: m.name }));
 }
@@ -28,11 +31,9 @@ export default async function EvalPage({ params }: { params: Promise<{ name: str
   const overall = meanBy(evalRows, (r) => r.score);
   const byTask = groupBy(evalRows, (r) => r.task_id);
   const scorers = Array.from(new Set(evalRows.map((r) => r.scorer))).sort();
+  const measuresPosition = scorers.some((s) => s === "stance_extraction" || s === "multi_signal_extraction");
   const failures = (rollup.failures ?? []).filter((f) => f.eval === name);
   const thresholds = rollup.failure_thresholds ?? {};
-  const failureSummary = rollup.failure_summary?.by_eval?.find(
-    (r) => r.eval === name,
-  );
 
   const plain = EVAL_COPY[meta.name];
   const title = plain?.title ?? meta.name;
@@ -52,7 +53,7 @@ export default async function EvalPage({ params }: { params: Promise<{ name: str
 
         <header className="space-y-3">
           <p className="inline-flex items-center gap-2 rounded-full border border-blue-200/70 bg-blue-50/70 px-3 py-1 text-xs font-medium uppercase tracking-widest text-blue-700 dark:border-blue-400/20 dark:bg-blue-500/10 dark:text-blue-300">
-            CORDA · P3 · one test
+            Civic Evals · One test
           </p>
           <div className="space-y-1">
             <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight ombre-text">{title}</h1>
@@ -112,13 +113,14 @@ export default async function EvalPage({ params }: { params: Promise<{ name: str
         <section className="space-y-3">
           <SectionHeader
             title="Worth a closer look"
-            hint="A high average can still hide a handful of answers that were wrong — and sometimes confidently so. These are the answers that fell short, so you can read them yourself."
+            hint={measuresPosition
+              ? "This test measures policy position. Lower stance scores mean opposition, not incorrectness. The rows below meet the suite's generic score thresholds and need to be read in that context."
+              : "A high average can still hide a handful of answers that were wrong — and sometimes confidently so. These are the answers that fell short, so you can read them yourself."}
             details={`Flagged when an answer scores below a per-difficulty alarm bar (easy < ${fmt(thresholds.easy ?? 0.9)}, medium < ${fmt(thresholds.medium ?? 0.7)}); hard questions are excluded by design.`}
           />
           <FailuresPanel
             failures={failures}
             thresholds={thresholds}
-            summary={failureSummary}
           />
         </section>
 
@@ -196,16 +198,14 @@ function TaskTable({
             ))}
           </tr>
         </thead>
-        <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
-          {tasks.map((t) => (
-            <TaskRow
-              key={t.id}
-              task={t}
-              rows={byTask[t.id] ?? []}
-              scorers={scorers}
-            />
-          ))}
-        </tbody>
+        {tasks.map((t) => (
+          <TaskRow
+            key={t.id}
+            task={t}
+            rows={byTask[t.id] ?? []}
+            scorers={scorers}
+          />
+        ))}
       </table>
     </div>
   );
@@ -228,17 +228,15 @@ function TaskRow({
   );
 
   return (
-    <>
+    // One <tbody> per task scopes `group/task`, so opening the details
+    // row below unclamps this task's question.
+    <tbody className="group/task divide-y divide-zinc-200 dark:divide-zinc-800 border-t border-zinc-200 dark:border-zinc-800 first-of-type:border-t-0">
       <tr className="bg-white dark:bg-zinc-950 align-top">
         <td className="px-3 py-3 font-mono text-xs whitespace-nowrap">
-          <details className="group">
-            <summary className="cursor-pointer hover:text-zinc-900 dark:hover:text-zinc-100">
-              {task.id}
-            </summary>
-          </details>
+          {task.id}
         </td>
         <td className="px-3 py-3 text-zinc-700 dark:text-zinc-300 max-w-md">
-          <span className="line-clamp-2">{task.input}</span>
+          <span className="line-clamp-2 group-has-[details[open]]/task:line-clamp-none">{task.input}</span>
         </td>
         <td className="px-3 py-3">
           <DifficultyBadge difficulty={task.difficulty} />
@@ -258,7 +256,7 @@ function TaskRow({
               className="px-3 py-3 font-mono text-xs tabular-nums"
               title={ss[0]?.explanation || ""}
             >
-              <ScoreCell score={m} />
+              <ScoreCell score={m} directional={s === "stance_extraction" || s === "multi_signal_extraction"} />
             </td>
           );
         })}
@@ -308,7 +306,7 @@ function TaskRow({
           </details>
         </td>
       </tr>
-    </>
+    </tbody>
   );
 }
 
@@ -346,6 +344,12 @@ function RefusalBadge({ expected }: { expected: "refuse" | "answer" | "hedge" | 
   );
 }
 
+function isStale(dateStr: string) {
+  const verifiedAt = new Date(dateStr);
+  const ageDays = (buildTime - verifiedAt.getTime()) / 86_400_000;
+  return ageDays > 365;
+}
+
 /**
  * Per-task ground-truth freshness indicator.
  *
@@ -375,9 +379,7 @@ function VerifiedBadge({ date }: { date: string | null }) {
       </span>
     );
   }
-  const verifiedAt = new Date(date);
-  const ageDays = (Date.now() - verifiedAt.getTime()) / 86_400_000;
-  const stale = ageDays > 365;
+  const stale = isStale(date);
   const cls = stale
     ? "border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-900/50 dark:bg-rose-950/40 dark:text-rose-300"
     : "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/50 dark:bg-emerald-950/40 dark:text-emerald-400";
@@ -396,10 +398,11 @@ function VerifiedBadge({ date }: { date: string | null }) {
   );
 }
 
-function ScoreCell({ score }: { score: number | null }) {
+function ScoreCell({ score, directional = false }: { score: number | null; directional?: boolean }) {
   if (score === null) return <span className="text-zinc-400">—</span>;
   let color = "text-zinc-600 dark:text-zinc-400";
-  if (score >= 0.85) color = "text-emerald-600 dark:text-emerald-400";
+  if (directional) color = "text-blue-700 dark:text-blue-300";
+  else if (score >= 0.85) color = "text-emerald-600 dark:text-emerald-400";
   else if (score >= 0.6) color = "text-amber-600 dark:text-amber-400";
   else color = "text-rose-600 dark:text-rose-400";
   return <span className={color}>{fmt(score)}</span>;

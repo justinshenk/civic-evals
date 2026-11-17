@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { asset } from "@/lib/basePath";
 
 export const metadata: Metadata = {
   title: "Persona-drift pilot — preview",
@@ -36,7 +37,7 @@ export default function PersonaDriftPilotPreview() {
         <figure className="space-y-3">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="/preview/persona_drift_pilot.png"
+            src={asset("/preview/persona_drift_pilot.png")}
             alt="Two-panel figure: left bar chart shows mean absolute drift per axis (false_prior dominates); right heatmap shows per-(topic, axis) signed drift with voter_id × false_prior at −0.57."
             className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800"
           />

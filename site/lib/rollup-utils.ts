@@ -202,6 +202,12 @@ export type UsageRow = {
 
 export type Rollup = {
   generated_at: string;
+  // Optional provenance for a complete refresh that retains older baselines.
+  run_info?: {
+    full_suite_models: string[];
+    scored_samples: number;
+    historical_baselines_generated_at: string;
+  };
   n_rows: number;
   evals: string[];
   providers: string[];
