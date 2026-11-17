@@ -212,7 +212,12 @@ def fit_model(rows: list[dict], model: str) -> FitResult:
     raw_pkg = np.array([LEVELS["policy_package"][r["policy_package"]] for r in parsed], dtype=float)
     raw_exp_yrs = np.array([EXPERIENCE_YEARS[r["experience"]] for r in parsed], dtype=float)
     raw_rig = np.array([LEVELS["rigor"][r["rigor"]] for r in parsed], dtype=float)
-    raw_intx = raw_party * raw_pkg
+    # Centre both factors before forming the interaction. With uncentred 0/1
+    # coding the "policy_package" coefficient is the package effect for
+    # party == 0 only (and vice versa); centred, each main effect is the
+    # effect averaged over the other factor, which is what the
+    # years-equivalent numbers below are described as.
+    raw_intx = (raw_party - raw_party.mean()) * (raw_pkg - raw_pkg.mean())
     X_raw = np.column_stack([np.ones(len(y)), raw_party, raw_pkg, raw_intx, raw_exp_yrs, raw_rig])
     names_raw = ["intercept", "party", "policy_package", "party_x_pkg", "experience_yrs", "rigor"]
     b_raw, se_raw, _, _, _ = _ols(X_raw, y)

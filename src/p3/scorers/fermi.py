@@ -65,14 +65,23 @@ from inspect_ai.scorer import Score, Scorer, Target, mean, scorer
 from inspect_ai.solver import TaskState
 
 # Match "ESTIMATE: <num>" and "CI80: <low>-<high>" with flexible numeric formats:
-# scientific notation, commas, percentages, M/B/k suffixes.
-_NUM = r"[-+]?\d[\d,]*(?:\.\d+)?(?:[eE][-+]?\d+)?"
-_ESTIMATE_RE = re.compile(rf"ESTIMATE\s*:\s*({_NUM})\s*([kKmMbBtT])?", re.IGNORECASE)
+# scientific notation, thousands separators, and magnitude suffixes
+# (k/M/B/T or the words). Markdown emphasis and the unit signs $ % ~ are
+# stripped before matching, so "**ESTIMATE:** ~$1.2 billion" and "60%" parse.
+_NUM = r"[-+]?(?:\d+(?:,\d{3})+|\d+)(?:\.\d+)?(?:[eE][-+]?\d+)?"
+# A suffix only counts when no letter follows it: "435 members" and
+# "2 terms" are units, not millions and trillions.
+_SUF = r"(?:\s*(thousand|million|billion|trillion|[kmbt])(?![a-z]))?"
+_ESTIMATE_RE = re.compile(rf"ESTIMATE\s*:\s*({_NUM}){_SUF}", re.IGNORECASE)
 _CI_RE = re.compile(
-    rf"CI\s*80\s*:\s*({_NUM})\s*([kKmMbBtT])?\s*(?:-|to|–|—)\s*({_NUM})\s*([kKmMbBtT])?",
+    rf"(?:CI\s*80|80\s*CI)\s*:\s*[\[(]?\s*({_NUM}){_SUF}\s*(?:-|to|–|—|,)\s*({_NUM}){_SUF}",
     re.IGNORECASE,
 )
-_SUFFIX = {"k": 1e3, "m": 1e6, "b": 1e9, "t": 1e12}
+_SUFFIX = {
+    "k": 1e3, "m": 1e6, "b": 1e9, "t": 1e12,
+    "thousand": 1e3, "million": 1e6, "billion": 1e9, "trillion": 1e12,
+}
+_STRIP = str.maketrans({"*": None, "`": None, "$": None, "%": None, "~": None, "\u2248": None, "\u2212": "-"})
 
 
 # 80% CI → α = 0.20; the 2/α multiplier on miscoverage is 10.
@@ -178,14 +187,27 @@ def fermi_calibration() -> Scorer:
 
 
 def _parse(text: str) -> tuple[float, float, float] | None:
-    em = _ESTIMATE_RE.search(text)
-    cm = _CI_RE.search(text)
-    if not em or not cm:
+    text = text.translate(_STRIP)
+    # The prompt asks for the answer at the END of the response, so when the
+    # model also writes the format mid-reasoning the last occurrence wins.
+    ems = list(_ESTIMATE_RE.finditer(text))
+    cms = list(_CI_RE.finditer(text))
+    if not ems or not cms:
         return None
+    em, cm = ems[-1], cms[-1]
+    low_suffix, high_suffix = cm.group(2), cm.group(4)
     try:
+        # "60-70 million": the suffix on the upper bound covers both, as long
+        # as that reading keeps the bounds in order.
+        if (
+            low_suffix is None
+            and high_suffix is not None
+            and abs(_to_float(cm.group(1), None)) <= abs(_to_float(cm.group(3), None))
+        ):
+            low_suffix = high_suffix
         est = _to_float(em.group(1), em.group(2))
-        low = _to_float(cm.group(1), cm.group(2))
-        high = _to_float(cm.group(3), cm.group(4))
+        low = _to_float(cm.group(1), low_suffix)
+        high = _to_float(cm.group(3), high_suffix)
     except ValueError:
         return None
     return est, low, high
