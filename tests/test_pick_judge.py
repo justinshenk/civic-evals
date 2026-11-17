@@ -23,6 +23,13 @@ from p3.providers import (
 )
 
 
+@pytest.fixture(autouse=True)
+def isolate_optional_judge_routes(monkeypatch: pytest.MonkeyPatch) -> None:
+    # Reporting tests can load .env during collection. These tests exercise
+    # direct-provider paths independently of the developer's local keys.
+    _clear_keys(monkeypatch, "OPENROUTER_API_KEY", "P3_OPENAI_JUDGE", "P3_ANTHROPIC_JUDGE")
+
+
 def _clear_keys(monkeypatch: pytest.MonkeyPatch, *keys: str) -> None:
     for k in keys:
         monkeypatch.delenv(k, raising=False)

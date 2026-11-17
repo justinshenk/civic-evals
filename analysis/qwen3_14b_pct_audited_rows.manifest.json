@@ -1,0 +1,21 @@
+{
+  "title": "multi_model_bias",
+  "started_utc": "2026-11-05T07:47:11.925973+00:00",
+  "backend": "local",
+  "models": [
+    "Qwen/Qwen3-14B"
+  ],
+  "thinking": "off",
+  "adapter": "justinphan3110/Qwen3-14B_PCT",
+  "n_reps": 5,
+  "smoke": false,
+  "max_tokens": 1024,
+  "seed": 0,
+  "do_sample": true,
+  "temperature": 1.0,
+  "top_p": 1.0,
+  "model_revision": "40c069824f4251a91eefaf281ebe4c544efd3e18",
+  "adapter_revision": "aae51108be35b90736931bb1689dd51273aade0d",
+  "out": "analysis/qwen3_14b_pct_audited_rows.json",
+  "checkpoint": "analysis/qwen3_14b_pct_audited_rows.json.jsonl"
+}

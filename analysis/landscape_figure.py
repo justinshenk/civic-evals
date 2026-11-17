@@ -1,11 +1,11 @@
-"""Generate the CORDA P3 problem-space landscape figure.
+"""Generate the Civic Evals problem-space landscape figure.
 
 Rows: research topics in civic-LLM evaluation.
-Cols: existing actors + CORDA P3 (current findings + proposed paper sections).
+Cols: existing actors + Civic Evals (current findings + proposed paper sections).
 Cells: 0 = empty, 1 = adjacent/partial, 2 = owns / strong claim.
 
 The figure surfaces the white space where this paper sits — rows where
-CORDA P3's proposed sections are filled but no other group has claimed
+Civic Evals's proposed sections are filled but no other group has claimed
 the row.
 
 Usage::
@@ -49,8 +49,8 @@ GROUPS = [
     "Sycophancy\nlit (Sharma,\nPerez + al.)",
     "Persona\ndrift lit\n(Salinas,\nWei + al.)",
     "P6 / Maxi\n(disclosure\nrubric, v1\nMay 2026)",
-    "CORDA P3\n(done in\nrepo)",
-    "CORDA P3\n(this paper\n§§1–6)",
+    "Civic Evals\n(done in\nrepo)",
+    "Civic Evals\n(this paper\n§§1–6)",
 ]
 
 # 0 = empty, 1 = adjacent / partial, 2 = owns / strong claim
@@ -73,7 +73,7 @@ MATRIX = np.array(
     dtype=int,
 )
 
-# Mark rows where CORDA P3's *new work* (rightmost column) is the only "owns" claim.
+# Mark rows where Civic Evals's *new work* (rightmost column) is the only "owns" claim.
 # These are the genuinely novel territory.
 NOVEL_ROWS = [4, 7, 8]  # refusal, persona×pressure, cross-axis
 
@@ -167,7 +167,7 @@ def render(out_path: Path) -> None:
     ax.set_yticks([len(TOPICS) - 1 - r + 0.5 for r in range(len(TOPICS))])
     ax.set_yticklabels(topic_labels, fontsize=9.5)
 
-    # Separator between existing actors and CORDA P3 columns.
+    # Separator between existing actors and Civic Evals columns.
     ax.axvline(x=len(GROUPS) - 2, color="#888888", linestyle="--", linewidth=1.0, alpha=0.6)
 
     # Move x-axis labels to top
@@ -190,9 +190,9 @@ def render(out_path: Path) -> None:
         0.5,
         0.04,
         "● owns / strong claim   ○ adjacent or partial   (blank) empty\n"
-        "★ rows where CORDA P3's proposed paper is the only owns-it claim — "
+        "★ rows where Civic Evals's proposed paper is the only owns-it claim — "
         "the white space being claimed.\n"
-        "Existing actors left of the dashed line; CORDA P3's two columns are 'current repo' "
+        "Existing actors left of the dashed line; Civic Evals's two columns are 'current repo' "
         "(Findings 1 + 2) and 'proposed paper §§1–6'.",
         ha="center",
         fontsize=8.5,

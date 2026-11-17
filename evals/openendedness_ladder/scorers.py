@@ -114,7 +114,7 @@ FRAME: <one label from the taxonomy above>
 REFUSED: <yes or no>"""
 
 
-_STANCE_LINE = re.compile(r"^STANCE\s*:\s*(-?\d+(?:\.\d+)?)", re.IGNORECASE | re.MULTILINE)
+_STANCE_LINE = re.compile(r"^STANCE\s*:\s*([+-]?\d+(?:\.\d+)?)", re.IGNORECASE | re.MULTILINE)
 _FRAME_LINE = re.compile(r"^FRAME\s*:\s*([a-zA-Z_]+)", re.IGNORECASE | re.MULTILINE)
 _REFUSED_LINE = re.compile(r"^REFUSED\s*:\s*(yes|no)", re.IGNORECASE | re.MULTILINE)
 

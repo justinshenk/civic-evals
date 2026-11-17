@@ -5,7 +5,7 @@ import { useMemo, useState } from "react";
 // Import from the client-safe utils module rather than @/lib/rollup —
 // the latter transitively imports node:fs (loadRollup reads the JSON
 // file from disk) which Turbopack rejects from a "use client" component.
-import { fmt, type FailureRow, type FailureSummaryRow } from "@/lib/rollup-utils";
+import { fmt, type FailureRow } from "@/lib/rollup-utils";
 
 /**
  * Surfaces individual completions whose score fell below the difficulty
@@ -34,11 +34,9 @@ import { fmt, type FailureRow, type FailureSummaryRow } from "@/lib/rollup-utils
 export function FailuresPanel({
   failures,
   thresholds,
-  summary,
 }: {
   failures: FailureRow[];
   thresholds: Record<string, number>;
-  summary: FailureSummaryRow | undefined;
 }) {
   const [provider, setProvider] = useState<string>("all");
   const [hedge, setHedge] = useState<"all" | "hedged" | "no-hedge">("all");
@@ -85,9 +83,7 @@ export function FailuresPanel({
 
   return (
     <div className="space-y-3">
-      {summary && summary.n_failures > 0 && (
-        <StalenessSummary summary={summary} />
-      )}
+      <StalenessSummary failures={failures} />
       {showFilters && (
         <FailureFilters
           providers={providers}
@@ -104,7 +100,7 @@ export function FailuresPanel({
       )}
       {filtered.length === 0 ? (
         <div className="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/40 p-4 text-sm text-zinc-600 dark:text-zinc-400">
-          No failures match the current filter. Clear it to see all{" "}
+          No flagged scores match the current filter. Clear it to see all{" "}
           {failures.length}.
         </div>
       ) : (
@@ -215,10 +211,24 @@ function FilterGroup({
   );
 }
 
-function StalenessSummary({ summary }: { summary: FailureSummaryRow }) {
-  const rate = summary.ack_rate ?? 0;
-  const allHedged = summary.n_acknowledged === summary.n_failures;
-  const noneHedged = summary.n_acknowledged === 0;
+function StalenessSummary({ failures }: { failures: FailureRow[] }) {
+  // The rollup summary excludes unjudged rows; derive coverage from the
+  // same rows this panel displays so skipped and partial checks stay visible.
+  const acknowledged = failures.filter((f) => f.acknowledged_staleness === true).length;
+  const unacknowledged = failures.filter((f) => f.acknowledged_staleness === false).length;
+  const judged = acknowledged + unacknowledged;
+  const unjudged = failures.length - judged;
+  if (judged === 0) {
+    return (
+      <div className="rounded-lg border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm leading-relaxed text-zinc-700 dark:border-zinc-800 dark:bg-zinc-900/40 dark:text-zinc-300">
+        These flagged scores have not been checked for staleness or jurisdiction hedges.
+        Their evaluation scores and responses are shown below.
+      </div>
+    );
+  }
+  const rate = acknowledged / judged;
+  const allHedged = acknowledged === judged;
+  const noneHedged = acknowledged === 0;
   const tone = allHedged
     ? "border-amber-200 bg-amber-50/60 text-amber-900 dark:border-amber-900/40 dark:bg-amber-950/30 dark:text-amber-200"
     : noneHedged
@@ -227,17 +237,20 @@ function StalenessSummary({ summary }: { summary: FailureSummaryRow }) {
   return (
     <div className={`rounded-lg border ${tone} px-4 py-3 text-sm leading-relaxed`}>
       <strong>
-        {summary.n_acknowledged}/{summary.n_failures} ({(rate * 100).toFixed(0)}%)
+        {acknowledged}/{judged} ({(rate * 100).toFixed(0)}%)
       </strong>{" "}
-      of failures came with a staleness or jurisdiction hedge — the model
+      of checked flagged scores came with a staleness or jurisdiction hedge — the model
       acknowledged its training data may be out of date, or pointed the
       asker at a Secretary of State / EAC / state-office source.{" "}
-      {summary.n_unacknowledged > 0 && (
+      {unacknowledged > 0 && (
         <span>
           The remaining{" "}
-          <strong>{summary.n_unacknowledged}</strong> were confidently wrong
-          with no epistemic caveat — those are the cards to inspect first.
+          <strong>{unacknowledged}</strong> had no such hedge.
+          Inspect their responses and grading methods below.
         </span>
+      )}
+      {unjudged > 0 && (
+        <span> {unjudged} additional flagged scores have not been checked for these hedges.</span>
       )}
     </div>
   );

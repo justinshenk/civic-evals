@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { asset } from "@/lib/basePath";
 
 export const metadata: Metadata = {
   title: "Landscape — preview",
@@ -25,7 +26,7 @@ export default function LandscapePreview() {
           <p className="max-w-3xl text-zinc-600 dark:text-zinc-400 leading-relaxed">
             A map of where the work in this paper sits relative to existing actors.
             Rows = research topics in civic-LLM evaluation; columns = groups working
-            in the space. Yellow halos mark the three rows where CORDA P3&rsquo;s proposed
+            in the space. Yellow halos mark the three rows where this project&rsquo;s proposed
             paper is the only &ldquo;owns it&rdquo; claim — the white space being claimed.
           </p>
         </header>
@@ -33,8 +34,8 @@ export default function LandscapePreview() {
         <figure className="space-y-3">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="/preview/landscape.png"
-            alt="Matrix figure: 11 research topics by 9 research groups. Filled green cells mark strong claims; light grey circles mark adjacent or partial work. Three rows (refusal as object, persona × pressure, cross-axis failure concentration) are highlighted as CORDA P3's novel territory."
+            src={asset("/preview/landscape.png")}
+            alt="Matrix figure: 11 research topics by 9 research groups. Filled green cells mark strong claims; light grey circles mark adjacent or partial work. Three rows (refusal as object, persona × pressure, cross-axis failure concentration) are highlighted as this project's novel territory."
             className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white"
           />
           <figcaption className="text-sm text-zinc-500 dark:text-zinc-400">
@@ -61,12 +62,12 @@ export default function LandscapePreview() {
               <strong>blank</strong> = the group hasn&rsquo;t worked here.
             </li>
             <li>
-              <strong>★ + yellow halo</strong> = rows where CORDA P3&rsquo;s proposed paper
+              <strong>★ + yellow halo</strong> = rows where this project&rsquo;s proposed paper
               is the only owns-it claim. These are the three claims the paper rests on
               being genuinely novel.
             </li>
             <li>
-              The dashed vertical line separates existing literature from CORDA P3&rsquo;s
+              The dashed vertical line separates existing literature from this project&rsquo;s
               two columns: <em>current repo</em> (Findings 1 + 2 already produced) and{" "}
               <em>this paper §§1–6</em> (what the proposed paper claims).
             </li>
