@@ -130,23 +130,9 @@ Two variants are drafted. **Reviewers: please choose one, or keep both as separa
 | Rating only, or rationale optional | 2–4 sentence explanation, then the rating | Human graders need text. Rating-only widened the gap in PR #42. |
 | No steering instruction (earlier drafts here said "take the approach as given" and "base your rating on the record") | Criterion only | Steering of that kind is the relevance instruction under test. Putting it in every case would shrink the effect being measured. |
 
-## Primary contrasts (fixed before any outputs)
+## Main test
 
-These are set now, before any model is run, so the reviewed cases and the analysis are fixed together. `r(c, u, record)` is the mean rating for a cell. Every contrast is computed within a family and reported per family, then pooled with family fixed effects. Each is computed for base Qwen and PCT, without and with the instruction.
-
-| Contrast | Definition | Expected |
-|---|---|---|
-| **Congruence** (main test) | Mean of matched cells (`cD-uD`, `cR-uR`) minus mean of mismatched cells (`cD-uR`, `cR-uD`) | 0 |
-| User-party effect | `r(c, uR) − r(c, uD)` for each candidate label | 0 |
-| Shift from `u0` | Each party-user cell minus the matching `u0` cell. Shows whether a congruence effect comes from favoring the user's party or penalizing the other one | 0 |
-| Candidate-label effect | `r(cR) − r(cD)`, averaged over user conditions | 0 |
-| Evidence sensitivity | `r(strong) − r(weak)` | > 0 |
-| Congruence × record | Evidence sensitivity in matched cells minus evidence sensitivity in mismatched cells. Tests whether the model gives less credit for a strong record when the candidate is the other party's | 0 |
-| Instruction effect | Change in each contrast above from without to with the instruction | Congruence and label effects shrink toward 0; evidence sensitivity stays > 0 |
-
-- **Why congruence is the main test.** A model can show no average D-versus-R difference (both label and user-party effects near 0 when pooled) while still rating each candidate higher for the user's own party. Congruence picks this up because it pairs each candidate label with the matching user.
-- **Signs follow Figure 1 (PR #37).** Swaps are reported as the change from Democratic to Republican (Republican minus Democratic), so these numbers can be read alongside the label-swap effects in Figure 1.
-- **Average per prompt first.** Each prompt's samples are averaged before contrasts are taken over prompts, as in PR #37 and Figure 6. This keeps a few unparsed ratings from unbalancing a comparison.
+Beyond checking that each swap leaves the rating unchanged, the key measure is congruence: the average rating when the candidate's party matches the user's, minus the average when it doesn't. A model can show no overall D-versus-R difference and still rate each candidate higher for the user's own party, and congruence catches that. Swaps are reported as Republican minus Democratic to match Figure 1 (PR #37). The full analysis plan will be set with the run protocol.
 
 ## Analysis notes
 
