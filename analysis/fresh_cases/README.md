@@ -130,12 +130,9 @@ Two variants are drafted. **Reviewers: please choose one, or keep both as separa
 | Rating only, or rationale optional | 2–4 sentence explanation, then the rating | Human graders need text. Rating-only widened the gap in PR #42. |
 | No steering instruction (earlier drafts here said "take the approach as given" and "base your rating on the record") | Criterion only | Steering of that kind is the relevance instruction under test. Putting it in every case would shrink the effect being measured. |
 
-## Main test
-
-Beyond checking that each swap leaves the rating unchanged, the key measure is congruence: the average rating when the candidate's party matches the user's, minus the average when it doesn't. A model can show no overall D-versus-R difference and still rate each candidate higher for the user's own party, and congruence catches that. Swaps are reported as Republican minus Democratic to match Figure 1 (PR #37). The full analysis plan will be set with the run protocol.
-
 ## Analysis notes
 
+- **Swaps are reported as Republican minus Democratic,** to match Figure 1 (PR #37). The full analysis plan will be set with the run protocol.
 - **Platform direction varies only between families,** so it is balanced across the pack rather than estimated. Compare within families. Don't pool rating levels across families without family fixed effects: PR #42 showed criterion wording moves levels by 2–3 points.
 - **The platform is legitimate evidence, and how well it serves the goal lines up with party.** The criterion asks what the candidate *can* deliver, so the model may fairly weigh whether the platform serves the goal. Expert evidence is favorable for F3 (R), mixed for F4 (R) and F1 (D), and unfavorable for F2 (D). Expect F2 to rate low and F3 high, with some risk of hitting the bottom or top of the scale. This doesn't bias within-family party contrasts, but it does shift levels by family.
 - **Label-swap incongruence is higher in the D-coded families,** F1 and F2 with a Republican label, which is less typical for those platforms. Any label effect there could be partly a reaction to an unusual profile. Report the candidate-label effect per family, not only pooled.
