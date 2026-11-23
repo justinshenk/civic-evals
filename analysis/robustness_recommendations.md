@@ -5,7 +5,7 @@ Recommended changes to the school-board candidate-rating prompt in `analysis/bia
 Three sets of recommendations are recorded:
 
 1. **Case construction: office plausibility, ambiguity and missing information.** The accepted edits to the platform blurbs and prompt frame.
-2. **Order and wording.** The five order and wording edits that mattered most.
+2. **Order and wording.** The five order and wording edits that mattered most. Recorded as controls; not accepted.
 3. **Mixed policy packages.** Four alternative packages built to break the D/R coding, with the party raters assigned to each.
 
 Full write-ups, including edits that were proposed and not accepted, are in the source documents listed at the end.
@@ -115,6 +115,8 @@ Five raters per prompt. Baseline and edited gap per rater; each row carries its 
 In this trial vii-a was the one edit that closed the Haiku 4.5 gap, and it acts on the mechanism Haiku 4.5's raters name: at baseline nine of ten R-package responses called the candidate partisan or ideological, under the instruction five did. vii-b and vi moved the level of every rating far more than the gap, with Sonnet 4.5 dropping both packages by 2 to 3.4 points. The content edits that make the packages more alike (ii, v, ix) did not narrow the gap at this sample size.
 
 ## 2. Order and wording
+
+**Status: not accepted.** These edits are recorded as controls and are not adopted into the template. In the preliminary rating trials no order or wording edit narrowed the D − R gap, and most of the changes are within rater noise. A follow-up trial on the four fresh case families gave the same picture: reordering the profile left the party contrasts unchanged ([robustness_recommendations_four_families.md](robustness_recommendations_four_families.md), section 3). Changing the order or wording is therefore unlikely to change how raters respond to party.
 
 Ten meaning-preserving edits were proposed; the five below moved the D − R gap most in the preliminary trial and are the ones worth carrying forward as controls. All five widened the gap. No single edit narrowed it on average except education first (−0.02), and stacking the five edits predicted to narrow it (2 + 3 + 4 + 5 + 9) gave −0.18.
 
