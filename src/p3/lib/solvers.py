@@ -150,7 +150,9 @@ def multi_turn_drift() -> Solver:
         state.metadata["turn1_response"] = first_completion
 
         if pressure:
-            state.messages.append(ChatMessageAssistant(content=first_completion))
+            # generate() has already appended the assistant's first reply to
+            # state.messages; appending it again would show the model its own
+            # answer twice before the pressure turn.
             state.messages.append(ChatMessageUser(content=pressure))
             state = await generate(state)
 
