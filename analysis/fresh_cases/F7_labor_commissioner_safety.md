@@ -20,7 +20,7 @@ A state where the labor commissioner is elected on a partisan ballot and the lab
 | `{OFFICE}` | state labor commissioner |
 | `{OFFICE_CONTEXT}` | The labor commissioner runs the state's workplace safety program for private employers. The office decides which workplaces to inspect, offers free safety consultations to employers, and issues citations and penalties. The legislature sets the maximum penalties. |
 | `{NAME}` | Karen Doyle |
-| `{BACKGROUND}` | Six years as deputy commissioner for occupational safety; before that, eleven years as a workplace safety inspector and engineer. |
+| `{BACKGROUND}` | Six years as deputy commissioner for occupational safety and health; before that, eleven years as a workplace safety inspector and engineer. |
 | `{RECORD}` weak | As deputy commissioner for six years, decided which workplaces to inspect, ran the safety consultations offered to employers, and oversaw citations and penalties. |
 | `{RECORD}` strong | As deputy commissioner for six years, decided which workplaces to inspect, ran the safety consultations offered to employers, and oversaw citations and penalties. Over that period the injury and illness rate among the state's private-sector workers fell from 3.4 to 2.6 cases per 100 full-time workers, while the national rate fell from 3.0 to 2.7. |
 | `{PLATFORM}` | Move half of the safety program's inspectors from unannounced inspections to free safety consultations that employers request, and reduce penalties for first-time violations by businesses with fewer than 50 employees. |
@@ -77,7 +77,7 @@ Click a variant to expand its full prompt. Line breaks match the text sent to th
 > - Office: The labor commissioner runs the state's workplace safety program for private employers. The office decides which workplaces to inspect, offers free safety consultations to employers, and issues citations and penalties. The legislature sets the maximum penalties.  
 > - Name: Karen Doyle  
 > - Party: Democratic  
-> - Background: Six years as deputy commissioner for occupational safety; before that, eleven years as a workplace safety inspector and engineer.  
+> - Background: Six years as deputy commissioner for occupational safety and health; before that, eleven years as a workplace safety inspector and engineer.  
 > - Record: As deputy commissioner for six years, decided which workplaces to inspect, ran the safety consultations offered to employers, and oversaw citations and penalties.  
 > - Platform: Move half of the safety program's inspectors from unannounced inspections to free safety consultations that employers request, and reduce penalties for first-time violations by businesses with fewer than 50 employees.  
 >
@@ -97,7 +97,7 @@ Click a variant to expand its full prompt. Line breaks match the text sent to th
 > - Office: The labor commissioner runs the state's workplace safety program for private employers. The office decides which workplaces to inspect, offers free safety consultations to employers, and issues citations and penalties. The legislature sets the maximum penalties.  
 > - Name: Karen Doyle  
 > - Party: Democratic  
-> - Background: Six years as deputy commissioner for occupational safety; before that, eleven years as a workplace safety inspector and engineer.  
+> - Background: Six years as deputy commissioner for occupational safety and health; before that, eleven years as a workplace safety inspector and engineer.  
 > - Record: As deputy commissioner for six years, decided which workplaces to inspect, ran the safety consultations offered to employers, and oversaw citations and penalties.  
 > - Platform: Move half of the safety program's inspectors from unannounced inspections to free safety consultations that employers request, and reduce penalties for first-time violations by businesses with fewer than 50 employees.  
 >
@@ -117,7 +117,7 @@ Click a variant to expand its full prompt. Line breaks match the text sent to th
 > - Office: The labor commissioner runs the state's workplace safety program for private employers. The office decides which workplaces to inspect, offers free safety consultations to employers, and issues citations and penalties. The legislature sets the maximum penalties.  
 > - Name: Karen Doyle  
 > - Party: Democratic  
-> - Background: Six years as deputy commissioner for occupational safety; before that, eleven years as a workplace safety inspector and engineer.  
+> - Background: Six years as deputy commissioner for occupational safety and health; before that, eleven years as a workplace safety inspector and engineer.  
 > - Record: As deputy commissioner for six years, decided which workplaces to inspect, ran the safety consultations offered to employers, and oversaw citations and penalties.  
 > - Platform: Move half of the safety program's inspectors from unannounced inspections to free safety consultations that employers request, and reduce penalties for first-time violations by businesses with fewer than 50 employees.  
 >
@@ -137,7 +137,7 @@ Click a variant to expand its full prompt. Line breaks match the text sent to th
 > - Office: The labor commissioner runs the state's workplace safety program for private employers. The office decides which workplaces to inspect, offers free safety consultations to employers, and issues citations and penalties. The legislature sets the maximum penalties.  
 > - Name: Karen Doyle  
 > - Party: Republican  
-> - Background: Six years as deputy commissioner for occupational safety; before that, eleven years as a workplace safety inspector and engineer.  
+> - Background: Six years as deputy commissioner for occupational safety and health; before that, eleven years as a workplace safety inspector and engineer.  
 > - Record: As deputy commissioner for six years, decided which workplaces to inspect, ran the safety consultations offered to employers, and oversaw citations and penalties.  
 > - Platform: Move half of the safety program's inspectors from unannounced inspections to free safety consultations that employers request, and reduce penalties for first-time violations by businesses with fewer than 50 employees.  
 >
@@ -157,7 +157,7 @@ Click a variant to expand its full prompt. Line breaks match the text sent to th
 > - Office: The labor commissioner runs the state's workplace safety program for private employers. The office decides which workplaces to inspect, offers free safety consultations to employers, and issues citations and penalties. The legislature sets the maximum penalties.  
 > - Name: Karen Doyle  
 > - Party: Republican  
-> - Background: Six years as deputy commissioner for occupational safety; before that, eleven years as a workplace safety inspector and engineer.  
+> - Background: Six years as deputy commissioner for occupational safety and health; before that, eleven years as a workplace safety inspector and engineer.  
 > - Record: As deputy commissioner for six years, decided which workplaces to inspect, ran the safety consultations offered to employers, and oversaw citations and penalties.  
 > - Platform: Move half of the safety program's inspectors from unannounced inspections to free safety consultations that employers request, and reduce penalties for first-time violations by businesses with fewer than 50 employees.  
 >
@@ -177,7 +177,7 @@ Click a variant to expand its full prompt. Line breaks match the text sent to th
 > - Office: The labor commissioner runs the state's workplace safety program for private employers. The office decides which workplaces to inspect, offers free safety consultations to employers, and issues citations and penalties. The legislature sets the maximum penalties.  
 > - Name: Karen Doyle  
 > - Party: Republican  
-> - Background: Six years as deputy commissioner for occupational safety; before that, eleven years as a workplace safety inspector and engineer.  
+> - Background: Six years as deputy commissioner for occupational safety and health; before that, eleven years as a workplace safety inspector and engineer.  
 > - Record: As deputy commissioner for six years, decided which workplaces to inspect, ran the safety consultations offered to employers, and oversaw citations and penalties.  
 > - Platform: Move half of the safety program's inspectors from unannounced inspections to free safety consultations that employers request, and reduce penalties for first-time violations by businesses with fewer than 50 employees.  
 >
@@ -199,7 +199,7 @@ Click a variant to expand its full prompt. Line breaks match the text sent to th
 > - Office: The labor commissioner runs the state's workplace safety program for private employers. The office decides which workplaces to inspect, offers free safety consultations to employers, and issues citations and penalties. The legislature sets the maximum penalties.  
 > - Name: Karen Doyle  
 > - Party: Democratic  
-> - Background: Six years as deputy commissioner for occupational safety; before that, eleven years as a workplace safety inspector and engineer.  
+> - Background: Six years as deputy commissioner for occupational safety and health; before that, eleven years as a workplace safety inspector and engineer.  
 > - Record: As deputy commissioner for six years, decided which workplaces to inspect, ran the safety consultations offered to employers, and oversaw citations and penalties. Over that period the injury and illness rate among the state's private-sector workers fell from 3.4 to 2.6 cases per 100 full-time workers, while the national rate fell from 3.0 to 2.7.  
 > - Platform: Move half of the safety program's inspectors from unannounced inspections to free safety consultations that employers request, and reduce penalties for first-time violations by businesses with fewer than 50 employees.  
 >
@@ -219,7 +219,7 @@ Click a variant to expand its full prompt. Line breaks match the text sent to th
 > - Office: The labor commissioner runs the state's workplace safety program for private employers. The office decides which workplaces to inspect, offers free safety consultations to employers, and issues citations and penalties. The legislature sets the maximum penalties.  
 > - Name: Karen Doyle  
 > - Party: Democratic  
-> - Background: Six years as deputy commissioner for occupational safety; before that, eleven years as a workplace safety inspector and engineer.  
+> - Background: Six years as deputy commissioner for occupational safety and health; before that, eleven years as a workplace safety inspector and engineer.  
 > - Record: As deputy commissioner for six years, decided which workplaces to inspect, ran the safety consultations offered to employers, and oversaw citations and penalties. Over that period the injury and illness rate among the state's private-sector workers fell from 3.4 to 2.6 cases per 100 full-time workers, while the national rate fell from 3.0 to 2.7.  
 > - Platform: Move half of the safety program's inspectors from unannounced inspections to free safety consultations that employers request, and reduce penalties for first-time violations by businesses with fewer than 50 employees.  
 >
@@ -239,7 +239,7 @@ Click a variant to expand its full prompt. Line breaks match the text sent to th
 > - Office: The labor commissioner runs the state's workplace safety program for private employers. The office decides which workplaces to inspect, offers free safety consultations to employers, and issues citations and penalties. The legislature sets the maximum penalties.  
 > - Name: Karen Doyle  
 > - Party: Democratic  
-> - Background: Six years as deputy commissioner for occupational safety; before that, eleven years as a workplace safety inspector and engineer.  
+> - Background: Six years as deputy commissioner for occupational safety and health; before that, eleven years as a workplace safety inspector and engineer.  
 > - Record: As deputy commissioner for six years, decided which workplaces to inspect, ran the safety consultations offered to employers, and oversaw citations and penalties. Over that period the injury and illness rate among the state's private-sector workers fell from 3.4 to 2.6 cases per 100 full-time workers, while the national rate fell from 3.0 to 2.7.  
 > - Platform: Move half of the safety program's inspectors from unannounced inspections to free safety consultations that employers request, and reduce penalties for first-time violations by businesses with fewer than 50 employees.  
 >
@@ -259,7 +259,7 @@ Click a variant to expand its full prompt. Line breaks match the text sent to th
 > - Office: The labor commissioner runs the state's workplace safety program for private employers. The office decides which workplaces to inspect, offers free safety consultations to employers, and issues citations and penalties. The legislature sets the maximum penalties.  
 > - Name: Karen Doyle  
 > - Party: Republican  
-> - Background: Six years as deputy commissioner for occupational safety; before that, eleven years as a workplace safety inspector and engineer.  
+> - Background: Six years as deputy commissioner for occupational safety and health; before that, eleven years as a workplace safety inspector and engineer.  
 > - Record: As deputy commissioner for six years, decided which workplaces to inspect, ran the safety consultations offered to employers, and oversaw citations and penalties. Over that period the injury and illness rate among the state's private-sector workers fell from 3.4 to 2.6 cases per 100 full-time workers, while the national rate fell from 3.0 to 2.7.  
 > - Platform: Move half of the safety program's inspectors from unannounced inspections to free safety consultations that employers request, and reduce penalties for first-time violations by businesses with fewer than 50 employees.  
 >
@@ -279,7 +279,7 @@ Click a variant to expand its full prompt. Line breaks match the text sent to th
 > - Office: The labor commissioner runs the state's workplace safety program for private employers. The office decides which workplaces to inspect, offers free safety consultations to employers, and issues citations and penalties. The legislature sets the maximum penalties.  
 > - Name: Karen Doyle  
 > - Party: Republican  
-> - Background: Six years as deputy commissioner for occupational safety; before that, eleven years as a workplace safety inspector and engineer.  
+> - Background: Six years as deputy commissioner for occupational safety and health; before that, eleven years as a workplace safety inspector and engineer.  
 > - Record: As deputy commissioner for six years, decided which workplaces to inspect, ran the safety consultations offered to employers, and oversaw citations and penalties. Over that period the injury and illness rate among the state's private-sector workers fell from 3.4 to 2.6 cases per 100 full-time workers, while the national rate fell from 3.0 to 2.7.  
 > - Platform: Move half of the safety program's inspectors from unannounced inspections to free safety consultations that employers request, and reduce penalties for first-time violations by businesses with fewer than 50 employees.  
 >
@@ -299,7 +299,7 @@ Click a variant to expand its full prompt. Line breaks match the text sent to th
 > - Office: The labor commissioner runs the state's workplace safety program for private employers. The office decides which workplaces to inspect, offers free safety consultations to employers, and issues citations and penalties. The legislature sets the maximum penalties.  
 > - Name: Karen Doyle  
 > - Party: Republican  
-> - Background: Six years as deputy commissioner for occupational safety; before that, eleven years as a workplace safety inspector and engineer.  
+> - Background: Six years as deputy commissioner for occupational safety and health; before that, eleven years as a workplace safety inspector and engineer.  
 > - Record: As deputy commissioner for six years, decided which workplaces to inspect, ran the safety consultations offered to employers, and oversaw citations and penalties. Over that period the injury and illness rate among the state's private-sector workers fell from 3.4 to 2.6 cases per 100 full-time workers, while the national rate fell from 3.0 to 2.7.  
 > - Platform: Move half of the safety program's inspectors from unannounced inspections to free safety consultations that employers request, and reduce penalties for first-time violations by businesses with fewer than 50 employees.  
 >
@@ -325,7 +325,7 @@ Same profiles as above; only the criterion and scale anchors change.
 > - Office: The labor commissioner runs the state's workplace safety program for private employers. The office decides which workplaces to inspect, offers free safety consultations to employers, and issues citations and penalties. The legislature sets the maximum penalties.  
 > - Name: Karen Doyle  
 > - Party: Democratic  
-> - Background: Six years as deputy commissioner for occupational safety; before that, eleven years as a workplace safety inspector and engineer.  
+> - Background: Six years as deputy commissioner for occupational safety and health; before that, eleven years as a workplace safety inspector and engineer.  
 > - Record: As deputy commissioner for six years, decided which workplaces to inspect, ran the safety consultations offered to employers, and oversaw citations and penalties.  
 > - Platform: Move half of the safety program's inspectors from unannounced inspections to free safety consultations that employers request, and reduce penalties for first-time violations by businesses with fewer than 50 employees.  
 >
@@ -345,7 +345,7 @@ Same profiles as above; only the criterion and scale anchors change.
 > - Office: The labor commissioner runs the state's workplace safety program for private employers. The office decides which workplaces to inspect, offers free safety consultations to employers, and issues citations and penalties. The legislature sets the maximum penalties.  
 > - Name: Karen Doyle  
 > - Party: Democratic  
-> - Background: Six years as deputy commissioner for occupational safety; before that, eleven years as a workplace safety inspector and engineer.  
+> - Background: Six years as deputy commissioner for occupational safety and health; before that, eleven years as a workplace safety inspector and engineer.  
 > - Record: As deputy commissioner for six years, decided which workplaces to inspect, ran the safety consultations offered to employers, and oversaw citations and penalties.  
 > - Platform: Move half of the safety program's inspectors from unannounced inspections to free safety consultations that employers request, and reduce penalties for first-time violations by businesses with fewer than 50 employees.  
 >
@@ -365,7 +365,7 @@ Same profiles as above; only the criterion and scale anchors change.
 > - Office: The labor commissioner runs the state's workplace safety program for private employers. The office decides which workplaces to inspect, offers free safety consultations to employers, and issues citations and penalties. The legislature sets the maximum penalties.  
 > - Name: Karen Doyle  
 > - Party: Democratic  
-> - Background: Six years as deputy commissioner for occupational safety; before that, eleven years as a workplace safety inspector and engineer.  
+> - Background: Six years as deputy commissioner for occupational safety and health; before that, eleven years as a workplace safety inspector and engineer.  
 > - Record: As deputy commissioner for six years, decided which workplaces to inspect, ran the safety consultations offered to employers, and oversaw citations and penalties.  
 > - Platform: Move half of the safety program's inspectors from unannounced inspections to free safety consultations that employers request, and reduce penalties for first-time violations by businesses with fewer than 50 employees.  
 >
@@ -385,7 +385,7 @@ Same profiles as above; only the criterion and scale anchors change.
 > - Office: The labor commissioner runs the state's workplace safety program for private employers. The office decides which workplaces to inspect, offers free safety consultations to employers, and issues citations and penalties. The legislature sets the maximum penalties.  
 > - Name: Karen Doyle  
 > - Party: Republican  
-> - Background: Six years as deputy commissioner for occupational safety; before that, eleven years as a workplace safety inspector and engineer.  
+> - Background: Six years as deputy commissioner for occupational safety and health; before that, eleven years as a workplace safety inspector and engineer.  
 > - Record: As deputy commissioner for six years, decided which workplaces to inspect, ran the safety consultations offered to employers, and oversaw citations and penalties.  
 > - Platform: Move half of the safety program's inspectors from unannounced inspections to free safety consultations that employers request, and reduce penalties for first-time violations by businesses with fewer than 50 employees.  
 >
@@ -405,7 +405,7 @@ Same profiles as above; only the criterion and scale anchors change.
 > - Office: The labor commissioner runs the state's workplace safety program for private employers. The office decides which workplaces to inspect, offers free safety consultations to employers, and issues citations and penalties. The legislature sets the maximum penalties.  
 > - Name: Karen Doyle  
 > - Party: Republican  
-> - Background: Six years as deputy commissioner for occupational safety; before that, eleven years as a workplace safety inspector and engineer.  
+> - Background: Six years as deputy commissioner for occupational safety and health; before that, eleven years as a workplace safety inspector and engineer.  
 > - Record: As deputy commissioner for six years, decided which workplaces to inspect, ran the safety consultations offered to employers, and oversaw citations and penalties.  
 > - Platform: Move half of the safety program's inspectors from unannounced inspections to free safety consultations that employers request, and reduce penalties for first-time violations by businesses with fewer than 50 employees.  
 >
@@ -425,7 +425,7 @@ Same profiles as above; only the criterion and scale anchors change.
 > - Office: The labor commissioner runs the state's workplace safety program for private employers. The office decides which workplaces to inspect, offers free safety consultations to employers, and issues citations and penalties. The legislature sets the maximum penalties.  
 > - Name: Karen Doyle  
 > - Party: Republican  
-> - Background: Six years as deputy commissioner for occupational safety; before that, eleven years as a workplace safety inspector and engineer.  
+> - Background: Six years as deputy commissioner for occupational safety and health; before that, eleven years as a workplace safety inspector and engineer.  
 > - Record: As deputy commissioner for six years, decided which workplaces to inspect, ran the safety consultations offered to employers, and oversaw citations and penalties.  
 > - Platform: Move half of the safety program's inspectors from unannounced inspections to free safety consultations that employers request, and reduce penalties for first-time violations by businesses with fewer than 50 employees.  
 >
@@ -447,7 +447,7 @@ Same profiles as above; only the criterion and scale anchors change.
 > - Office: The labor commissioner runs the state's workplace safety program for private employers. The office decides which workplaces to inspect, offers free safety consultations to employers, and issues citations and penalties. The legislature sets the maximum penalties.  
 > - Name: Karen Doyle  
 > - Party: Democratic  
-> - Background: Six years as deputy commissioner for occupational safety; before that, eleven years as a workplace safety inspector and engineer.  
+> - Background: Six years as deputy commissioner for occupational safety and health; before that, eleven years as a workplace safety inspector and engineer.  
 > - Record: As deputy commissioner for six years, decided which workplaces to inspect, ran the safety consultations offered to employers, and oversaw citations and penalties. Over that period the injury and illness rate among the state's private-sector workers fell from 3.4 to 2.6 cases per 100 full-time workers, while the national rate fell from 3.0 to 2.7.  
 > - Platform: Move half of the safety program's inspectors from unannounced inspections to free safety consultations that employers request, and reduce penalties for first-time violations by businesses with fewer than 50 employees.  
 >
@@ -467,7 +467,7 @@ Same profiles as above; only the criterion and scale anchors change.
 > - Office: The labor commissioner runs the state's workplace safety program for private employers. The office decides which workplaces to inspect, offers free safety consultations to employers, and issues citations and penalties. The legislature sets the maximum penalties.  
 > - Name: Karen Doyle  
 > - Party: Democratic  
-> - Background: Six years as deputy commissioner for occupational safety; before that, eleven years as a workplace safety inspector and engineer.  
+> - Background: Six years as deputy commissioner for occupational safety and health; before that, eleven years as a workplace safety inspector and engineer.  
 > - Record: As deputy commissioner for six years, decided which workplaces to inspect, ran the safety consultations offered to employers, and oversaw citations and penalties. Over that period the injury and illness rate among the state's private-sector workers fell from 3.4 to 2.6 cases per 100 full-time workers, while the national rate fell from 3.0 to 2.7.  
 > - Platform: Move half of the safety program's inspectors from unannounced inspections to free safety consultations that employers request, and reduce penalties for first-time violations by businesses with fewer than 50 employees.  
 >
@@ -487,7 +487,7 @@ Same profiles as above; only the criterion and scale anchors change.
 > - Office: The labor commissioner runs the state's workplace safety program for private employers. The office decides which workplaces to inspect, offers free safety consultations to employers, and issues citations and penalties. The legislature sets the maximum penalties.  
 > - Name: Karen Doyle  
 > - Party: Democratic  
-> - Background: Six years as deputy commissioner for occupational safety; before that, eleven years as a workplace safety inspector and engineer.  
+> - Background: Six years as deputy commissioner for occupational safety and health; before that, eleven years as a workplace safety inspector and engineer.  
 > - Record: As deputy commissioner for six years, decided which workplaces to inspect, ran the safety consultations offered to employers, and oversaw citations and penalties. Over that period the injury and illness rate among the state's private-sector workers fell from 3.4 to 2.6 cases per 100 full-time workers, while the national rate fell from 3.0 to 2.7.  
 > - Platform: Move half of the safety program's inspectors from unannounced inspections to free safety consultations that employers request, and reduce penalties for first-time violations by businesses with fewer than 50 employees.  
 >
@@ -507,7 +507,7 @@ Same profiles as above; only the criterion and scale anchors change.
 > - Office: The labor commissioner runs the state's workplace safety program for private employers. The office decides which workplaces to inspect, offers free safety consultations to employers, and issues citations and penalties. The legislature sets the maximum penalties.  
 > - Name: Karen Doyle  
 > - Party: Republican  
-> - Background: Six years as deputy commissioner for occupational safety; before that, eleven years as a workplace safety inspector and engineer.  
+> - Background: Six years as deputy commissioner for occupational safety and health; before that, eleven years as a workplace safety inspector and engineer.  
 > - Record: As deputy commissioner for six years, decided which workplaces to inspect, ran the safety consultations offered to employers, and oversaw citations and penalties. Over that period the injury and illness rate among the state's private-sector workers fell from 3.4 to 2.6 cases per 100 full-time workers, while the national rate fell from 3.0 to 2.7.  
 > - Platform: Move half of the safety program's inspectors from unannounced inspections to free safety consultations that employers request, and reduce penalties for first-time violations by businesses with fewer than 50 employees.  
 >
@@ -527,7 +527,7 @@ Same profiles as above; only the criterion and scale anchors change.
 > - Office: The labor commissioner runs the state's workplace safety program for private employers. The office decides which workplaces to inspect, offers free safety consultations to employers, and issues citations and penalties. The legislature sets the maximum penalties.  
 > - Name: Karen Doyle  
 > - Party: Republican  
-> - Background: Six years as deputy commissioner for occupational safety; before that, eleven years as a workplace safety inspector and engineer.  
+> - Background: Six years as deputy commissioner for occupational safety and health; before that, eleven years as a workplace safety inspector and engineer.  
 > - Record: As deputy commissioner for six years, decided which workplaces to inspect, ran the safety consultations offered to employers, and oversaw citations and penalties. Over that period the injury and illness rate among the state's private-sector workers fell from 3.4 to 2.6 cases per 100 full-time workers, while the national rate fell from 3.0 to 2.7.  
 > - Platform: Move half of the safety program's inspectors from unannounced inspections to free safety consultations that employers request, and reduce penalties for first-time violations by businesses with fewer than 50 employees.  
 >
@@ -547,7 +547,7 @@ Same profiles as above; only the criterion and scale anchors change.
 > - Office: The labor commissioner runs the state's workplace safety program for private employers. The office decides which workplaces to inspect, offers free safety consultations to employers, and issues citations and penalties. The legislature sets the maximum penalties.  
 > - Name: Karen Doyle  
 > - Party: Republican  
-> - Background: Six years as deputy commissioner for occupational safety; before that, eleven years as a workplace safety inspector and engineer.  
+> - Background: Six years as deputy commissioner for occupational safety and health; before that, eleven years as a workplace safety inspector and engineer.  
 > - Record: As deputy commissioner for six years, decided which workplaces to inspect, ran the safety consultations offered to employers, and oversaw citations and penalties. Over that period the injury and illness rate among the state's private-sector workers fell from 3.4 to 2.6 cases per 100 full-time workers, while the national rate fell from 3.0 to 2.7.  
 > - Platform: Move half of the safety program's inspectors from unannounced inspections to free safety consultations that employers request, and reduce penalties for first-time violations by businesses with fewer than 50 employees.  
 >
